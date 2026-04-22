@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "hkim",
+  "version": "${version}",
+  "name": "HkiM",
+  "description": "Orbit test mod.",
+  "authors": [],
+  "contact": {},
+  "license": "BSD-3-Clause",
+  "icon": "assets/hkim/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      {
+        "adapter": "kotlin",
+        "value": "cn.hkim.addon.Hkim"
+      }
+    ],
+    "modmenu": [
+      "cn.hkim.addon.config.ModMenuIntegration"
+    ]
+  },
+  "mixins": [
+    "hkim.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": ">=${fabric_api_version}",
+    "minecraft": "~${minecraft_version}",
+    "fabric-language-kotlin": ">=${fabric_kotlin_version}",
+    "modmenu": ">=${modmenu_version}"
+  }
+}
