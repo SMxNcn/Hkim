@@ -9,11 +9,16 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 import kotlin.math.abs
 
 open class BooleanSetting(name: String, desc: String, override val default: Boolean) : Setting<Boolean>(name, desc) {
-    private var animationProgress = if (value) 1f else 0f
+    private var animationProgress = 0f
     private var lastUpdateTime = System.currentTimeMillis()
     private val animationSpeed = 0.15f
 
-    init { value = default }
+    override var value: Boolean = default
+        set(newValue) {
+            field = newValue
+            animationProgress = if (newValue) 1f else 0f
+            lastUpdateTime = System.currentTimeMillis()
+        }
 
     override fun render(
         graphics: GuiGraphicsExtractor,

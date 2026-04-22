@@ -10,10 +10,16 @@ import kotlin.math.roundToInt
 class NumberSetting(name: String, desc: String, override val default: Number, val min: Number, val max: Number, val step: Number) : Setting<Number>(name, desc) {
     private var isDragging = false
 
-    private var animationProgress = 0f
-    private var targetProgress = 0f
+    private var animationProgress: Float
+    private var targetProgress: Float
     private var lastUpdateTime = System.currentTimeMillis()
     private val animationSpeed = 0.3f
+
+    init {
+        val initialVal = snapToStep(default)
+        targetProgress = calculateProgress(initialVal)
+        animationProgress = targetProgress
+    }
 
     override var value: Number = snapToStep(default)
         set(newValue) {
@@ -48,11 +54,11 @@ class NumberSetting(name: String, desc: String, override val default: Number, va
 
         val valueText = if (default is Int) value.toInt().toString() else String.format("%.1f", value.toDouble())
         val valueWidth = mc.font.width(valueText)
-        graphics.text(mc.font, valueText, (x + width - valueWidth - 10).toInt(), y.toInt() + 6, themeColor, false)
+        graphics.text(mc.font, valueText, (x + width - valueWidth - 8).toInt(), y.toInt() + 6, themeColor, false)
 
         val sliderX = x + 120f
         val sliderY = y + 8f
-        val sliderW = width - 150f - valueWidth
+        val sliderW = width - 150f - 15f
         val sliderH = 4f
 
         graphics.fill(sliderX.toInt(), sliderY.toInt(), (sliderX + sliderW).toInt(), (sliderY + sliderH).toInt(), 0xFF3A3A3A.toInt())
@@ -73,13 +79,11 @@ class NumberSetting(name: String, desc: String, override val default: Number, va
     override fun mouseClicked(mouseX: Float, mouseY: Float, button: Int, x: Float, y: Float, width: Float): Boolean {
         if (button != 0) return false
 
-        val valueText = if (default is Int) value.toInt().toString() else String.format("%.1f", value.toDouble())
-        val valueWidth = mc.font.width(valueText)
         val sliderX = x + 120f
         val sliderY = y + 8f
-        val sliderW = width - 150f - valueWidth
+        val sliderW = width - 150f - 15f
 
-        if (HudUtils.isPointInRect(mouseX, mouseY, sliderX, sliderY - 4f, sliderW, 12f)) {
+        if (HudUtils.isPointInRect(mouseX, mouseY, sliderX, sliderY - 2f, sliderW, 12f)) {
             isDragging = true
             updateValueFromMouse(mouseX, sliderX, sliderW)
             return true
@@ -88,15 +92,19 @@ class NumberSetting(name: String, desc: String, override val default: Number, va
     }
 
     override fun mouseDragged(mouseX: Float, mouseY: Float, button: Int, deltaX: Float, deltaY: Float, x: Float, y: Float, width: Float): Boolean {
-        if (isDragging) {
-            val valueText = if (default is Int) value.toInt().toString() else String.format("%.1f", value.toDouble())
-            val valueWidth = mc.font.width(valueText)
+        if (isDragging && button == 0) {
             val sliderX = x + 120f
-            val sliderW = width - 150f - valueWidth
+            val sliderW = width - 150f - 15f
 
-            if (mouseY >= y - 2f && mouseY <= y + 20f) {
-                updateValueFromMouse(mouseX, sliderX, sliderW)
-            }
+            updateValueFromMouse(mouseX, sliderX, sliderW)
+            return true
+        }
+        return false
+    }
+
+    override fun mouseReleased(mouseX: Float, mouseY: Float, button: Int, x: Float, y: Float, width: Float): Boolean {
+        if (isDragging && button == 0) {
+            isDragging = false
             return true
         }
         return false
@@ -142,6 +150,9 @@ class NumberSetting(name: String, desc: String, override val default: Number, va
         val minVal = min.toDouble()
         val maxVal = max.toDouble()
         val valVal = value.toDouble()
+
+        if (maxVal == minVal) return 0f
+
         return ((valVal - minVal) / (maxVal - minVal)).toFloat().coerceIn(0f, 1f)
     }
 }

@@ -128,6 +128,23 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY)
     }
 
+    override fun mouseReleased(event: MouseButtonEvent): Boolean {
+        val mouseX = event.x.toFloat()
+        val mouseY = event.y.toFloat()
+        val button = event.button()
+
+        var y = guiY + headerH + contentPadding + contentScrollY
+        val x = guiX + sidebarW + contentPadding
+        val w = guiW - sidebarW - contentPadding * 2
+
+        for (module in getFilteredModules()) {
+            val state = cardStates[module.id] ?: continue
+            if (state.handleRelease(mouseX, mouseY, button, x, y, w)) return true
+            y += state.totalHeight + 4f
+        }
+        return super.mouseReleased(event)
+    }
+
     override fun mouseDragged(event: MouseButtonEvent, dx: Double, dy: Double): Boolean {
         val mouseX = event.x.toFloat()
         val mouseY = event.y.toFloat()
@@ -227,7 +244,9 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         }
 
         val bottomY = y + h - 70f
-        graphics.text(mc.font, "v${Hkim.VERSION}", (guiX + 4).toInt(), (guiY + guiH - mc.font.lineHeight - 2).toInt(), 0xFF888888.toInt(), false)
+        val isVerHovered = HudUtils.isPointInRect(mouseX.toFloat(), mouseY.toFloat(), x + 1f, bottomY + 58f, sidebarW - 6f, 10f)
+        val versionText = if (isVerHovered) Component.literal("v${Hkim.VERSION}").withStyle(ChatFormatting.UNDERLINE) else Component.literal("v${Hkim.VERSION}")
+        graphics.text(mc.font, versionText, (guiX + 4).toInt(), (guiY + guiH - mc.font.lineHeight - 2).toInt(), 0xFF888888.toInt(), false)
 
         graphics.blit(RenderPipelines.GUI_TEXTURED, editIcon, iconX.toInt(), (bottomY + 30).toInt(), 0f, 0f, 20, 20, 20, 20)
         if (HudUtils.isPointInRect(mouseX.toFloat(), mouseY.toFloat(), x + 10f, bottomY + 30f, 20f, 20f)) {
@@ -356,6 +375,10 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         }
         if (HudUtils.isPointInRect(mouseX, mouseY, iconX, bottomY + 30f, 20f, 20f)) {
             Hkim.logger.info("[HKM] EDIT clicked")
+            return true
+        }
+        if (HudUtils.isPointInRect(mouseX, mouseY, x + 1f, bottomY + 58f, sidebarW - 6f, 10f)) {
+            HudUtils.openUrl("https://github.com/SMxNcn/Hkim")
             return true
         }
 
@@ -494,6 +517,9 @@ private class ModuleCardState(val module: Module) {
     private val settingHeight = 20f
     private val settingGap = 3f
 
+    private var draggingSetting: Setting<*>? = null
+    private var draggingSettingY: Float = 0f
+
     private val visibleSettings: List<Setting<*>>
         get() = module.settings.filter { it.isVisible() }
 
@@ -553,6 +579,8 @@ private class ModuleCardState(val module: Module) {
                 if (!setting.isVisible()) continue
                 val indent = 24f
                 if (setting.mouseClicked(mouseX, mouseY, button, x + indent, sy, width - indent * 2)) {
+                    draggingSetting = setting
+                    draggingSettingY = sy
                     return true
                 }
                 sy += settingHeight + settingGap
@@ -563,16 +591,25 @@ private class ModuleCardState(val module: Module) {
     }
 
     fun handleDrag(mouseX: Float, mouseY: Float, button: Int, x: Float, y: Float, width: Float): Boolean {
-        if (targetExpanded) {
-            var sy = y + 44f + 6f
-            for (setting in visibleSettings) {
-                if (!setting.isVisible()) continue
-                val indent = 24f
-                if (setting.mouseDragged(mouseX, mouseY, button, 0f, 0f, x + indent, sy, width - indent * 2)) {
-                    return true
-                }
-                sy += settingHeight + settingGap
-            }
+        if (draggingSetting != null) {
+            val indent = 24f
+            return draggingSetting!!.mouseDragged(
+                mouseX, mouseY, button, 0f, 0f,
+                x + indent, draggingSettingY, width - indent * 2
+            )
+        }
+        return false
+    }
+
+    fun handleRelease(mouseX: Float, mouseY: Float, button: Int, x: Float, y: Float, width: Float): Boolean {
+        if (draggingSetting != null) {
+            val indent = 24f
+            draggingSetting!!.mouseReleased(
+                mouseX, mouseY, button,
+                x + indent, draggingSettingY, width - indent * 2
+            )
+            draggingSetting = null
+            return true
         }
         return false
     }
