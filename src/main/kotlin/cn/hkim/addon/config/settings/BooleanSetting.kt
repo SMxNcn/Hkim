@@ -13,12 +13,13 @@ open class BooleanSetting(name: String, desc: String, override val default: Bool
     private var lastUpdateTime = System.currentTimeMillis()
     private val animationSpeed = 0.15f
 
-    override var value: Boolean = default
-        set(newValue) {
-            field = newValue
-            animationProgress = if (newValue) 1f else 0f
-            lastUpdateTime = System.currentTimeMillis()
+    init {
+        animationProgress = if (default) {
+            if (value) 0f else 1f
+        } else {
+            if (value) 1f else 0f
         }
+    }
 
     override fun render(
         graphics: GuiGraphicsExtractor,
