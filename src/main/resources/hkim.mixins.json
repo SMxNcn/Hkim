@@ -15,6 +15,7 @@
     "ChatComponentMixin",
     "ConnectionMixin",
     "GuiGraphicsExtractorMixin",
+    "GuiMixin",
     "LocalPlayerMixin",
     "MinecraftMixin",
     "MouseHandlerMixin",
