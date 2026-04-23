@@ -16,6 +16,8 @@
     "ConnectionMixin",
     "GuiGraphicsExtractorMixin",
     "GuiMixin",
+    "ItemInHandRendererMixin",
+    "LivingEntityMixin",
     "LocalPlayerMixin",
     "MinecraftMixin",
     "MouseHandlerMixin",
