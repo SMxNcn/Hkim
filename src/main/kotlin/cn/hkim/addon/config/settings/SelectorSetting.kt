@@ -6,10 +6,11 @@ import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.HudUtils.drawRectWithBorder
 import net.minecraft.client.gui.GuiGraphicsExtractor
 
-class SelectorSetting(name: String, desc: String, val options: List<String>, override val default: String) : Setting<String>(name, desc) {
+class SelectorSetting(name: String, desc: String, val options: List<String>, default: String) : Setting<Int>(name, desc) {
+    override val default: Int = options.indexOf(default).coerceAtLeast(0)
     private var _selected: String = options.firstOrNull() ?: ""
-    init { value = default }
-    fun select(option: String) { if (option in options) { _selected = option; value = option } }
+    init { value = this.default }
+    fun select(option: String) { if (option in options) { _selected = option; value = options.indexOf(option) } }
     fun getSelected(): String = _selected
 
     override fun render(
@@ -38,12 +39,12 @@ class SelectorSetting(name: String, desc: String, val options: List<String>, ove
         val rightArrowHovered = HudUtils.isPointInRect(mouseX, mouseY, selectorX + selectorW - 16f, selectorY, 14f, selectorH)
         val leftArrowColor = if (leftArrowHovered) themeColor else 0xFF888888.toInt()
         val rightArrowColor = if (rightArrowHovered) themeColor else 0xFF888888.toInt()
-        val optionsX = (selectorX + (selectorW - mc.font.width(_selected)) / 2).toInt()
+        val optionsX = (selectorX + selectorW / 2).toInt()
 
         graphics.text(mc.font, "<", selectorX.toInt() + 6, selectorY.toInt() + 4, leftArrowColor, false)
         graphics.text(mc.font, ">", (selectorX + selectorW - 12).toInt(), selectorY.toInt() + 4, rightArrowColor, false)
 
-        graphics.centeredText(mc.font, _selected, optionsX + 2, selectorY.toInt() + 4, 0xFFFFFFFF.toInt())
+        graphics.centeredText(mc.font, _selected, optionsX, selectorY.toInt() + 4, 0xFFFFFFFF.toInt())
 
         renderDescriptionTooltip(graphics, isHovered, mouseX, mouseY)
         return height
@@ -68,16 +69,14 @@ class SelectorSetting(name: String, desc: String, val options: List<String>, ove
     }
 
     private fun next(): Boolean {
-        val currentIndex = options.indexOf(value)
-        val nextIndex = (currentIndex + 1) % options.size
+        val nextIndex = (value + 1) % options.size
         select(options[nextIndex])
         settingsChanged()
         return true
     }
 
     private fun previous(): Boolean {
-        val currentIndex = options.indexOf(value)
-        val prevIndex = if (currentIndex - 1 < 0) options.size - 1 else currentIndex - 1
+        val prevIndex = if (value - 1 < 0) options.size - 1 else value - 1
         select(options[prevIndex])
         settingsChanged()
         return true
