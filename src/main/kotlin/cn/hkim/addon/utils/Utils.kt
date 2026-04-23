@@ -4,7 +4,9 @@ import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.mixins.accessors.KeyMappingAccessor
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.resources.sounds.SimpleSoundInstance
 import net.minecraft.core.BlockPos
+import net.minecraft.sounds.SoundEvent
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.inventory.ContainerInput
 import net.minecraft.world.phys.AABB
@@ -56,7 +58,7 @@ fun isPlayerInArea(corner1: BlockPos, corner2: BlockPos, playerPos: BlockPos): B
 fun leapTo(name: String, screenHandler: AbstractContainerScreen<*>) {
     val player = mc.player ?: return
     val index = screenHandler.menu.slots.subList(11, 16).firstOrNull {
-        it.item?.hoverName?.string?.substringAfter(' ').equals(name.clean, ignoreCase = true)
+        it.item.hoverName.string.substringAfter(' ').equals(name.clean, ignoreCase = true)
     }?.index ?: return
     mc.gameMode?.handleContainerInput(screenHandler.menu.containerId, index, 0, ContainerInput.PICKUP, player)
 }
@@ -123,4 +125,8 @@ fun leftClick() {
     KeyMapping.set(actualKey, true)
     KeyMapping.click(actualKey)
     KeyMapping.set(actualKey, false)
+}
+
+fun playSoundAtPlayer(event: SoundEvent, volume: Float = 1f, pitch: Float = 1f) = mc.execute {
+    mc.soundManager.playDelayed(SimpleSoundInstance.forUI(event, pitch, volume), 0)
 }

@@ -13,6 +13,7 @@ import cn.hkim.addon.features.impl.ClickGUI
 import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.HudUtils.drawHorizontalSeparator
 import cn.hkim.addon.utils.HudUtils.drawRectWithBorder
+import cn.hkim.addon.utils.playSoundAtPlayer
 import com.mojang.blaze3d.platform.cursor.CursorType
 import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -24,6 +25,7 @@ import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
+import net.minecraft.sounds.SoundEvents
 import kotlin.math.max
 import kotlin.math.min
 
@@ -361,6 +363,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
 
         for (category in Category.entries) {
             if (HudUtils.isPointInRect(mouseX, mouseY, iconX, iconY, iconSize, iconSize)) {
+                playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value(), 0.3f)
                 selectedCategory = if (selectedCategory == category) null else category
                 searchQuery = ""
                 return true
@@ -378,6 +381,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
             return true
         }
         if (HudUtils.isPointInRect(mouseX, mouseY, x + 1f, bottomY + 58f, sidebarW - 6f, 10f)) {
+            playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value())
             HudUtils.openUrl("https://github.com/SMxNcn/Hkim")
             return true
         }
@@ -395,6 +399,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         val closeX = x + w - 36f
         val closeY = y + 14f
         if (HudUtils.isPointInRect(mouseX, mouseY, closeX, closeY, 20f, 20f)) {
+            playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value(), 0.3f)
             onClose()
             return true
         }
@@ -404,7 +409,8 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         val sbW = 140f
         val sbH = 20f
 
-        if (HudUtils.isPointInRect(mouseX, mouseY, sbX, sbY, 180f, 24f)) {
+        if (HudUtils.isPointInRect(mouseX, mouseY, sbX, sbY, sbW, sbH)) {
+            playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value(), 0.3f)
             activateSearchBox(sbX.toInt() + 6, sbY.toInt() + 6, sbW.toInt(), sbH.toInt())
             return true
         }

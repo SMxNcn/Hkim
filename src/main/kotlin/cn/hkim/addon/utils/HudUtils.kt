@@ -1,7 +1,12 @@
 package cn.hkim.addon.utils
 
+import cn.hkim.addon.Hkim
 import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.resources.Identifier
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.util.Util
 import java.awt.Color
+import java.net.URI
 import kotlin.math.sin
 
 object HudUtils {
@@ -71,6 +76,21 @@ object HudUtils {
 
     fun Color.multiplyAlpha(factor: Float): Color {
         return Color(red, green, blue, (alpha.toFloat() * factor).coerceIn(0f, 255f).toInt())
+    }
+
+    fun openUrl(url: String) {
+        try {
+            Util.getPlatform().openUri(URI.create(url))
+        } catch (e: Exception) {
+            Hkim.logger.error("Failed to open URL: $url", e)
+        }
+    }
+
+    fun playModuleSound(state: Boolean) {
+        val enable = SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("hkim", "enable"))
+        val disable = SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("hkim", "disable"))
+        if (state) playSoundAtPlayer(enable, 0.7f, 0.7f)
+        else playSoundAtPlayer(disable, 0.7f, 0.7f)
     }
 }
 

@@ -2,6 +2,7 @@ package cn.hkim.addon.features
 
 import cn.hkim.addon.config.ModuleConfig
 import cn.hkim.addon.config.Setting
+import cn.hkim.addon.utils.HudUtils.playModuleSound
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.gui.GuiGraphicsExtractor
 
@@ -43,6 +44,7 @@ abstract class Module(
     fun enable() {
         if (!enabled) {
             enabled = true
+            playModuleSound(true)
             onEnable()
         }
     }
@@ -50,6 +52,7 @@ abstract class Module(
     fun disable() {
         if (enabled) {
             enabled = false
+            playModuleSound(false)
             onDisable()
         }
     }

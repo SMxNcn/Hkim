@@ -7,6 +7,10 @@ import cn.hkim.addon.features.ModuleManager.initOrbit
 import cn.hkim.addon.utils.render.RenderBatchManager
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents
+import net.minecraft.core.Registry
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.Identifier
+import net.minecraft.sounds.SoundEvent
 
 class EventDispatcher {
     companion object {
@@ -28,6 +32,11 @@ class EventDispatcher {
             }
 
             LevelRenderEvents.END_MAIN.register(RenderBatchManager::renderBatch)
+
+            Registry.register(BuiltInRegistries.SOUND_EVENT, Identifier.fromNamespaceAndPath("hkim", "enable"),
+                SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("hkim", "enable")))
+            Registry.register(BuiltInRegistries.SOUND_EVENT, Identifier.fromNamespaceAndPath("hkim", "disable"),
+                SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("hkim", "disable")))
         }
 
         fun registerListeners(vararg listeners: Any) {
