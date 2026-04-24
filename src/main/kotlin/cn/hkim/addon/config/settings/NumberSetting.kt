@@ -3,7 +3,9 @@ package cn.hkim.addon.config.settings
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.Setting
 import cn.hkim.addon.utils.HudUtils
+import cn.hkim.addon.utils.playSoundAtPlayer
 import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.sounds.SoundEvents
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -13,7 +15,7 @@ class NumberSetting(name: String, desc: String, override val default: Number, va
     private var animationProgress: Float
     private var targetProgress: Float
     private var lastUpdateTime = System.currentTimeMillis()
-    private val animationSpeed = 0.3f
+    private val animationSpeed = 0.15f
 
     init {
         val initialVal = snapToStep(default)
@@ -35,6 +37,15 @@ class NumberSetting(name: String, desc: String, override val default: Number, va
         }
     }
 
+    override fun reset() {
+        super.reset()
+        settingsChanged()
+        targetProgress = calculateProgress(default)
+        animationProgress = targetProgress
+        lastUpdateTime = System.currentTimeMillis()
+        isDragging = false
+    }
+
     override fun render(
         graphics: GuiGraphicsExtractor,
         x: Float, y: Float, width: Float,
@@ -52,7 +63,13 @@ class NumberSetting(name: String, desc: String, override val default: Number, va
 
         graphics.text(mc.font, name, x.toInt() + 10, y.toInt() + 6, 0xFFCCCCCC.toInt(), false)
 
-        val valueText = if (default is Int) value.toInt().toString() else String.format("%.1f", value.toDouble())
+        val decimals = when {
+            step.toDouble() % 1.0 == 0.0 -> 0
+            step.toDouble() in 0.01..<0.1 -> 2
+            step.toDouble() < 1.0 -> 1
+            else -> 2
+        }
+        val valueText = if (default is Int) value.toInt().toString() else String.format("%.${decimals}f", value.toDouble())
         val valueWidth = mc.font.width(valueText)
         graphics.text(mc.font, valueText, (x + width - valueWidth - 8).toInt(), y.toInt() + 6, themeColor, false)
 
@@ -85,6 +102,7 @@ class NumberSetting(name: String, desc: String, override val default: Number, va
 
         if (HudUtils.isPointInRect(mouseX, mouseY, sliderX, sliderY - 2f, sliderW, 12f)) {
             isDragging = true
+            playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value(), 0.3f)
             updateValueFromMouse(mouseX, sliderX, sliderW)
             return true
         }
@@ -104,6 +122,7 @@ class NumberSetting(name: String, desc: String, override val default: Number, va
 
     override fun mouseReleased(mouseX: Float, mouseY: Float, button: Int, x: Float, y: Float, width: Float): Boolean {
         if (isDragging && button == 0) {
+            settingsChanged()
             isDragging = false
             return true
         }

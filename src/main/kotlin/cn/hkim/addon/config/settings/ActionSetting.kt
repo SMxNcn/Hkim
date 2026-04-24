@@ -4,7 +4,9 @@ import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.Setting
 import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.HudUtils.drawRectWithBorder
+import cn.hkim.addon.utils.playSoundAtPlayer
 import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.sounds.SoundEvents
 
 class ActionSetting(name: String, desc: String, val action: () -> Unit) : Setting<Unit>(name, desc) {
     override val default: Unit = Unit
@@ -52,6 +54,7 @@ class ActionSetting(name: String, desc: String, val action: () -> Unit) : Settin
 
         if (HudUtils.isPointInRect(mouseX, mouseY, btnX, btnY, btnW, btnH)) {
             execute()
+            playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value(), 0.3f)
             return true
         }
         return false

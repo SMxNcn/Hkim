@@ -5,7 +5,9 @@ import cn.hkim.addon.config.Setting
 import cn.hkim.addon.config.clickgui.ClickGUIScreen
 import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.HudUtils.drawRectWithBorder
+import cn.hkim.addon.utils.playSoundAtPlayer
 import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.sounds.SoundEvents
 
 class TextSetting(name: String, desc: String, override val default: String) : Setting<String>(name, desc) {
     init { value = default }
@@ -58,6 +60,7 @@ class TextSetting(name: String, desc: String, override val default: String) : Se
                     inputX.toInt() + 4, inputY.toInt() + 4, inputW.toInt(), inputH.toInt(),
                     value
                 )
+                playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value(), 0.3f)
             }
             return true
         }

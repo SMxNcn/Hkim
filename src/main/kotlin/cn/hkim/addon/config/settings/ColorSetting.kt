@@ -5,7 +5,9 @@ import cn.hkim.addon.config.Setting
 import cn.hkim.addon.config.clickgui.ClickGUIScreen
 import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.HudUtils.drawRectWithBorder
+import cn.hkim.addon.utils.playSoundAtPlayer
 import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.sounds.SoundEvents
 
 class ColorSetting(name: String, desc: String, override val default: Int) : Setting<Int>(name, desc) {
     init { value = default }
@@ -58,6 +60,7 @@ class ColorSetting(name: String, desc: String, override val default: Int) : Sett
                     (previewX - 50f).toInt() + 8, previewY.toInt() + 4, 70, 16,
                     hexValue
                 )
+                playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value(), 0.3f)
             }
             return true
         }

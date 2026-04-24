@@ -5,7 +5,9 @@ import cn.hkim.addon.config.Setting
 import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.HudUtils.lerp
 import cn.hkim.addon.utils.HudUtils.lerpColor
+import cn.hkim.addon.utils.playSoundAtPlayer
 import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.sounds.SoundEvents
 import kotlin.math.abs
 
 open class BooleanSetting(name: String, desc: String, override val default: Boolean) : Setting<Boolean>(name, desc) {
@@ -59,7 +61,7 @@ open class BooleanSetting(name: String, desc: String, override val default: Bool
     }
 
     override fun mouseClicked(mouseX: Float, mouseY: Float, button: Int, x: Float, y: Float, width: Float): Boolean {
-        if (button != 0) return false // 仅左键
+        if (button != 0) return false
 
         val toggleX = x + width - 34f
         val toggleY = y + 4f
@@ -68,6 +70,7 @@ open class BooleanSetting(name: String, desc: String, override val default: Bool
 
         if (HudUtils.isPointInRect(mouseX, mouseY, toggleX, toggleY, toggleW, toggleH)) {
             set(!get())
+            playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value(), 0.3f)
             settingsChanged()
             return true
         }

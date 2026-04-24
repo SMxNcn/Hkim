@@ -4,7 +4,9 @@ import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.Setting
 import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.HudUtils.drawRectWithBorder
+import cn.hkim.addon.utils.playSoundAtPlayer
 import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.sounds.SoundEvents
 
 class SelectorSetting(name: String, desc: String, val options: List<String>, default: String) : Setting<Int>(name, desc) {
     override val default: Int = options.indexOf(default).coerceAtLeast(0)
@@ -71,6 +73,7 @@ class SelectorSetting(name: String, desc: String, val options: List<String>, def
     private fun next(): Boolean {
         val nextIndex = (value + 1) % options.size
         select(options[nextIndex])
+        playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value(), 0.3f)
         settingsChanged()
         return true
     }
@@ -78,6 +81,7 @@ class SelectorSetting(name: String, desc: String, val options: List<String>, def
     private fun previous(): Boolean {
         val prevIndex = if (value - 1 < 0) options.size - 1 else value - 1
         select(options[prevIndex])
+        playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value(), 0.3f)
         settingsChanged()
         return true
     }
