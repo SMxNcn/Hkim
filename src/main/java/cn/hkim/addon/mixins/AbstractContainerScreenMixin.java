@@ -63,14 +63,14 @@ public class AbstractContainerScreenMixin {
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     protected void onMouseClicked(MouseButtonEvent event, boolean doubleClick, CallbackInfoReturnable<Boolean> cir) {
         GuiEvent.MouseClick mcEvent = new GuiEvent.MouseClick((Screen)(Object) this, event, doubleClick);
-        Hkim.EVENT_BUS.post(event);
+        Hkim.EVENT_BUS.post(mcEvent);
         if (mcEvent.isCancelled()) cir.cancel();
     }
 
     @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
     protected void onKeyPressed(KeyEvent event, CallbackInfoReturnable<Boolean> cir) {
         GuiEvent.KeyPress kpEvent = new GuiEvent.KeyPress((Screen)(Object)this, event);
-        Hkim.EVENT_BUS.post(event);
+        Hkim.EVENT_BUS.post(kpEvent);
         if (kpEvent.isCancelled()) cir.cancel();
     }
 }
