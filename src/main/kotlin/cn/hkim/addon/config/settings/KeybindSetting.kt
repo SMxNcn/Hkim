@@ -1,0 +1,96 @@
+package cn.hkim.addon.config.settings
+
+import cn.hkim.addon.Hkim.mc
+import cn.hkim.addon.config.Setting
+import cn.hkim.addon.utils.HudUtils
+import cn.hkim.addon.utils.HudUtils.drawRectWithBorder
+import cn.hkim.addon.utils.playSoundAtPlayer
+import com.mojang.blaze3d.platform.InputConstants
+import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.sounds.SoundEvents
+import org.lwjgl.glfw.GLFW
+
+class KeybindSetting(name: String, desc: String, defaultKey: Int = GLFW.GLFW_KEY_UNKNOWN) : Setting<Int>(name, desc) {
+    override val default: Int = defaultKey
+    override var value: Int = defaultKey
+
+    internal var isBinding = false
+
+    override fun render(
+        graphics: GuiGraphicsExtractor, x: Float, y: Float, width: Float,
+        mouseX: Float, mouseY: Float, themeColor: Int
+    ): Float {
+        val height = 20f
+        val isHovered = HudUtils.isPointInRect(mouseX, mouseY, x, y, width, height)
+
+        if (isHovered || isBinding) {
+            graphics.fill(x.toInt(), y.toInt(), (x + width).toInt(), (y + height).toInt(), 0x15FFFFFF)
+        }
+
+        graphics.text(mc.font, name, x.toInt() + 10, y.toInt() + 6, 0xFFCCCCCC.toInt(), false)
+
+        val btnX = x + width - 80f
+        val btnY = y + 2f
+        val btnW = 70f
+        val btnH = 16f
+
+        val isBtnHovered = HudUtils.isPointInRect(mouseX, mouseY, btnX, btnY, btnW, btnH)
+        val displayText = when {
+            isBinding -> "Press..."
+            value == GLFW.GLFW_KEY_UNKNOWN -> "None"
+            else -> getKeyDisplayName(value)
+        }
+
+        val btnColor = if (isBinding || isBtnHovered) themeColor else 0xFF555555.toInt()
+        graphics.drawRectWithBorder(btnX, btnY, btnW, btnH, 0xFF3A3A3A.toInt(), btnColor)
+
+        graphics.text(mc.font, displayText, (btnX + btnW / 2 - mc.font.width(displayText) / 2).toInt(), btnY.toInt() + 4, 0xFFFFFFFF.toInt(), false)
+
+        renderDescriptionTooltip(graphics, isHovered, mouseX, mouseY)
+        return height
+    }
+
+    override fun mouseClicked(mouseX: Float, mouseY: Float, button: Int, x: Float, y: Float, width: Float): Boolean {
+        if (button != 0) return false
+        val btnX = x + width - 80f
+        val btnY = y + 2f
+        val btnW = 70f
+        val btnH = 16f
+
+        if (HudUtils.isPointInRect(mouseX, mouseY, btnX, btnY, btnW, btnH)) {
+            isBinding = true
+            playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value(), 0.3f)
+            return true
+        }
+        return false
+    }
+
+    fun handleKey(keyCode: Int): Boolean {
+        if (!isBinding) return false
+
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            value = default
+            isBinding = false
+            settingsChanged()
+            return true
+        }
+
+        if (keyCode == GLFW.GLFW_KEY_UNKNOWN) return false
+
+        value = keyCode
+        isBinding = false
+        settingsChanged()
+        playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value(), 0.3f)
+        return true
+    }
+
+    private fun getKeyDisplayName(keyCode: Int): String {
+        if (keyCode == GLFW.GLFW_KEY_UNKNOWN) return "None"
+        return try {
+            val key = InputConstants.Type.KEYSYM.getOrCreate(keyCode)
+            key.displayName.string
+        } catch (_: Exception) {
+            "Key $keyCode"
+        }
+    }
+}

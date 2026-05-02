@@ -17,6 +17,7 @@
     "GuiGraphicsExtractorMixin",
     "GuiMixin",
     "ItemInHandRendererMixin",
+    "KeyMappingMixin",
     "LivingEntityMixin",
     "LocalPlayerMixin",
     "MinecraftMixin",

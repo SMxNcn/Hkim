@@ -5,6 +5,7 @@ import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.ModuleConfig
 import cn.hkim.addon.config.Setting
 import cn.hkim.addon.config.settings.ColorSetting
+import cn.hkim.addon.config.settings.KeybindSetting
 import cn.hkim.addon.config.settings.TextSetting
 import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
@@ -168,6 +169,15 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
     override fun keyPressed(event: KeyEvent): Boolean {
         if (searchEditBox?.isFocused == true && searchEditBox!!.keyPressed(event)) return true
         if (activeEditBox?.isFocused == true && activeEditBox!!.keyPressed(event)) return true
+
+        for (state in cardStates.values) {
+            for (setting in state.module.settings) {
+                if (setting is KeybindSetting && setting.isBinding) {
+                    if (setting.handleKey(event.key)) return true
+                }
+            }
+        }
+
         if (event.isEscape) {
             if (searchEditBox != null) {
                 deactivateSearchBox()
