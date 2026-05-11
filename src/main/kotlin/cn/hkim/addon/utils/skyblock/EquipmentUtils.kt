@@ -6,14 +6,14 @@ import cn.hkim.addon.utils.clickPlayerInventorySlot
 import cn.hkim.addon.utils.findItemByID
 import cn.hkim.addon.utils.schedule
 import cn.hkim.addon.utils.sendCommand
-import kotlinx.coroutines.future.await
+import kotlinx.coroutines.suspendCancellableCoroutine
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import java.util.concurrent.CompletableFuture
+import kotlin.coroutines.resume
 
 object EquipmentUtils {
-    private var pendingFuture: CompletableFuture<Boolean>? = null
+    private var callback: ((Boolean) -> Unit)? = null
     private var pendingSlots = listOf<Int>()
     private var isProcessing = false
     private var currentIndex = 0
@@ -36,60 +36,53 @@ object EquipmentUtils {
         val slots = itemIds.mapNotNull { findItemByID(it).takeIf { slot -> slot != -1 } }
         if (slots.isEmpty()) return false
 
-        val future = CompletableFuture<Boolean>()
-        pendingFuture = future
-        pendingSlots = slots
-        currentIndex = 0
-        isProcessing = false
-        calledFromThis = true
+        return suspendCancellableCoroutine { cont ->
+            callback = { result -> cont.resume(result) }
+            pendingSlots = slots
+            currentIndex = 0
+            isProcessing = false
+            calledFromThis = true
+            sendCommand("equipment")
 
-        sendCommand("equipment")
-
-        schedule(100) {
-            val f = pendingFuture
-            if (f != null && !f.isDone) {
-                reset()
-                f.complete(false)
+            schedule(200) {
+                if (callback != null) {
+                    callback?.invoke(false)
+                    reset()
+                }
             }
         }
-
-        return future.await()
     }
 
     private fun handleGuiOpen(screen: Screen?) {
-        if (pendingFuture == null) return
-        val chest = (screen as? AbstractContainerScreen<*>) ?: return
-        if (!chest.title.string.contains("Your Equipment")) return
+        val chest = (screen as? AbstractContainerScreen<*>) ?: run { callback?.invoke(false); return }
+        if (!chest.title.string.contains("Your Equipment")) run { callback?.invoke(false); return }
 
-        schedule((5..7).random()) {
-            if (!isProcessing) {
-                processNextItem()
-            }
+        schedule((6..8).random()) {
+            if (!isProcessing) { processNextItem() }
         }
     }
 
     private fun processNextItem() {
         if (currentIndex >= pendingSlots.size) {
-            schedule((5..8).random()) {
+            schedule((6..8).random()) {
                 mc.player?.closeContainer()
-                pendingFuture?.complete(true)
+                callback?.invoke(true)
                 reset()
             }
             return
         }
 
         isProcessing = true
+        println(currentIndex)
 
         clickPlayerInventorySlot(pendingSlots[currentIndex], containerId)
         currentIndex++
 
-        schedule((6..8).random()) {
-            processNextItem()
-        }
+        schedule((8..10).random()) { processNextItem() }
     }
 
     private fun reset() {
-        pendingFuture = null
+        callback = null
         pendingSlots = emptyList()
         isProcessing = false
         currentIndex = 0
