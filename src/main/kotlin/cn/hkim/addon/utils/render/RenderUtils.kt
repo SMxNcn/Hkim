@@ -41,6 +41,9 @@ object RenderBatchManager {
     val renderConsumer = RenderConsumer()
 
     fun renderBatch(context: LevelRenderContext) {
+        if (renderConsumer.lines.isEmpty && renderConsumer.wireBoxes.isEmpty &&
+            renderConsumer.filledBoxes.isEmpty && renderConsumer.texts.isEmpty) return
+
         val matrix = context.poseStack()
         val bufferSource = context.bufferSource()
         val camera = context.gameRenderer().mainCamera.position()
@@ -50,10 +53,11 @@ object RenderBatchManager {
 
         matrix.renderBatchedLinesAndWireBoxes(renderConsumer.lines, renderConsumer.wireBoxes, bufferSource)
         matrix.renderBatchedFilledBoxes(renderConsumer.filledBoxes, bufferSource)
+        matrix.renderBatchedTexts(renderConsumer.texts, bufferSource)
 
         matrix.popPose()
 
-        matrix.renderBatchedTexts(renderConsumer.texts, bufferSource, camera)
+        bufferSource.endBatch()
         renderConsumer.clear()
     }
 }
@@ -122,26 +126,32 @@ private fun PoseStack.renderBatchedFilledBoxes(consumer: List<BoxData>, bufferSo
     }
 }
 
-private fun PoseStack.renderBatchedTexts(consumer: List<TextData>, bufferSource: MultiBufferSource.BufferSource, camera: Vec3) {
-    val cameraPos = Vec3(-camera.x, -camera.y, -camera.z)
-
+private fun PoseStack.renderBatchedTexts(consumer: List<TextData>, bufferSource: MultiBufferSource.BufferSource) {
     for (textData in consumer) {
         pushPose()
-        val pose = last().pose()
-        val scaleFactor = textData.scale * 0.025f
 
-        pose
-            .rotate(textData.cameraRotation)
-            .translate(textData.pos.toVector3f())
-            .translate(cameraPos.x.toFloat(), cameraPos.y.toFloat(), cameraPos.z.toFloat())
-            .scale(scaleFactor, -scaleFactor, scaleFactor)
+        translate(textData.pos.x, textData.pos.y, textData.pos.z)
+
+        val invRotation = Quaternionf().set(textData.cameraRotation)
+        mulPose(invRotation)
+
+        val scaleFactor = textData.scale * 0.025f
+        scale(scaleFactor, -scaleFactor, scaleFactor)
+
+        val displayMode = if (textData.depth) Font.DisplayMode.NORMAL else Font.DisplayMode.SEE_THROUGH
+        val color = 0xFFFFFFFF.toInt()
 
         textData.font.drawInBatch(
-            textData.text, -textData.textWidth / 2f, 0f, -1, true, pose, bufferSource,
-            if (textData.depth) Font.DisplayMode.NORMAL else Font.DisplayMode.SEE_THROUGH,
-            0, LightCoordsUtil.FULL_BRIGHT
+            textData.text,
+            -textData.textWidth / 2f, 0f,
+            color,
+            true,
+            last().pose(),
+            bufferSource,
+            displayMode,
+            0,
+            LightCoordsUtil.FULL_BRIGHT
         )
-
         popPose()
     }
 }

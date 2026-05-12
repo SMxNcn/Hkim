@@ -76,6 +76,15 @@ object Nametags : Module("Nametags", "Render a nametag above players.") {
         else name.matches(Regex("^\\[\\d{1,3}]\\s[a-zA-Z0-9_]{1,16}.*"))
     }
 
+    @JvmStatic
+    fun isDungeonTeammate(player: Player): Boolean {
+        if (!LocationUtils.inDungeons) return false
+
+        val playerName = player.name.string
+        return DungeonUtils.dungeonTeammates.any { it.name == playerName }
+    }
+
+    @JvmStatic
     fun shouldRemoveGlowing() = enabled && teammateESP && removeGlowing && LocationUtils.inDungeons
 
     fun canDisplayNametags() = enabled && (forceSkyBlock || LocationUtils.inSkyBlock)
