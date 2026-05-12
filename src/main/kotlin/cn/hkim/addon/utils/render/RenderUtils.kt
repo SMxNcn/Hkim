@@ -1,10 +1,12 @@
-// Origin RenderUtils: https://github.com/odtheking/Odin/blob/main/src/main/kotlin/com/odtheking/odin/utils/render/RenderUtils.kt
-
 package cn.hkim.addon.utils.render
 
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.events.impl.RenderEvent
+import cn.hkim.addon.utils.HudUtils.aGL
+import cn.hkim.addon.utils.HudUtils.bGL
+import cn.hkim.addon.utils.HudUtils.gGL
 import cn.hkim.addon.utils.HudUtils.multiplyAlpha
+import cn.hkim.addon.utils.HudUtils.rGL
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
@@ -22,6 +24,8 @@ import java.awt.Color
 internal data class LineData(val from: Vec3, val to: Vec3, val color1: Int, val color2: Int, val thickness: Float, val depth: Boolean)
 internal data class BoxData(val aabb: AABB, val r: Float, val g: Float, val b: Float, val a: Float, val thickness: Float, val depth: Boolean)
 internal data class TextData(val text: String, val pos: Vec3, val scale: Float, val depth: Boolean, val cameraRotation: Quaternionf, val font: Font, val textWidth: Float)
+
+// Origin RenderUtils: https://github.com/odtheking/Odin/blob/main/src/main/kotlin/com/odtheking/odin/utils/render/RenderUtils.kt
 
 class RenderConsumer {
     internal val lines = ObjectArrayList<LineData>()
@@ -51,7 +55,7 @@ object RenderBatchManager {
         matrix.pushPose()
         matrix.translate(-camera.x, -camera.y, -camera.z)
 
-        matrix.renderBatchedLinesAndWireBoxes(renderConsumer.lines, renderConsumer.wireBoxes, bufferSource)
+        matrix.renderBatchedLinesAndWireBoxes(renderConsumer, bufferSource)
         matrix.renderBatchedFilledBoxes(renderConsumer.filledBoxes, bufferSource)
         matrix.renderBatchedTexts(renderConsumer.texts, bufferSource)
 
@@ -77,37 +81,26 @@ private fun BoxData.lineRenderType() = resolveLineRenderType(depth, a >= 0.999f)
 
 private fun BoxData.filledRenderType() = if (depth) RenderTypes.debugFilledBox() else CustomRenderType.QUADS_ESP
 
-private fun PoseStack.renderBatchedLinesAndWireBoxes(
-    lines: List<LineData>,
-    wireBoxes: List<BoxData>,
-    bufferSource: MultiBufferSource.BufferSource
-) {
-    if (lines.isEmpty() && wireBoxes.isEmpty()) return
+private fun PoseStack.renderBatchedLinesAndWireBoxes(consumer: RenderConsumer, bufferSource: MultiBufferSource.BufferSource) {
     val last = this.last()
 
-    for (line in lines) {
-
-        val dirX = line.to.x - line.from.x
-        val dirY = line.to.y - line.from.y
-        val dirZ = line.to.z - line.from.z
+    for (line in consumer.lines) {
         val buffer = bufferSource.getBuffer(line.renderType())
+        val dir = Vec3(line.to.x - line.from.x, line.to.y - line.from.y, line.to.z - line.from.z)
 
-        PrimitiveRenderer.renderVector(
-            last, buffer,
-            Vector3f(line.from.x.toFloat(), line.from.y.toFloat(), line.from.z.toFloat()),
-            Vec3(dirX, dirY, dirZ),
-            line.color1, line.color2,
-            line.thickness
-        )
+        buffer.addVertex(last, line.from.x.toFloat(), line.from.y.toFloat(), line.from.z.toFloat())
+            .setColor(line.color1)
+            .setNormal(last, dir.x.toFloat(), dir.y.toFloat(), dir.z.toFloat())
+            .setLineWidth(line.thickness)
+        buffer.addVertex(last, line.to.x.toFloat(), line.to.y.toFloat(), line.to.z.toFloat())
+            .setColor(line.color2)
+            .setNormal(last, dir.x.toFloat(), dir.y.toFloat(), dir.z.toFloat())
+            .setLineWidth(line.thickness)
     }
 
-    for (box in wireBoxes) {
+    for (box in consumer.wireBoxes) {
         val buffer = bufferSource.getBuffer(box.lineRenderType())
-        PrimitiveRenderer.renderLineBox(
-            last, buffer, box.aabb,
-            box.r, box.g, box.b, box.a,
-            box.thickness
-        )
+        PrimitiveRenderer.renderLineBox(last, buffer, box.aabb, box.r, box.g, box.b, box.a, box.thickness)
     }
 }
 
@@ -158,22 +151,17 @@ private fun PoseStack.renderBatchedTexts(consumer: List<TextData>, bufferSource:
 
 fun RenderEvent.Extract.drawWireFrameBox(aabb: AABB, color: Color, thickness: Float = 3f, depth: Boolean = false) {
     consumer.wireBoxes.add(
-        BoxData(aabb, color.red.toFloat(), color.green.toFloat(), color.blue.toFloat(), color.alpha.toFloat(), thickness, depth)
+        BoxData(aabb, color.rGL, color.gGL, color.bGL, color.aGL, thickness, depth)
     )
 }
 
 fun RenderEvent.Extract.drawFilledBox(aabb: AABB, color: Color, depth: Boolean = false) {
     consumer.filledBoxes.add(
-        BoxData(aabb, color.red.toFloat(), color.green.toFloat(), color.blue.toFloat(), color.alpha.toFloat(), 3f, depth)
+        BoxData(aabb, color.rGL, color.gGL, color.bGL, color.aGL, 3f, depth)
     )
 }
 
-fun RenderEvent.Extract.drawStyledBox(
-    aabb: AABB,
-    color: Color,
-    style: Int = 0,
-    depth: Boolean = true
-) {
+fun RenderEvent.Extract.drawStyledBox(aabb: AABB, color: Color, style: Int = 0, depth: Boolean = true) {
     when (style) {
         0 -> drawFilledBox(aabb, color, depth = depth)
         1 -> drawWireFrameBox(aabb, color, depth = depth)
@@ -193,7 +181,6 @@ fun RenderEvent.Extract.drawText(text: String, pos: Vec3, scale: Float, depth: B
 }
 
 object PrimitiveRenderer {
-
     private val edges = intArrayOf(
         0, 1,  1, 5,  5, 4,  4, 0,
         3, 2,  2, 6,  6, 7,  7, 3,
@@ -207,41 +194,28 @@ object PrimitiveRenderer {
         r: Float, g: Float, b: Float, a: Float,
         thickness: Float
     ) {
-        val x0 = aabb.minX.toFloat()
-        val y0 = aabb.minY.toFloat()
-        val z0 = aabb.minZ.toFloat()
-        val x1 = aabb.maxX.toFloat()
-        val y1 = aabb.maxY.toFloat()
-        val z1 = aabb.maxZ.toFloat()
+        val x0 = aabb.minX.toFloat(); val y0 = aabb.minY.toFloat(); val z0 = aabb.minZ.toFloat()
+        val x1 = aabb.maxX.toFloat(); val y1 = aabb.maxY.toFloat(); val z1 = aabb.maxZ.toFloat()
 
         val corners = floatArrayOf(
-            x0, y0, z0,
-            x1, y0, z0,
-            x1, y1, z0,
-            x0, y1, z0,
-            x0, y0, z1,
-            x1, y0, z1,
-            x1, y1, z1,
-            x0, y1, z1
+            x0, y0, z0, x1, y0, z0, x1, y1, z0, x0, y1, z0,
+            x0, y0, z1, x1, y0, z1, x1, y1, z1, x0, y1, z1
         )
 
         for (i in edges.indices step 2) {
-            val i0 = edges[i] * 3
-            val i1 = edges[i + 1] * 3
+            val i0 = edges[i] * 3; val i1 = edges[i + 1] * 3
+            val cx0 = corners[i0]; val cy0 = corners[i0+1]; val cz0 = corners[i0+2]
+            val cx1 = corners[i1]; val cy1 = corners[i1+1]; val cz1 = corners[i1+2]
+            val nx = cx1 - cx0; val ny = cy1 - cy0; val nz = cz1 - cz0
 
-            val x0 = corners[i0]
-            val y0 = corners[i0 + 1]
-            val z0 = corners[i0 + 2]
-            val x1 = corners[i1]
-            val y1 = corners[i1 + 1]
-            val z1 = corners[i1 + 2]
-
-            val dx = x1 - x0
-            val dy = y1 - y0
-            val dz = z1 - z0
-
-            buffer.addVertex(pose, x0, y0, z0).setColor(r, g, b, a).setNormal(pose, dx, dy, dz).setLineWidth(thickness)
-            buffer.addVertex(pose, x1, y1, z1).setColor(r, g, b, a).setNormal(pose, dx, dy, dz).setLineWidth(thickness)
+            buffer.addVertex(pose, cx0, cy0, cz0)
+                .setColor(r, g, b, a)
+                .setNormal(pose, nx, ny, nz)
+                .setLineWidth(thickness)
+            buffer.addVertex(pose, cx1, cy1, cz1)
+                .setColor(r, g, b, a)
+                .setNormal(pose, nx, ny, nz)
+                .setLineWidth(thickness)
         }
     }
 
@@ -258,48 +232,17 @@ object PrimitiveRenderer {
             buffer.addVertex(matrix, x, y, z).setColor(r, g, b, a)
         }
 
-        vertex(minX, minY, minZ)
-        vertex(minX, minY, minZ)
-        vertex(minX, minY, minZ)
+        vertex(minX, minY, minZ); vertex(maxX, minY, minZ); vertex(maxX, minY, maxZ); vertex(minX, minY, maxZ)
 
-        vertex(minX, minY, maxZ)
-        vertex(minX, maxY, minZ)
-        vertex(minX, maxY, maxZ)
+        vertex(minX, maxY, minZ); vertex(minX, maxY, maxZ); vertex(maxX, maxY, maxZ); vertex(maxX, maxY, minZ)
 
-        vertex(minX, maxY, maxZ)
+        vertex(minX, minY, minZ); vertex(maxX, minY, minZ); vertex(maxX, maxY, minZ); vertex(minX, maxY, minZ)
 
-        vertex(minX, minY, maxZ)
-        vertex(maxX, maxY, maxZ)
-        vertex(maxX, minY, maxZ)
+        vertex(minX, minY, maxZ); vertex(minX, maxY, maxZ); vertex(maxX, maxY, maxZ); vertex(maxX, minY, maxZ)
 
-        vertex(maxX, minY, maxZ)
+        vertex(minX, minY, minZ); vertex(minX, minY, maxZ); vertex(minX, maxY, maxZ); vertex(minX, maxY, minZ)
 
-        vertex(maxX, minY, minZ)
-        vertex(maxX, maxY, maxZ)
-        vertex(maxX, maxY, minZ)
-
-        vertex(maxX, maxY, minZ)
-
-        vertex(maxX, minY, minZ)
-        vertex(minX, maxY, minZ)
-        vertex(minX, minY, minZ)
-
-        vertex(minX, minY, minZ)
-
-        vertex(maxX, minY, minZ)
-        vertex(minX, minY, maxZ)
-        vertex(maxX, minY, maxZ)
-
-        vertex(maxX, minY, maxZ)
-
-        vertex(minX, maxY, minZ)
-        vertex(minX, maxY, minZ)
-        vertex(minX, maxY, maxZ)
-        vertex(maxX, maxY, minZ)
-        vertex(maxX, maxY, maxZ)
-
-        vertex(maxX, maxY, maxZ)
-        vertex(maxX, maxY, maxZ)
+        vertex(maxX, minY, minZ); vertex(maxX, maxY, minZ); vertex(maxX, maxY, maxZ); vertex(maxX, minY, maxZ)
     }
 
     fun renderVector(

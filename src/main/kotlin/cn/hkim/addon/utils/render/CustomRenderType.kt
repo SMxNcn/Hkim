@@ -10,14 +10,14 @@ object CustomRenderType {
         "lines-esp",
         RenderSetup.builder(CustomRenderPipelines.LINES_ESP)
             .setLayeringTransform(LayeringTransform.VIEW_OFFSET_Z_LAYERING)
-            .setOutputTarget(OutputTarget.ITEM_ENTITY_TARGET)
+            .setOutputTarget(OutputTarget.MAIN_TARGET)
             .createRenderSetup()
     )
 
     val LINES_TRANSLUCENT_ESP: RenderType = RenderType.create(
         "lines-translucent-esp",
         RenderSetup.builder(CustomRenderPipelines.LINES_TRANSLUCENT_ESP)
-            .setOutputTarget(OutputTarget.ITEM_ENTITY_TARGET)
+            .setOutputTarget(OutputTarget.MAIN_TARGET)
             .createRenderSetup()
     )
 
@@ -27,5 +27,15 @@ object CustomRenderType {
             .sortOnUpload()
             .setLayeringTransform(LayeringTransform.VIEW_OFFSET_Z_LAYERING)
             .createRenderSetup()
+    )
+
+    val ROUNDED_RECT: RenderType = RenderType.create(
+        "hkim:rounded_rect",
+        RenderSetup.builder(CustomRenderPipelines.ROUNDED_RECT).createRenderSetup()
+    )
+
+    val CIRCLE: RenderType = RenderType.create(
+        "hkim:circle",
+        RenderSetup.builder(CustomRenderPipelines.CIRCLE).createRenderSetup()
     )
 }

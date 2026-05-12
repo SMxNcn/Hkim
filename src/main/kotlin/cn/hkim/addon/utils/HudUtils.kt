@@ -1,7 +1,10 @@
 package cn.hkim.addon.utils
 
 import cn.hkim.addon.Hkim
+import cn.hkim.addon.Hkim.mc
+import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.util.Util
@@ -10,6 +13,52 @@ import java.net.URI
 import kotlin.math.sin
 
 object HudUtils {
+
+    private fun GuiGraphicsExtractor.renderScaledText(
+        renderer: (Int, Int) -> Unit,
+        x: Int,
+        y: Int,
+        scale: Float
+    ) {
+        if (scale == 1.0f) {
+            renderer(x, y)
+            return
+        }
+
+        this.pose().pushMatrix()
+        this.pose().scale(scale, scale)
+        renderer((x / scale).toInt(), (y / scale).toInt())
+        this.pose().popMatrix()
+    }
+
+    fun GuiGraphicsExtractor.scaledText(
+        font: Font,
+        text: Component,
+        x: Int,
+        y: Int,
+        color: Int,
+        shadow: Boolean = false,
+        scale: Float = 1.0f
+    ) {
+        renderScaledText({ sx, sy ->
+            this.text(font, text, sx, sy, color, shadow)
+        }, x, y, scale)
+    }
+
+    fun GuiGraphicsExtractor.scaledText(
+        font: Font,
+        text: String,
+        x: Int,
+        y: Int,
+        color: Int,
+        shadow: Boolean = false,
+        scale: Float = 1.0f
+    ) {
+        renderScaledText({ sx, sy ->
+            this.text(font, text, sx, sy, color, shadow)
+        }, x, y, scale)
+    }
+
     fun GuiGraphicsExtractor.drawRectWithBorder(x: Float, y: Float, width: Float, height: Float, fillColor: Int, borderColor: Int? = null, borderWidth: Int = 1) {
         fill(x.toInt(), y.toInt(), (x + width).toInt(), (y + height).toInt(), fillColor)
 
@@ -67,16 +116,26 @@ object HudUtils {
     fun isPointInRect(px: Float, py: Float, x: Float, y: Float, w: Float, h: Float): Boolean =
         px in x..x + w && py in y..y + h
 
-    fun GuiGraphicsExtractor.hollowFill(x: Int, y: Int, width: Int, height: Int, thickness: Int, color: Color) {
-        fill(x, y, x + width, y + thickness, color.rgb)
-        fill(x, y + height - thickness, x + width, y + height, color.rgb)
-        fill(x, y + thickness, x + thickness, y + height - thickness, color.rgb)
-        fill(x + width - thickness, y + thickness, x + width, y + height - thickness, color.rgb)
-    }
-
     fun Color.multiplyAlpha(factor: Float): Color {
         return Color(red, green, blue, (alpha.toFloat() * factor).coerceIn(0f, 255f).toInt())
     }
+
+    val Color.rGL: Float get() = red / 255f
+    val Color.gGL: Float get() = green / 255f
+    val Color.bGL: Float get() = blue / 255f
+    val Color.aGL: Float get() = alpha / 255f
+
+    inline val mouseX: Float
+        get() = mc.mouseHandler.xpos().toFloat()
+
+    inline val mouseY: Float
+        get() = mc.mouseHandler.ypos().toFloat()
+
+    fun getQuadrant(x: Int, y: Int): Int =
+        when {
+            x >= mc.window.guiScaledWidth / 2 -> if (y >= mc.window.guiScaledHeight / 2) 4 else 2
+            else -> if (y >= mc.window.guiScaledHeight / 2) 3 else 1
+        }
 
     fun openUrl(url: String) {
         try {
