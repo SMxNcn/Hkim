@@ -4,8 +4,11 @@ import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.Setting
 import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.playSoundAtPlayer
+import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
+import cn.hkim.addon.utils.render.nvg.NVGRenderer
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
+import java.awt.Color
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -78,16 +81,20 @@ class NumberSetting(name: String, desc: String, override val default: Number, va
         val sliderW = width - 150f - 15f
         val sliderH = 4f
 
-        graphics.fill(sliderX.toInt(), sliderY.toInt(), (sliderX + sliderW).toInt(), (sliderY + sliderH).toInt(), 0xFF3A3A3A.toInt())
-
         val displayProgress = if (isDragging) targetProgress else animationProgress
-        val filledW = (sliderW * displayProgress).toInt()
-        if (filledW > 0) {
-            graphics.fill(sliderX.toInt(), sliderY.toInt(), sliderX.toInt() + filledW, (sliderY + sliderH).toInt(), themeColor)
-        }
-
+        val filledW = sliderW * displayProgress
         val knobX = sliderX + filledW - 3f
-        graphics.fill(knobX.toInt(), (sliderY - 2).toInt(), (knobX + 6).toInt(), (sliderY + sliderH + 2).toInt(), themeColor)
+
+        NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
+            NVGRenderer.rect(sliderX * 2, sliderY * 2, sliderW * 2, sliderH * 2, Color(0x3A3A3A), 4f)
+
+            if (filledW > 0) {
+                NVGRenderer.rect(sliderX * 2, sliderY * 2, filledW * 2, sliderH * 2, Color(themeColor), 4f)
+            }
+
+            NVGRenderer.rect(knobX * 2, (sliderY - 2) * 2, 16f, (sliderH + 4) * 2, Color(themeColor), 8f)
+            NVGRenderer.hollowRect(knobX * 2, (sliderY - 2) * 2, 16f, (sliderH + 4) * 2, 1f, Color(0xA0181818.toInt(), true), 8f)
+        }
 
         renderDescriptionTooltip(graphics, isHovered, mouseX, mouseY)
         return height

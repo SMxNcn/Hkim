@@ -13,7 +13,6 @@ import java.net.URI
 import kotlin.math.sin
 
 object HudUtils {
-
     private fun GuiGraphicsExtractor.renderScaledText(
         renderer: (Int, Int) -> Unit,
         x: Int,

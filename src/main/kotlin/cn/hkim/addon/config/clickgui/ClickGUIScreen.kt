@@ -13,8 +13,10 @@ import cn.hkim.addon.features.ModuleManager
 import cn.hkim.addon.features.impl.ClickGUI
 import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.HudUtils.drawHorizontalSeparator
-import cn.hkim.addon.utils.HudUtils.drawRectWithBorder
+import cn.hkim.addon.utils.HudUtils.drawVerticalSeparator
 import cn.hkim.addon.utils.playSoundAtPlayer
+import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
+import cn.hkim.addon.utils.render.nvg.NVGRenderer
 import com.mojang.blaze3d.platform.cursor.CursorType
 import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -27,6 +29,7 @@ import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
 import net.minecraft.sounds.SoundEvents
+import java.awt.Color
 import kotlin.math.max
 import kotlin.math.min
 
@@ -78,7 +81,10 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
     override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float) {
         graphics.fill(0, 0, width, height, 0x80000000.toInt())
 
-        graphics.drawRectWithBorder(guiX, guiY, guiW, guiH, 0xFF1A1A1A.toInt(), 0xFF333333.toInt(), 2)
+        NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
+            NVGRenderer.rect(guiX * 2, guiY * 2, guiW * 2, guiH * 2, Color(0x801A1A1A.toInt(), true), 16f)
+            NVGRenderer.hollowRect(guiX * 2, guiY * 2, guiW * 2, guiH * 2, 3f, Color(0x444444), 16f)
+        }
 
         renderSidebar(graphics, mouseX, mouseY, delta)
         renderHeader(graphics, mouseX, mouseY, delta)
@@ -204,6 +210,8 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
 
     override fun extractMenuBackground(graphics: GuiGraphicsExtractor) {}
 
+    override fun extractTransparentBackground(graphics: GuiGraphicsExtractor) {}
+
     override fun onClose() {
         deactivateSearchBox()
 
@@ -223,7 +231,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         val w = sidebarW
         val h = guiH
 
-        graphics.fill(x.toInt(), y.toInt(), (x + w).toInt(), (y + h).toInt(), 0xFF141414.toInt())
+        graphics.drawVerticalSeparator(x + w, y + 12f, h - 24f, 0xFF444444.toInt())
 
         val logoX = x + (w - 20) / 2f
         val logoY = y + 12f
@@ -240,7 +248,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
             if (isSelected) {
                 graphics.fill(
                     (x + 4).toInt(), (iconY - 4).toInt(),
-                    (x + w).toInt(), (iconY + iconSize + 4).toInt(),
+                    (x + w - 4).toInt(), (iconY + iconSize + 4).toInt(),
                     0xFF1C1C1C.toInt()
                 )
             }
@@ -277,9 +285,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         val w = guiW - sidebarW
         val h = headerH
 
-        graphics.fill(x.toInt(), y.toInt(), (x + w).toInt(), (y + h).toInt(), 0xFF1E1E1E.toInt())
-
-        graphics.drawHorizontalSeparator(x, y + h - 1, w, 0xFF333333.toInt())
+        graphics.drawHorizontalSeparator(x + 8f, y + h - 1, w - 16f, 0xFF444444.toInt())
 
         val titleText = when {
             searchQuery.isNotEmpty() -> "Search: \"$searchQuery\""
@@ -294,8 +300,6 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         val sbH = 20f
         val isSearchActive = searchEditBox != null
 
-        graphics.drawRectWithBorder(sbX, sbY, sbW, sbH, 0xFF2A2A2A.toInt(), 0xFF555555.toInt())
-
         val displayText = searchQuery.ifEmpty { "Search modules..." }
         val textColor = if (searchQuery.isEmpty()) 0xFF666666.toInt() else 0xFFFFFFFF.toInt()
         if (!isSearchActive) {
@@ -303,7 +307,14 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         }
 
         val closeX = x + w - 32f
-        graphics.drawRectWithBorder(closeX, sbY, 20f, 20f, 0xFF3A2A2A.toInt(), 0xFFAA4444.toInt())
+
+        NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
+            NVGRenderer.hollowRect(sbX * 2, sbY * 2, sbW * 2, sbH * 2, 2f, Color(0x555555), 6f)
+
+            NVGRenderer.rect(closeX * 2, sbY * 2, 40f, 40f, Color(0x3A2A2A), 6f)
+            NVGRenderer.hollowRect(closeX * 2, sbY * 2, 40f, 40f, 2f, Color(0xAA4444), 6f)
+        }
+
         graphics.text(mc.font, "×", closeX.toInt() + 8, sbY.toInt() + 6, 0xFFFFFFFF.toInt(), false)
 
         if (HudUtils.isPointInRect(mouseX.toFloat(), mouseY.toFloat(), closeX, sbY, 20f, 20f)) {
@@ -317,13 +328,6 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         val availW = guiW - sidebarW - contentPadding * 2
         val availH = guiH - headerH - contentPadding * 2
 
-        graphics.fill(
-            (baseX - contentPadding).toInt(), (baseY - contentPadding).toInt(),
-            (baseX - contentPadding + availW + contentPadding * 2).toInt(),
-            (baseY - contentPadding + availH + contentPadding * 2).toInt(),
-            0xFF1C1C1C.toInt()
-        )
-
         val modules = getFilteredModules()
 
         val totalH = modules.sumOf { (cardStates[it.id]?.totalHeight ?: 44f).toInt() } + modules.size * 4f
@@ -331,7 +335,10 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         contentScrollY = contentScrollY.coerceIn(-maxScroll, 0f)
 
         graphics.enableScissor((baseX - contentPadding).toInt(), (baseY - contentPadding).toInt(),
-            (baseX + availW + contentPadding).toInt(), (baseY + availH + contentPadding).toInt())
+            (baseX + availW + contentPadding).toInt(), (baseY + availH + contentPadding - 1).toInt())
+
+        val contentTop = baseY - contentPadding
+        val contentBottom = baseY + availH + contentPadding
 
         val scrollOffset = contentScrollY
 
@@ -339,7 +346,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
             val state = cardStates[module.id] ?: continue
             val currentModuleY = baseY + scrollOffset
 
-            state.render(graphics, baseX, currentModuleY, availW, mouseX.toFloat(), mouseY.toFloat(), themeColor)
+            state.render(graphics, baseX, currentModuleY, availW, mouseX.toFloat(), mouseY.toFloat(), contentTop, contentBottom, themeColor)
             baseY += state.totalHeight + 4f
         }
 
@@ -432,6 +439,9 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         var y = guiY + headerH + contentPadding + contentScrollY
         val x = guiX + sidebarW + contentPadding
         val w = guiW - sidebarW - contentPadding * 2
+        val h = guiH - headerH - contentPadding * 2
+
+        if (!HudUtils.isPointInRect(mouseX, mouseY, x, guiY + headerH, w, h)) return false
 
         for (module in getFilteredModules()) {
             val state = cardStates[module.id] ?: continue
@@ -555,15 +565,25 @@ private class ModuleCardState(val module: Module) {
         lerpEnabled = HudUtils.lerp(lerpEnabled, if (targetEnabled) 1f else 0f, factor)
     }
 
-    fun render(graphics: GuiGraphicsExtractor, x: Float, y: Float, width: Float, mouseX: Float, mouseY: Float, themeColor: Int): Float {
+    fun render(graphics: GuiGraphicsExtractor, x: Float, y: Float, width: Float, mouseX: Float, mouseY: Float, visibleTop: Float, visibleBottom: Float, themeColor: Int): Float {
         val cardH = 44f
         val isHovered = HudUtils.isPointInRect(mouseX, mouseY, x, y, width, 44f)
 
         val borderColor = HudUtils.lerpColor(0xFF333333.toInt(), themeColor, lerpEnabled)
         val nameColor = HudUtils.lerpColor(0xFFFFFFFF.toInt(), themeColor, lerpEnabled)
-        val bgColor = if (isHovered) 0x10FFFFFF else 0xFF222222.toInt()
+        val bgColor = if (isHovered) 0x10BFBFBF else 0x10222222
 
-        graphics.drawRectWithBorder(x, y, width, cardH, bgColor, borderColor, 1)
+        NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
+            val nvgX = x * 2f
+            val nvgY = y * 2f
+            val nvgW = width * 2f
+            val nvgH = totalHeight * 2f
+            NVGRenderer.rect(nvgX, nvgY, nvgW, nvgH, Color(bgColor, true), 8f)
+            NVGRenderer.hollowRect(nvgX, nvgY, nvgW, nvgH, 2f, Color(borderColor, true), 8f)
+            if (targetExpanded) {
+                NVGRenderer.line((x + 12f) * 2f, (y + cardH) * 2f, (x + width - 12f) * 2f, (y + cardH) * 2f, 1f, Color(0x30FFFFFF, true))
+            }
+        }
 
         graphics.text(mc.font, Component.literal(module.name).withStyle(ChatFormatting.BOLD), x.toInt() + 14, y.toInt() + 12, nameColor, false)
         graphics.text(mc.font, module.description, x.toInt() + 14, y.toInt() + 28, 0xFF888888.toInt(), false)
@@ -571,10 +591,13 @@ private class ModuleCardState(val module: Module) {
         if (targetExpanded) {
             var sy = y + cardH + 6f
             for (setting in visibleSettings) {
-                if (!setting.isVisible()) continue
+                val settingTop = sy
+                val settingBottom = sy + settingHeight + settingGap
                 val indent = 24f
-                val renderedHeight = setting.render(graphics, x + indent, sy, width - indent * 2, mouseX, mouseY, themeColor)
-                sy += renderedHeight + settingGap
+                if (settingBottom >= visibleTop && settingTop <= visibleBottom) {
+                    setting.render(graphics, x + indent, sy, width - indent * 2, mouseX, mouseY, themeColor)
+                }
+                sy += settingHeight + settingGap
             }
         }
 
@@ -585,7 +608,12 @@ private class ModuleCardState(val module: Module) {
         if (HudUtils.isPointInRect(mouseX, mouseY, x, y, width, 44f)) {
             when (button) {
                 0 -> { module.toggle(); return true }
-                1 -> { targetExpanded = !targetExpanded; return true }
+                1 -> {
+                    if (visibleSettings.isNotEmpty()) {
+                        targetExpanded = !targetExpanded
+                    }
+                    return true
+                }
             }
         }
 

@@ -4,10 +4,12 @@ import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.Setting
 import cn.hkim.addon.config.clickgui.ClickGUIScreen
 import cn.hkim.addon.utils.HudUtils
-import cn.hkim.addon.utils.HudUtils.drawRectWithBorder
 import cn.hkim.addon.utils.playSoundAtPlayer
+import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
+import cn.hkim.addon.utils.render.nvg.NVGRenderer
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
+import java.awt.Color
 
 class ColorSetting(name: String, desc: String, override val default: Int) : Setting<Int>(name, desc) {
     init { value = default }
@@ -35,7 +37,11 @@ class ColorSetting(name: String, desc: String, override val default: Int) : Sett
         val screen = mc.screen
         val isActive = screen is ClickGUIScreen && screen.activeEditBoxSetting == this
 
-        graphics.drawRectWithBorder(previewX, previewY, 16f, 16f, value or 0xFF000000.toInt(), 0xFF444444.toInt())
+        NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
+            NVGRenderer.rect(previewX * 2, previewY * 2, 32f, 32f, Color(value), 6f)
+            NVGRenderer.hollowRect(previewX * 2, previewY * 2, 32f, 32f, 2f, Color(0x444444), 6f)
+        }
+
         if (!isActive) {
             graphics.text(mc.font, hexText, (previewX - mc.font.width(hexText) - 10).toInt(), y.toInt() + 6, value or 0xFF000000.toInt(), false)
         }

@@ -3,10 +3,12 @@ package cn.hkim.addon.config.settings
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.Setting
 import cn.hkim.addon.utils.HudUtils
-import cn.hkim.addon.utils.HudUtils.drawRectWithBorder
 import cn.hkim.addon.utils.playSoundAtPlayer
+import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
+import cn.hkim.addon.utils.render.nvg.NVGRenderer
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
+import java.awt.Color
 
 class ActionSetting(name: String, desc: String, val action: () -> Unit) : Setting<Unit>(name, desc) {
     override val default: Unit = Unit
@@ -36,7 +38,11 @@ class ActionSetting(name: String, desc: String, val action: () -> Unit) : Settin
 
         val isBtnHovered = HudUtils.isPointInRect(mouseX, mouseY, btnX, btnY, btnW, btnH)
         val btnColor = if (isBtnHovered) themeColor else 0xFF555555.toInt()
-        graphics.drawRectWithBorder(btnX, btnY, btnW, btnH, 0xFF3A3A3A.toInt(), btnColor)
+
+        NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
+            NVGRenderer.rect(btnX * 2, btnY * 2, btnW * 2, btnH * 2, Color(0x3A3A3A), 6f)
+            NVGRenderer.hollowRect(btnX * 2, btnY * 2, btnW * 2, btnH * 2, 2f, Color(btnColor), 6f)
+        }
 
         graphics.text(mc.font, "Execute", (btnX + btnW / 2 - mc.font.width("Execute") / 2).toInt(), btnY.toInt() + 4, 0xFFFFFFFF.toInt(), false)
 

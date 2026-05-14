@@ -5,7 +5,9 @@ import cn.hkim.addon.events.impl.RenderEvent
 import cn.hkim.addon.events.impl.WorldEvent
 import cn.hkim.addon.features.ModuleManager.initOrbit
 import cn.hkim.addon.utils.render.RenderBatchManager
+import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
+import net.fabricmc.fabric.api.client.rendering.v1.PictureInPictureRendererRegistry
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents
 import net.minecraft.core.Registry
 import net.minecraft.core.registries.BuiltInRegistries
@@ -32,6 +34,10 @@ class EventDispatcher {
             }
 
             LevelRenderEvents.END_MAIN.register(RenderBatchManager::renderBatch)
+
+            PictureInPictureRendererRegistry.register { context ->
+                NVGPIPRenderer(context.bufferSource())
+            }
 
             Registry.register(BuiltInRegistries.SOUND_EVENT, Identifier.fromNamespaceAndPath("hkim", "enable"),
                 SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("hkim", "enable")))

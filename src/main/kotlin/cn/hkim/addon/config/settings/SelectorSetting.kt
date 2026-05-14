@@ -3,10 +3,12 @@ package cn.hkim.addon.config.settings
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.Setting
 import cn.hkim.addon.utils.HudUtils
-import cn.hkim.addon.utils.HudUtils.drawRectWithBorder
 import cn.hkim.addon.utils.playSoundAtPlayer
+import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
+import cn.hkim.addon.utils.render.nvg.NVGRenderer
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
+import java.awt.Color
 
 class SelectorSetting(name: String, desc: String, val options: List<String>, default: String) : Setting<Int>(name, desc) {
     override val default: Int = options.indexOf(default).coerceAtLeast(0)
@@ -35,7 +37,10 @@ class SelectorSetting(name: String, desc: String, val options: List<String>, def
         val selectorY = y + 2f
         val selectorH = 16f
 
-        graphics.drawRectWithBorder(selectorX, selectorY, selectorW, selectorH, 0xFF222222.toInt(), 0xFF444444.toInt())
+        NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
+            NVGRenderer.rect(selectorX * 2, selectorY * 2, selectorW * 2, selectorH * 2, Color(0x222222), 6f)
+            NVGRenderer.hollowRect(selectorX * 2, selectorY * 2, selectorW * 2, selectorH * 2, 2f, Color(0x444444), 6f)
+        }
 
         val leftArrowHovered = HudUtils.isPointInRect(mouseX, mouseY, selectorX, selectorY, 14f, selectorH)
         val rightArrowHovered = HudUtils.isPointInRect(mouseX, mouseY, selectorX + selectorW - 16f, selectorY, 14f, selectorH)

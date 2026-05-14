@@ -6,8 +6,11 @@ import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.HudUtils.lerp
 import cn.hkim.addon.utils.HudUtils.lerpColor
 import cn.hkim.addon.utils.playSoundAtPlayer
+import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
+import cn.hkim.addon.utils.render.nvg.NVGRenderer
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
+import java.awt.Color
 import kotlin.math.abs
 
 open class BooleanSetting(name: String, desc: String, override val default: Boolean) : Setting<Boolean>(name, desc) {
@@ -45,16 +48,17 @@ open class BooleanSetting(name: String, desc: String, override val default: Bool
         val toggleW = 28f
         val toggleH = 12f
 
-        val trackColor = if (isHovered) 0xFF555555.toInt() else 0xFF3A3A3A.toInt()
-        graphics.fill(toggleX.toInt(), toggleY.toInt(), (toggleX + toggleW).toInt(), (toggleY + toggleH).toInt(), trackColor)
-
         val knobStartX = toggleX + 2f
-        val knobEndX = toggleX + toggleW - 10f
+        val knobEndX = toggleX + toggleW - 11f
         val knobX = lerp(knobStartX, knobEndX, animationProgress)
 
         val knobStartColor = 0xFF888888.toInt()
         val knobColor = lerpColor(knobStartColor, themeColor, animationProgress)
-        graphics.fill(knobX.toInt(), (toggleY + 2).toInt(), (knobX + 8).toInt(), (toggleY + toggleH - 2).toInt(), knobColor)
+
+        NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
+            NVGRenderer.rect(toggleX * 2, toggleY * 2, toggleW * 2, toggleH * 2, Color(0x3A3A3A), toggleH)
+            NVGRenderer.rect(knobX * 2 - 1, toggleY * 2 + 2, toggleH * 2 - 4, toggleH * 2 - 4, Color(knobColor), toggleH - 2)
+        }
 
         renderDescriptionTooltip(graphics, isHovered, mouseX, mouseY)
         return height

@@ -3,12 +3,14 @@ package cn.hkim.addon.config.settings
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.Setting
 import cn.hkim.addon.utils.HudUtils
-import cn.hkim.addon.utils.HudUtils.drawRectWithBorder
 import cn.hkim.addon.utils.playSoundAtPlayer
+import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
+import cn.hkim.addon.utils.render.nvg.NVGRenderer
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
 import org.lwjgl.glfw.GLFW
+import java.awt.Color
 
 class KeybindSetting(name: String, desc: String, defaultKey: Int = GLFW.GLFW_KEY_UNKNOWN) : Setting<Int>(name, desc) {
     override val default: Int = defaultKey
@@ -42,7 +44,11 @@ class KeybindSetting(name: String, desc: String, defaultKey: Int = GLFW.GLFW_KEY
         }
 
         val btnColor = if (isBinding || isBtnHovered) themeColor else 0xFF555555.toInt()
-        graphics.drawRectWithBorder(btnX, btnY, btnW, btnH, 0xFF3A3A3A.toInt(), btnColor)
+
+        NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
+            NVGRenderer.rect(btnX * 2, btnY * 2, btnW * 2, btnH * 2, Color(0x3A3A3A), 6f)
+            NVGRenderer.hollowRect(btnX * 2, btnY * 2, btnW * 2, btnH * 2, 2f, Color(btnColor), 6f)
+        }
 
         graphics.text(mc.font, displayText, (btnX + btnW / 2 - mc.font.width(displayText) / 2).toInt(), btnY.toInt() + 4, 0xFFFFFFFF.toInt(), false)
 

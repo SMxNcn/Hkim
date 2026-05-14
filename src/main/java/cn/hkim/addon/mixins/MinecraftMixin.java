@@ -4,6 +4,8 @@ import cn.hkim.addon.Hkim;
 import cn.hkim.addon.config.ModuleConfig;
 import cn.hkim.addon.events.impl.TickEvent;
 import cn.hkim.addon.gui.Background;
+import cn.hkim.addon.utils.render.nvg.NVGRenderer;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -26,6 +28,7 @@ public abstract class MinecraftMixin {
     @Inject(method = "onGameLoadFinished", at = @At("HEAD"))
     private void onGameLoadFinished(CallbackInfo ci) {
         Background.loadBackgrounds();
+        NVGRenderer.init();
     }
 
     @Inject(method = "stop", at = @At("HEAD"))

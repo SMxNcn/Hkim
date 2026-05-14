@@ -4,7 +4,7 @@ import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
-import cn.hkim.addon.utils.HudUtils.hollowFill
+import cn.hkim.addon.utils.HudUtils.drawRectWithBorder
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements
 import net.minecraft.client.DeltaTracker
@@ -24,7 +24,7 @@ object HurtCamera : Module("Hurt Camera", "Renders hurt overlay effect.") {
         val hurtTime = mc.player?.hurtTime ?: return
         if (hurtTime <= 0 || !enabled || mc.options.hideGui) return
         val alpha = hurtTime.times(25.5f).toInt()
-        graphics.hollowFill(0, 0, mc.window.guiScaledWidth, mc.window.guiScaledHeight, 2, Color(255, 0, 0, alpha))
+        graphics.drawRectWithBorder(0f, 0f, mc.window.guiScaledWidth.toFloat(), mc.window.guiScaledHeight.toFloat(), 0, Color(255, 0, 0, alpha).rgb, 2)
         super.render(graphics, tickTracker)
     }
 }

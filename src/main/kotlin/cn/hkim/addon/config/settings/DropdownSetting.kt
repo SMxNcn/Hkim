@@ -23,13 +23,9 @@ class DropdownSetting(name: String, desc: String, defaultExpanded: Boolean = fal
 
         updateAnimation()
 
-        graphics.fill(x.toInt(), y.toInt(), (x + width).toInt(), (y + height).toInt(), 0xFF181818.toInt())
+        graphics.fill(x.toInt(), y.toInt(), (x + width).toInt(), (y + height).toInt(), 0x80181818.toInt())
 
-        graphics.fill(
-            x.toInt(), y.toInt(),
-            x.toInt() + 2, (y + height).toInt(),
-            0xFF444444.toInt()
-        )
+        graphics.fill(x.toInt(), y.toInt(), x.toInt() + 2, (y + height).toInt(), 0xFF444444.toInt())
 
         val centerY = y + height / 2
         val halfHeight = (height / 2) * animationProgress
