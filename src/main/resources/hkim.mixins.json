@@ -12,6 +12,7 @@
   },
   "client": [
     "AbstractContainerScreenMixin",
+    "CameraMixin",
     "ChatComponentMixin",
     "ConnectionMixin",
     "EntityMixin",
