@@ -3,6 +3,7 @@ package cn.hkim.addon.mixins;
 import cn.hkim.addon.Hkim;
 import cn.hkim.addon.config.ModuleConfig;
 import cn.hkim.addon.events.impl.TickEvent;
+import cn.hkim.addon.features.impl.TitleManager;
 import cn.hkim.addon.gui.Background;
 import cn.hkim.addon.utils.render.nvg.NVGRenderer;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
@@ -34,5 +35,11 @@ public abstract class MinecraftMixin {
     @Inject(method = "stop", at = @At("HEAD"))
     private void onStop(CallbackInfo ci) {
         ModuleConfig.INSTANCE.saveConfig();
+    }
+
+    @ModifyReturnValue(method = "createTitle", at = @At("RETURN"))
+    private String modifyTitle(String originalTitle) {
+        if (!TitleManager.INSTANCE.getEnabled()) return originalTitle;
+        return TitleManager.INSTANCE.buildTitle();
     }
 }
