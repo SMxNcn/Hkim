@@ -15,6 +15,7 @@ import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
 import net.minecraft.network.protocol.game.ClientboundSetPlayerTeamPacket
+import net.minecraft.resources.Identifier
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.player.Player
 import java.awt.Color
@@ -24,6 +25,7 @@ data class DungeonPlayer(
     val name: String,
     val clazz: DungeonClass,
     val clazzLvl: Int,
+    val locationSkin: Identifier?,
     var entity: Player? = null,
     var isDead: Boolean = false,
     var deaths: Int = 0,
@@ -31,14 +33,16 @@ data class DungeonPlayer(
 
 enum class DungeonClass(
     val color: Color,
-    val colorCode: Char
+    val colorCode: Char,
+    val defaultQuadrant: Int,
+    var priority: Int,
 ) {
-    Archer(Colors.MINECRAFT_RED, 'c'),
-    Berserk(Colors.MINECRAFT_GOLD, '6'),
-    Healer(Colors.MINECRAFT_LIGHT_PURPLE, 'd'),
-    Mage(Colors.MINECRAFT_AQUA, 'b'),
-    Tank(Colors.MINECRAFT_DARK_GREEN, '2'),
-    Unknown(Colors.WHITE, 'f')
+    Archer(Colors.MINECRAFT_RED, 'c', 0, 2),
+    Berserk(Colors.MINECRAFT_GOLD, '6', 1, 0),
+    Healer(Colors.MINECRAFT_LIGHT_PURPLE, 'd', 2, 2),
+    Mage(Colors.MINECRAFT_AQUA, 'b', 3, 2),
+    Tank(Colors.MINECRAFT_DARK_GREEN, '2', 3, 1),
+    Unknown(Colors.MINECRAFT_GRAY, '7', 0, 0)
 }
 
 enum class Floor {
@@ -122,9 +126,10 @@ enum class P3Stages(val corner1: BlockPos, val corner2: BlockPos) {
 object DungeonUtils {
     var dungeonTeammates: ArrayList<DungeonPlayer> = ArrayList(5)
     var dungeonTeammatesNoSelf: List<DungeonPlayer> = ArrayList(4)
+    var leapTeammates: List<DungeonPlayer> = ArrayList(4)
     inline val currentDungeonPlayer: DungeonPlayer
         get() = dungeonTeammates.find { it.name == mc.player?.name?.string } ?:
-        DungeonPlayer(mc.player?.name?.string ?: "Unknown", DungeonClass.Unknown, 0)
+        DungeonPlayer(mc.player?.name?.string ?: "Unknown", DungeonClass.Unknown, 0, null)
 
     var floor: Floor? = null
     var inBoss = false
@@ -155,6 +160,7 @@ object DungeonUtils {
     fun onWorldLoad(event: WorldEvent.Load) {
         dungeonTeammates.clear()
         dungeonTeammatesNoSelf = emptyList()
+        leapTeammates = emptyList()
         inBoss = false
         floor = null
     }
@@ -213,7 +219,8 @@ object DungeonUtils {
                     previousTeammates.add(
                         DungeonPlayer(
                             name, DungeonClass.entries.find { it.name == clazz } ?: continue,
-                            romanToInt(clazzLevel), mc.level?.getPlayerByUUID(player.profile.id!!)
+                            romanToInt(clazzLevel), mc.player?.skin?.body?.id(),
+                            player.profile.id?.let { mc.level?.getPlayerByUUID(it) }
                         )
                     )
                 }

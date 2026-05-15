@@ -13,7 +13,7 @@ public class LivingEntityRendererMixin {
 
     @Inject(method = "shouldShowName(Lnet/minecraft/world/entity/Entity;D)Z", at = @At("HEAD"), cancellable = true)
     private void shouldShowName(Entity par1, double par2, CallbackInfoReturnable<Boolean> cir) {
-        if (Nametags.INSTANCE.getEnabled()) {
+        if (Nametags.canDisplayNametags()) {
             cir.setReturnValue(false);
             cir.cancel();
         }

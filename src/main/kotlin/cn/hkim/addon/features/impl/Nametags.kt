@@ -8,6 +8,7 @@ import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.utils.*
+import cn.hkim.addon.utils.render.drawStyledBox
 import cn.hkim.addon.utils.render.drawText
 import cn.hkim.addon.utils.skyblock.DungeonUtils
 import cn.hkim.addon.utils.skyblock.Island
@@ -42,6 +43,16 @@ object Nametags : Module("Nametags", "Render a nametag above players.") {
             val renderPos = Vec3(entity.renderX, entity.renderY + entity.eyeHeight + yOffset, entity.renderZ)
 
             event.drawText(nametagText, renderPos, scale, false)
+
+            if (teammateESP && LocationUtils.inDungeons) {
+                val playerName = entity.name.cleanString
+                val dungeonPlayer = DungeonUtils.dungeonTeammates.find { it.name == playerName }
+
+                dungeonPlayer?.let { dp ->
+                    val color = dp.clazz.color
+                    event.drawStyledBox(entity.renderBoundingBox, color, 1, false)
+                }
+            }
         }
     }
 
@@ -61,7 +72,7 @@ object Nametags : Module("Nametags", "Render a nametag above players.") {
                 val clazz = dungeonPlayer.clazz
                 val classInitial = clazz.name.first().uppercase()
 
-                "${clazz.colorCode}[$classInitial] $playerName"
+                "§${clazz.colorCode}[$classInitial] $playerName"
             } else {
                 "§7[?] $playerName"
             }
@@ -87,5 +98,6 @@ object Nametags : Module("Nametags", "Render a nametag above players.") {
     @JvmStatic
     fun shouldRemoveGlowing() = enabled && teammateESP && removeGlowing && LocationUtils.inDungeons
 
+    @JvmStatic
     fun canDisplayNametags() = enabled && (forceSkyBlock || LocationUtils.inSkyBlock)
 }
