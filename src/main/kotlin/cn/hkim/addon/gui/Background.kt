@@ -10,11 +10,18 @@ import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.resources.Identifier
 import java.awt.image.BufferedImage
+import java.net.URI
+import java.nio.file.Path
 import javax.imageio.ImageIO
 
 object Background {
     private const val FADE_DURATION = 1000L
     private const val DISPLAY_DURATION = 10_000L
+    private const val BG_URL = "https://gitee.com/mixturedg/necron-client-repo/raw/master/bg/bg0.png"
+
+    private val cacheDir: Path by lazy {
+        FabricLoader.getInstance().configDir.resolve("hkim/backgrounds").also { it.toFile().mkdirs() }
+    }
 
     private val backgrounds = mutableListOf<Identifier>()
 
@@ -27,21 +34,32 @@ object Background {
     private var lastSwitchTime = 0L
     private var initialized = false
 
-    fun getBackgrounds(): List<Identifier> {
-        ensureInitialized()
-        return backgrounds
-    }
+    fun getDefaultBackground() {
+        val file = cacheDir.resolve("bg0.png").toFile()
+        if (file.exists()) return
 
-    fun getDefaultBackground(): Identifier = Identifier.fromNamespaceAndPath("hkim", "bg.png")
+        Thread {
+            runCatching {
+                val image = ImageIO.read(URI.create(BG_URL).toURL())
+                ImageIO.write(image, "png", file)
+                Hkim.logger.info("Default background downloaded.")
+            }.onFailure {
+                Hkim.logger.error("Failed to download bg0: ${it.message}")
+            }
+        }.apply {
+            name = "Hkim-Download"
+            isDaemon = true
+            start()
+        }
+    }
 
     @JvmStatic
     fun loadBackgrounds() {
-        val bgDir = FabricLoader.getInstance().configDir.resolve("hkim/backgrounds").toFile()
-        bgDir.mkdirs()
+        if (initialized) return
 
         val texManager = mc.textureManager
 
-        bgDir.listFiles { it.name.lowercase().endsWith(".png") }?.forEach { file ->
+        cacheDir.toFile().listFiles { it.name.lowercase().endsWith(".png") }?.forEach { file ->
             runCatching {
                 ImageIO.read(file)?.let { image ->
                     val native = convertToNativeImage(image)
@@ -52,10 +70,6 @@ object Background {
                     initialized = true
                 }
             }.onFailure { Hkim.logger.error("Failed: ${file.name} - ${it.message}") }
-        }
-
-        if (backgrounds.isEmpty()) {
-            backgrounds.add(getDefaultBackground())
         }
 
         Hkim.logger.info("Loaded ${backgrounds.size} backgrounds")
