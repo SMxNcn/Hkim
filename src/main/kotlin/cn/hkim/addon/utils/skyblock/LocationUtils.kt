@@ -16,6 +16,7 @@ object LocationUtils {
         private set
 
     inline val inDungeons: Boolean get() = currentArea == Island.Dungeon
+    inline val inKuudra: Boolean get() = currentArea == Island.Kuudra
 
     @EventHandler
     fun onPacket(event: PacketReceiveEvent) {
