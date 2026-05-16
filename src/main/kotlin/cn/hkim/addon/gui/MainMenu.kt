@@ -4,6 +4,8 @@ import cn.hkim.addon.Hkim
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.utils.HudUtils.getChromaColor
 import cn.hkim.addon.utils.coloredChar
+import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
+import cn.hkim.addon.utils.render.nvg.NVGRenderer
 import com.terraformersmc.modmenu.gui.ModsScreen
 import net.minecraft.SharedConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -61,7 +63,7 @@ class MainMenu : Screen(Component.literal("Main Menu")) {
         val centerX = width / 2
         val centerY = height / 2
         val btnW = 180
-        val btnH = 20
+        val btnH = 18
 
         addRenderableWidget(ClientButton(centerX - 90, centerY + 1, btnW, btnH, Component.translatable("menu.singleplayer")) {
             mc.setScreen(SelectWorldScreen(this))
@@ -93,8 +95,15 @@ class MainMenu : Screen(Component.literal("Main Menu")) {
         currentParallaxY += (targetParallaxY - currentParallaxY) * 0.15f
         val centerX = this.width / 2
         val centerY = this.height / 2
+        val rectW = 380f
+        val rectH = 400f
 
         Background.renderBackground(this, graphics, currentParallaxX, currentParallaxY)
+
+        NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
+            NVGRenderer.rect((centerX - rectW / 4f) * 2f, (centerY - rectH / 4f) * 2f, rectW, rectW, Color(0x0f8C8C8C, true), 12f)
+            NVGRenderer.hollowRect((centerX - rectW / 4f) * 2f, (centerY - rectH / 4f) * 2f, rectW, rectW, 2.5f, Color(0x4D969696, true), 12f)
+        }
 
         val logoSize = 64
         graphics.blit(

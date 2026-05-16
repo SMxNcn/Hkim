@@ -18,7 +18,7 @@ public abstract class TitleScreenMixin {
     @Inject(method = "init", at = @At("RETURN"))
     public void init(CallbackInfo ci) {
         TitleScreen screen = (TitleScreen)(Object)this;
-        ClientButton ncBtn = new ClientButton(screen.width - 55, -7, 50, 20, coloredChar("Necron", 0xFF8EDDFF), _ -> mc.setScreen(new MainMenu()));
+        ClientButton ncBtn = new ClientButton(screen.width - 55, -7, 50, 18, coloredChar("Necron", 0xFF8EDDFF), _ -> mc.setScreen(new MainMenu()));
 
         ScreenAccessor accessor = (ScreenAccessor)screen;
         accessor.getRenderables().add(ncBtn);

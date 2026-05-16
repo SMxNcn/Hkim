@@ -1,11 +1,12 @@
 package cn.hkim.addon.gui
 
 import cn.hkim.addon.Hkim.mc
+import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
+import cn.hkim.addon.utils.render.nvg.NVGRenderer
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.Button
-import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.Identifier
+import java.awt.Color
 
 class ClientButton(
     x: Int, y: Int,
@@ -13,12 +14,15 @@ class ClientButton(
     private val component: Component,
     onPress: OnPress,
 ): Button(x, y, width, height, component, onPress, DEFAULT_NARRATION) {
-    private val normalTex: Identifier = Identifier.fromNamespaceAndPath("hkim", "button")
-    private val hoveredTex: Identifier = Identifier.fromNamespaceAndPath("hkim", "button_highlighted")
 
     override fun extractContents(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, f: Float) {
-        if (isHovered) graphics.blitSprite(RenderPipelines.GUI_TEXTURED, hoveredTex, this.x, this.y, this.width, this.height)
-        else graphics.blitSprite(RenderPipelines.GUI_TEXTURED, normalTex, this.x, this.y, this.width, this.height)
+        val bgColor = if (isHovered) 0x43AAAAAA else 0x432A2A2A
+        val borderColor = if (isHovered) 0x43AAAAAA else 0x33969696
+
+        NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
+            NVGRenderer.rect(x * 2f, y * 2f, width * 2f, height * 2f, Color(bgColor, true), 6f)
+            NVGRenderer.hollowRect(x * 2f, y * 2f, width * 2f, height * 2f, 2.5f, Color(borderColor, true), 6f)
+        }
 
         val isHovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height
         val textColor = if (isHovered) 0xFFFFFFFF.toInt() else 0xFFE0E0E0.toInt()
