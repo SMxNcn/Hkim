@@ -44,5 +44,6 @@ object Hkim : ClientModInitializer {
             ItemStar, ModuleList, Nametags, RerollProtector, TitleManager
         )
         ModuleConfig.loadConfig()
+        Background.getDefaultBackground()
     }
 }
