@@ -101,6 +101,32 @@ object NVGRenderer {
         scissor?.applyScissor()
     }
 
+    fun arc(cx: Float, cy: Float, r: Float, startAngle: Float, endAngle: Float, thickness: Float, color: Color) {
+        nvgBeginPath(vg)
+        nvgArc(vg, cx, cy, r, startAngle, endAngle, NVG_CW)
+        nvgStrokeWidth(vg, thickness)
+        color(color)
+        nvgStrokeColor(vg, nvgColor)
+        nvgStroke(vg)
+    }
+
+    fun circle(cx: Float, cy: Float, r: Float, color: Color) {
+        nvgBeginPath(vg)
+        nvgCircle(vg, cx, cy, r)
+        color(color)
+        nvgFillColor(vg, nvgColor)
+        nvgFill(vg)
+    }
+
+    fun hollowCircle(cx: Float, cy: Float, r: Float, thickness: Float, color: Color) {
+        nvgBeginPath(vg)
+        nvgCircle(vg, cx, cy, r)
+        nvgStrokeWidth(vg, thickness)
+        color(color)
+        nvgStrokeColor(vg, nvgColor)
+        nvgStroke(vg)
+    }
+
     fun line(x1: Float, y1: Float, x2: Float, y2: Float, thickness: Float, color: Color) {
         nvgBeginPath(vg)
         nvgMoveTo(vg, x1, y1)

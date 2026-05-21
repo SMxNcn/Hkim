@@ -6,25 +6,18 @@ import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.HudUtils.lerp
 import cn.hkim.addon.utils.HudUtils.lerpColor
 import cn.hkim.addon.utils.playSoundAtPlayer
+import cn.hkim.addon.utils.render.Easing
+import cn.hkim.addon.utils.render.GuiAnimation
 import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
 import cn.hkim.addon.utils.render.nvg.NVGRenderer
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
 import java.awt.Color
-import kotlin.math.abs
 
 open class BooleanSetting(name: String, desc: String, override val default: Boolean) : Setting<Boolean>(name, desc) {
-    private var animationProgress = 0f
-    private var lastUpdateTime = System.currentTimeMillis()
-    private val animationSpeed = 0.15f
-
-    init {
-        animationProgress = if (default) {
-            if (value) 0f else 1f
-        } else {
-            if (value) 1f else 0f
-        }
-    }
+    private val toggleAnim = GuiAnimation.create(if (value) 1f else 0f, if (value) 1f else 0f)
+        .duration(100L)
+        .easing(Easing.CUBIC_OUT)
 
     override fun render(
         graphics: GuiGraphicsExtractor,
@@ -34,8 +27,6 @@ open class BooleanSetting(name: String, desc: String, override val default: Bool
     ): Float {
         val height = 20f
         val isHovered = HudUtils.isPointInRect(mouseX, mouseY, x, y, width, height)
-
-        updateAnimation()
 
         if (isHovered) {
             graphics.fill(x.toInt(), y.toInt(), (x + width).toInt(), (y + height).toInt(), 0x15FFFFFF)
@@ -48,16 +39,15 @@ open class BooleanSetting(name: String, desc: String, override val default: Bool
         val toggleW = 28f
         val toggleH = 12f
 
+        val animationProgress = toggleAnim.getValue()
         val knobStartX = toggleX + 2f
         val knobEndX = toggleX + toggleW - 11f
         val knobX = lerp(knobStartX, knobEndX, animationProgress)
 
-        val knobStartColor = 0xFF888888.toInt()
-        val knobColor = lerpColor(knobStartColor, themeColor, animationProgress)
-
         NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
-            NVGRenderer.rect(toggleX * 2, toggleY * 2, toggleW * 2, toggleH * 2, Color(0x3A3A3A), toggleH)
-            NVGRenderer.rect(knobX * 2 - 1, toggleY * 2 + 2, toggleH * 2 - 4, toggleH * 2 - 4, Color(knobColor), toggleH - 2)
+            val bgColor = lerpColor(0xFF3A3A3A.toInt(), themeColor, animationProgress)
+            NVGRenderer.rect(toggleX * 2, toggleY * 2, toggleW * 2, toggleH * 2, Color(bgColor), toggleH)
+            NVGRenderer.circle(knobX * 2 + 10f, toggleY * 2 + toggleH, 10f, Color(0xFFFFFF))
         }
 
         renderDescriptionTooltip(graphics, isHovered, mouseX, mouseY)
@@ -81,18 +71,8 @@ open class BooleanSetting(name: String, desc: String, override val default: Bool
         return false
     }
 
-    private fun updateAnimation() {
-        val currentTime = System.currentTimeMillis()
-        val deltaTime = (currentTime - lastUpdateTime) / 10f
-        lastUpdateTime = currentTime
-
-        val targetProgress = if (value) 1f else 0f
-        val step = animationSpeed * deltaTime.coerceAtMost(3f)
-
-        animationProgress = when {
-            abs(animationProgress - targetProgress) < 0.01f -> targetProgress
-            animationProgress < targetProgress -> (animationProgress + step).coerceAtMost(targetProgress)
-            else -> (animationProgress - step).coerceAtLeast(targetProgress)
-        }
+    override fun set(newValue: Boolean) {
+        super.set(newValue)
+        toggleAnim.animateTo(if (newValue) 1f else 0f)
     }
 }

@@ -15,6 +15,8 @@ import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.HudUtils.drawHorizontalSeparator
 import cn.hkim.addon.utils.HudUtils.drawVerticalSeparator
 import cn.hkim.addon.utils.playSoundAtPlayer
+import cn.hkim.addon.utils.render.Easing
+import cn.hkim.addon.utils.render.GuiAnimation
 import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
 import cn.hkim.addon.utils.render.nvg.NVGRenderer
 import com.mojang.blaze3d.platform.cursor.CursorType
@@ -30,6 +32,7 @@ import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
 import net.minecraft.sounds.SoundEvents
 import java.awt.Color
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
@@ -94,11 +97,9 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
             if (editBox.isFocused) graphics.requestCursor(CursorType.DEFAULT)
             editBox.extractWidgetRenderState(graphics, mouseX, mouseY, delta)
         }
-        searchEditBox?.let { box ->
-            if (box.isFocused) {
-                graphics.requestCursor(CursorType.DEFAULT)
-            }
-            box.extractWidgetRenderState(graphics, mouseX, mouseY, delta)
+        searchEditBox?.let { editBox ->
+            if (editBox.isFocused) graphics.requestCursor(CursorType.DEFAULT)
+            editBox.extractWidgetRenderState(graphics, mouseX, mouseY, delta)
         }
     }
 
@@ -285,7 +286,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         val w = guiW - sidebarW
         val h = headerH
 
-        graphics.drawHorizontalSeparator(x + 8f, y + h - 1, w - 16f, 0xFF444444.toInt())
+        graphics.drawHorizontalSeparator(x, y + h - 1, w, 0xFF333333.toInt())
 
         val titleText = when {
             searchQuery.isNotEmpty() -> "Search: \"$searchQuery\""
@@ -439,7 +440,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         var y = guiY + headerH + contentPadding + contentScrollY
         val x = guiX + sidebarW + contentPadding
         val w = guiW - sidebarW - contentPadding * 2
-        val h = guiH - headerH - contentPadding * 2
+        val h = guiH - headerH
 
         if (!HudUtils.isPointInRect(mouseX, mouseY, x, guiY + headerH, w, h)) return false
 
@@ -535,7 +536,14 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
 }
 
 private class ModuleCardState(val module: Module) {
-    private var targetExpanded = false
+    var targetExpanded = false
+        private set
+
+    private val expandAnim = GuiAnimation.create(0f, 0f)
+        .duration(150L)
+        .easing(Easing.CUBIC_OUT)
+
+    private var animatedExpandedHeight = 0f
 
     private var targetEnabled = module.enabled
     private var lerpEnabled = if (targetEnabled) 1f else 0f
@@ -550,23 +558,27 @@ private class ModuleCardState(val module: Module) {
         get() = module.settings.filter { it.isVisible() }
 
     val totalHeight: Float
-        get() = when {
-            !targetExpanded -> 44f
-            else -> {
-                val settingsH = calculateCurrentVisibleHeight()
-                if (settingsH > 0f) 44f + settingsH + 8f else 44f
-            }
-        }
+        get() = 44f + expandAnim.getValue()
 
     fun update(deltaTime: Float) {
         val factor = min(1f, deltaTime * 10f)
 
         if (targetEnabled != module.enabled) targetEnabled = module.enabled
         lerpEnabled = HudUtils.lerp(lerpEnabled, if (targetEnabled) 1f else 0f, factor)
+
+        if (targetExpanded) {
+            val currentH = calculateCurrentVisibleHeight() + 8f
+            if (abs(currentH - animatedExpandedHeight) > 0.5f) {
+                animatedExpandedHeight = currentH
+                expandAnim.animateTo(currentH)
+            }
+        }
     }
 
     fun render(graphics: GuiGraphicsExtractor, x: Float, y: Float, width: Float, mouseX: Float, mouseY: Float, visibleTop: Float, visibleBottom: Float, themeColor: Int): Float {
         val cardH = 44f
+        val currentExpandedH = expandAnim.getValue()
+
         val isHovered = HudUtils.isPointInRect(mouseX, mouseY, x, y, width, 44f)
 
         val borderColor = HudUtils.lerpColor(0xFF333333.toInt(), themeColor, lerpEnabled)
@@ -588,16 +600,30 @@ private class ModuleCardState(val module: Module) {
         graphics.text(mc.font, Component.literal(module.name).withStyle(ChatFormatting.BOLD), x.toInt() + 14, y.toInt() + 12, nameColor, false)
         graphics.text(mc.font, module.description, x.toInt() + 14, y.toInt() + 28, 0xFF888888.toInt(), false)
 
-        if (targetExpanded) {
-            var sy = y + cardH + 6f
-            for (setting in visibleSettings) {
-                val settingTop = sy
-                val settingBottom = sy + settingHeight + settingGap
-                val indent = 24f
-                if (settingBottom >= visibleTop && settingTop <= visibleBottom) {
-                    setting.render(graphics, x + indent, sy, width - indent * 2, mouseX, mouseY, themeColor)
+        if (currentExpandedH > 0.01f) {
+            val scissorTop = y + cardH
+            val scissorBottom = y + totalHeight
+
+            if (scissorBottom > visibleTop && scissorTop < visibleBottom) {
+                graphics.enableScissor(
+                    (x - 4f).toInt(),
+                    max(scissorTop, visibleTop).toInt(),
+                    (x + width + 4f).toInt(),
+                    min(scissorBottom, visibleBottom).toInt()
+                )
+
+                var sy = y + cardH + 6f
+                for (setting in visibleSettings) {
+                    val settingTop = sy
+                    val settingBottom = sy + settingHeight + settingGap
+                    if (settingBottom >= scissorTop && settingTop <= scissorBottom) {
+                        val indent = 24f
+                        setting.render(graphics, x + indent, sy, width - indent * 2, mouseX, mouseY, themeColor)
+                    }
+                    sy += settingHeight + settingGap
                 }
-                sy += settingHeight + settingGap
+
+                graphics.disableScissor()
             }
         }
 
