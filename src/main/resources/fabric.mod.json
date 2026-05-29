@@ -4,10 +4,10 @@
   "version": "${version}",
   "name": "HkiM",
   "description": "Orbit test mod.",
-  "authors": [],
+  "authors": ["SMxNcn"],
   "contact": {
     "homepage": "https://nckim.top",
-    "github": "https://github.com/SMxNcn/Hkim"
+    "sources": "https://github.com/SMxNcn/Hkim"
   },
   "license": "BSD-3-Clause",
   "icon": "assets/hkim/icon.png",
