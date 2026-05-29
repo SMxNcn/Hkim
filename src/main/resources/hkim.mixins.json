@@ -15,6 +15,7 @@
     "CameraMixin",
     "ChatComponentMixin",
     "ConnectionMixin",
+    "ContainerScreenMixin",
     "EntityMixin",
     "GuiGraphicsExtractorMixin",
     "GuiMixin",
