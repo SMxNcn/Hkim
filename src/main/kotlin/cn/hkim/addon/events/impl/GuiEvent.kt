@@ -21,6 +21,8 @@ sealed class GuiEvent(open val screen: Screen) : Cancellable() {
 
     class Draw(screen: Screen, val graphics: GuiGraphicsExtractor, val mouseX: Int, val mouseY: Int) : GuiEvent(screen)
 
+    class DrawBackground(screen: Screen, val guiGraphics: GuiGraphicsExtractor, val mouseX: Int, val mouseY: Int) : GuiEvent(screen)
+
     class DrawSlot(screen: Screen, val graphics: GuiGraphicsExtractor, val slot: Slot) : GuiEvent(screen)
 
     class DrawTooltip(screen: Screen, val graphics: GuiGraphicsExtractor, val mouseX: Int, val mouseY: Int) : GuiEvent(screen)

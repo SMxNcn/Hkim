@@ -26,6 +26,7 @@
     "LocalPlayerMixin",
     "MinecraftMixin",
     "MouseHandlerMixin",
+    "ScreenMixin",
     "TitleScreenMixin",
     "TooltipRenderUtilMixin",
     "WindowMixin",
