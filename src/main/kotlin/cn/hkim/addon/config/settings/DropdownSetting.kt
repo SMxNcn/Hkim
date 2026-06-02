@@ -2,13 +2,14 @@ package cn.hkim.addon.config.settings
 
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.utils.HudUtils
+import cn.hkim.addon.utils.render.Easing
+import cn.hkim.addon.utils.render.GuiAnimation
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import kotlin.math.abs
 
 class DropdownSetting(name: String, desc: String, defaultExpanded: Boolean = false) : BooleanSetting(name, desc, defaultExpanded) {
-    private var animationProgress = if (value) 1f else 0f
-    private var lastUpdateTime = System.currentTimeMillis()
-    private val animationSpeed = 0.15f
+    private val expandAnim = GuiAnimation.create(if (value) 1f else 0f, if (value) 1f else 0f)
+        .duration(100L)
+        .easing(Easing.CUBIC_OUT)
 
     init { noSave() }
 
@@ -21,12 +22,11 @@ class DropdownSetting(name: String, desc: String, defaultExpanded: Boolean = fal
         val height = 20f
         val isHovered = HudUtils.isPointInRect(mouseX, mouseY, x, y, width, height)
 
-        updateAnimation()
-
         graphics.fill(x.toInt(), y.toInt(), (x + width).toInt(), (y + height).toInt(), 0x80181818.toInt())
 
         graphics.fill(x.toInt(), y.toInt(), x.toInt() + 2, (y + height).toInt(), 0xFF444444.toInt())
 
+        val animationProgress = expandAnim.getValue()
         val centerY = y + height / 2
         val halfHeight = (height / 2) * animationProgress
         val lineTopY = (centerY - halfHeight).toInt()
@@ -66,18 +66,8 @@ class DropdownSetting(name: String, desc: String, defaultExpanded: Boolean = fal
         return false
     }
 
-    private fun updateAnimation() {
-        val currentTime = System.currentTimeMillis()
-        val deltaTime = (currentTime - lastUpdateTime) / 10f
-        lastUpdateTime = currentTime
-
-        val targetProgress = if (value) 1f else 0f
-        val step = animationSpeed * deltaTime.coerceAtMost(3f)
-
-        animationProgress = when {
-            abs(animationProgress - targetProgress) < 0.01f -> targetProgress
-            animationProgress < targetProgress -> (animationProgress + step).coerceAtMost(targetProgress)
-            else -> (animationProgress - step).coerceAtLeast(targetProgress)
-        }
+    override fun set(newValue: Boolean) {
+        super.set(newValue)
+        expandAnim.animateTo(if (newValue) 1f else 0f)
     }
 }

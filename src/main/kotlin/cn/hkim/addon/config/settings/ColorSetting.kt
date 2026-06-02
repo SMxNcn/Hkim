@@ -33,7 +33,7 @@ class ColorSetting(name: String, desc: String, override val default: Int) : Sett
         val previewX = x + width - previewSize - 10f
         val previewY = y + 2f
 
-        val hexText = String.format("#%06X", value and 0x00FFFFFF)
+        val hexText = toHexString(value)
         val screen = mc.screen
         val isActive = screen is ClickGUIScreen && screen.activeEditBoxSetting == this
 
@@ -60,7 +60,7 @@ class ColorSetting(name: String, desc: String, override val default: Int) : Sett
         if (HudUtils.isPointInRect(mouseX, mouseY, previewX - 46f, previewY, clickW, 16f)) {
             val screen = mc.screen
             if (screen is ClickGUIScreen) {
-                val hexValue = String.format("#%06X", value and 0x00FFFFFF)
+                val hexValue = toHexString(value)
                 screen.activateEditBox(
                     this,
                     (previewX - 50f).toInt() + 8, previewY.toInt() + 4, 70, 16,
@@ -71,5 +71,33 @@ class ColorSetting(name: String, desc: String, override val default: Int) : Sett
             return true
         }
         return false
+    }
+
+    companion object {
+        fun toHexString(color: Int): String {
+            val a = (color shr 24) and 0xFF
+            val r = (color shr 16) and 0xFF
+            val g = (color shr 8) and 0xFF
+            val b = color and 0xFF
+            return String.format("#%02X%02X%02X%02X", r, g, b, a)
+        }
+
+        fun fromHexString(hex: String): Int {
+            val clean = hex.replace("#", "").trim().uppercase()
+            return when (clean.length) {
+                6 -> {
+                    val rgb = clean.toLong(16).toInt()
+                    rgb or (0xFF shl 24)
+                }
+                8 -> {
+                    val r = clean.substring(0, 2).toInt(16)
+                    val g = clean.substring(2, 4).toInt(16)
+                    val b = clean.substring(4, 6).toInt(16)
+                    val a = clean.substring(6, 8).toInt(16)
+                    (a shl 24) or (r shl 16) or (g shl 8) or b
+                }
+                else -> throw IllegalArgumentException("Invalid hex color: $hex (expected 6 or 8 hex digits)")
+            }
+        }
     }
 }

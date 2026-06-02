@@ -99,4 +99,35 @@ class KeybindSetting(name: String, desc: String, defaultKey: Int = GLFW.GLFW_KEY
             "Key $keyCode"
         }
     }
+
+    companion object {
+        private val keyCodeToName: Map<Int, String> by lazy {
+            GLFW::class.java.declaredFields
+                .filter { f -> f.type == Int::class.javaPrimitiveType && f.name.startsWith("GLFW_KEY_") }
+                .mapNotNull { f ->
+                    try {
+                        f.isAccessible = true
+                        val code = f.getInt(null)
+                        val name = f.name.removePrefix("GLFW_")
+                        code to name
+                    } catch (_: Exception) { null }
+                }
+                .distinctBy { (code, _) -> code }
+                .toMap()
+        }
+
+        private val nameToKeyCode: Map<String, Int> by lazy {
+            keyCodeToName.entries.associate { (code, name) -> name to code }
+        }
+
+        @JvmStatic
+        fun keyCodeToGlfwName(code: Int): String {
+            return keyCodeToName[code] ?: code.toString()
+        }
+
+        @JvmStatic
+        fun glfwNameToKeyCode(name: String): Int {
+            return nameToKeyCode[name] ?: GLFW.GLFW_KEY_UNKNOWN
+        }
+    }
 }
