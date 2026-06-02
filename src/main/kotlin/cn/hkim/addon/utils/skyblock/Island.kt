@@ -22,6 +22,7 @@ enum class Island(val displayName: String) {
     Mineshaft("Mineshaft"),
     Rift("The Rift"),
     BackwaterBayou("Backwater Bayou"),
+    LotusAtoll("Lotus Atoll"),
     Galatea("Galatea"),
     Unknown("(Unknown)");
 }
