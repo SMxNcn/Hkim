@@ -20,6 +20,7 @@ abstract class Setting<T>(
 
     override operator fun provideDelegate(thisRef: Module, property: KProperty<*>): Setting<T> {
         thisRef.registerSetting(this)
+        configKey = property.name
         return this
     }
 
@@ -33,11 +34,6 @@ abstract class Setting<T>(
     open fun set(newValue: T) { value = newValue }
     fun depends(condition: () -> Boolean): Setting<T> {
         this.dependsCondition = condition
-        return this
-    }
-
-    fun key(key: String): Setting<T> {
-        this.configKey = key
         return this
     }
 
