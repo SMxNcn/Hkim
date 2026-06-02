@@ -2,6 +2,7 @@ package cn.hkim.addon.features
 
 import cn.hkim.addon.config.ModuleConfig
 import cn.hkim.addon.config.Setting
+import cn.hkim.addon.hud.HudElement
 import cn.hkim.addon.utils.HudUtils.playModuleSound
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -12,6 +13,9 @@ abstract class Module(
 ) {
     private val _settings: MutableList<Setting<*>> = mutableListOf()
     val settings: List<Setting<*>> get() = _settings
+
+    private val _hudElements: MutableList<HudElement> = mutableListOf()
+    val hudElements: List<HudElement> get() = _hudElements
 
     var id: String private set
     var category: Category private set
@@ -30,11 +34,19 @@ abstract class Module(
         _settings.add(setting)
     }
 
+    internal fun registerHudElement(element: HudElement) {
+        _hudElements.add(element)
+    }
+
     var enabled: Boolean = default
 
     open fun onEnable() {}
     open fun onDisable() {}
-    open fun render(graphics: GuiGraphicsExtractor, tickTracker: DeltaTracker) {}
+    open fun render(graphics: GuiGraphicsExtractor, tickTracker: DeltaTracker) {
+        for (hud in hudElements) {
+            hud.render(graphics, tickTracker)
+        }
+    }
 
     fun toggle() {
         if (enabled) disable() else enable()

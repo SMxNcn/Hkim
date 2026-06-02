@@ -3,6 +3,7 @@ package cn.hkim.addon.commands
 import cn.hkim.addon.Hkim
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.clickgui.ClickGUIScreen
+import cn.hkim.addon.gui.HudEditScreen
 import cn.hkim.addon.utils.skyblock.EquipmentUtils.swapEquipment
 import cn.hkim.addon.utils.skyblock.WardrobeUtils.swapArmorTo
 import com.github.stivais.commodore.Commodore
@@ -12,6 +13,10 @@ import kotlinx.coroutines.launch
 val hkimCommand = Commodore("hkim") {
     runs {
         mc.execute { mc.setScreen(ClickGUIScreen(null)) }
+    }
+
+    literal("hud").runs {
+        mc.execute { mc.setScreen(HudEditScreen(null)) }
     }
 
     literal("swapArmor").runs { index: Int, page: Int? ->

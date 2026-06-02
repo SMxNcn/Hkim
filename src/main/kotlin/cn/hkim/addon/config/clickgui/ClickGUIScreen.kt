@@ -11,6 +11,7 @@ import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleManager
 import cn.hkim.addon.features.impl.ClickGUI
+import cn.hkim.addon.gui.HudEditScreen
 import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.HudUtils.drawHorizontalSeparator
 import cn.hkim.addon.utils.HudUtils.drawVerticalSeparator
@@ -395,7 +396,8 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
             return true
         }
         if (HudUtils.isPointInRect(mouseX, mouseY, iconX, bottomY + 30f, 20f, 20f)) {
-            Hkim.logger.info("[HKM] EDIT clicked")
+            playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value(), 0.3f)
+            mc.setScreen(HudEditScreen(this))
             return true
         }
         if (HudUtils.isPointInRect(mouseX, mouseY, x + 1f, bottomY + 58f, sidebarW - 6f, 10f)) {

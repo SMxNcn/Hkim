@@ -24,7 +24,7 @@ object HurtCamera : Module("Hurt Camera", "Renders hurt overlay effect.") {
         val hurtTime = mc.player?.hurtTime ?: return
         if (hurtTime <= 0 || !enabled || mc.options.hideGui) return
         val alpha = hurtTime.times(25.5f).toInt()
-        graphics.drawRectWithBorder(0f, 0f, mc.window.guiScaledWidth.toFloat(), mc.window.guiScaledHeight.toFloat(), 0, Color(255, 0, 0, alpha).rgb, 2)
+        graphics.drawRectWithBorder(0f, 0f, mc.window.guiScaledWidth.toFloat(), mc.window.guiScaledHeight.toFloat(), 0, Color(255, 0, 0, alpha).rgb, 2f)
         super.render(graphics, tickTracker)
     }
 }

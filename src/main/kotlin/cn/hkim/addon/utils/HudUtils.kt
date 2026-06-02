@@ -13,12 +13,7 @@ import java.net.URI
 import kotlin.math.sin
 
 object HudUtils {
-    private fun GuiGraphicsExtractor.renderScaledText(
-        renderer: (Int, Int) -> Unit,
-        x: Int,
-        y: Int,
-        scale: Float
-    ) {
+    private fun GuiGraphicsExtractor.renderScaledText(renderer: (Int, Int) -> Unit, x: Int, y: Int, scale: Float) {
         if (scale == 1.0f) {
             renderer(x, y)
             return
@@ -30,42 +25,26 @@ object HudUtils {
         this.pose().popMatrix()
     }
 
-    fun GuiGraphicsExtractor.scaledText(
-        font: Font,
-        text: Component,
-        x: Int,
-        y: Int,
-        color: Int,
-        shadow: Boolean = false,
-        scale: Float = 1.0f
-    ) {
+    fun GuiGraphicsExtractor.scaledText(font: Font, text: Component, x: Int, y: Int, color: Int, shadow: Boolean = false, scale: Float = 1.0f) {
         renderScaledText({ sx, sy ->
             this.text(font, text, sx, sy, color, shadow)
         }, x, y, scale)
     }
 
-    fun GuiGraphicsExtractor.scaledText(
-        font: Font,
-        text: String,
-        x: Int,
-        y: Int,
-        color: Int,
-        shadow: Boolean = false,
-        scale: Float = 1.0f
-    ) {
+    fun GuiGraphicsExtractor.scaledText(font: Font, text: String, x: Int, y: Int, color: Int, shadow: Boolean = false, scale: Float = 1.0f) {
         renderScaledText({ sx, sy ->
             this.text(font, text, sx, sy, color, shadow)
         }, x, y, scale)
     }
 
-    fun GuiGraphicsExtractor.drawRectWithBorder(x: Float, y: Float, width: Float, height: Float, fillColor: Int, borderColor: Int? = null, borderWidth: Int = 1) {
-        fill(x.toInt(), y.toInt(), (x + width).toInt(), (y + height).toInt(), fillColor)
+    fun GuiGraphicsExtractor.drawRectWithBorder(x: Float, y: Float, width: Float, height: Float, fillColor: Int, borderColor: Int? = null, borderWidth: Float = 1f) {
+        this.fill(x.toInt(), y.toInt(), (x + width).toInt(), (y + height).toInt(), fillColor)
 
         if (borderColor != null) {
-            fill(x.toInt(), y.toInt(), (x + width).toInt(), y.toInt() + borderWidth, borderColor)
-            fill(x.toInt(), (y + height - borderWidth).toInt(), (x + width).toInt(), (y + height).toInt(), borderColor)
-            fill(x.toInt(), y.toInt(), x.toInt() + borderWidth, (y + height).toInt(), borderColor)
-            fill((x + width - borderWidth).toInt(), y.toInt(), (x + width).toInt(), (y + height).toInt(), borderColor)
+            this.drawHorizontalLine(x, y, width, borderColor, borderWidth)
+            this.drawHorizontalLine(x, y + height - borderWidth, width, borderColor, borderWidth)
+            this.drawVerticalLine(x, y, height, borderColor, borderWidth)
+            this.drawVerticalLine(x + width - borderWidth, y, height, borderColor, borderWidth)
         }
     }
 
@@ -75,6 +54,36 @@ object HudUtils {
 
     fun GuiGraphicsExtractor.drawHorizontalSeparator(x: Float, y: Float, width: Float, color: Int, height: Int = 1) {
         fill(x.toInt(), y.toInt(), (x + width).toInt(), y.toInt() + height, color)
+    }
+
+    fun GuiGraphicsExtractor.drawVerticalLine(x: Float, y: Float, height: Float, color: Int, lineWidth: Float = 1f) {
+        if (lineWidth <= 0f || height <= 0f) return
+        val intW = lineWidth.toInt()
+        if (lineWidth == intW.toFloat()) {
+            fill(x.toInt(), y.toInt(), x.toInt() + intW, (y + height).toInt(), color)
+            return
+        }
+
+        this.pose().pushMatrix()
+        this.pose().translate(x, y)
+        this.pose().scale(lineWidth, 1f)
+        this.fill(0, 0, 1, height.toInt(), color)
+        this.pose().popMatrix()
+    }
+
+    fun GuiGraphicsExtractor.drawHorizontalLine(x: Float, y: Float, width: Float, color: Int, lineWidth: Float = 1f) {
+        if (lineWidth <= 0f || width <= 0f) return
+        val intW = lineWidth.toInt()
+        if (lineWidth == intW.toFloat()) {
+            fill(x.toInt(), y.toInt(), (x + width).toInt(), y.toInt() + intW, color)
+            return
+        }
+
+        this.pose().pushMatrix()
+        this.pose().translate(x, y)
+        this.pose().scale(1f, lineWidth)
+        this.fill(0, 0, width.toInt(), 1, color)
+        this.pose().popMatrix()
     }
 
     fun lerp(start: Float, end: Float, t: Float): Float = start + (end - start) * t.coerceIn(0f, 1f)

@@ -33,8 +33,8 @@ object ModuleConfig {
                     module.enabled = moduleJson.get("enabled").asBoolean
                 }
                 applySettingsToModule(module, moduleJson)
+                module.hudElements.forEach { it.loadFrom(moduleJson) }
             }
-            //Hkim.logger.info("[HKim] Configuration loaded successfully.")
         } catch (e: Exception) {
             Hkim.logger.error("[HKim] Failed to load config: ${e.message}")
             e.printStackTrace()
@@ -50,6 +50,7 @@ object ModuleConfig {
                 val moduleJson = JsonObject()
                 moduleJson.addProperty("enabled", module.enabled)
                 serializeModuleSettings(module, moduleJson)
+                module.hudElements.forEach { it.saveTo(moduleJson) }
 
                 if (!moduleJson.entrySet().isEmpty()) {
                     rootJson.add(module.id, moduleJson)
@@ -57,7 +58,6 @@ object ModuleConfig {
             }
 
             Files.writeString(configFile.toPath(), gson.toJson(rootJson), StandardCharsets.UTF_8)
-            //Hkim.logger.info("[HKim] Configuration saved successfully.")
         } catch (e: Exception) {
             Hkim.logger.error("[HKim] Failed to save config: ${e.message}")
             e.printStackTrace()
@@ -75,8 +75,20 @@ object ModuleConfig {
                 val element = json.get(key)
                 when (setting) {
                     is BooleanSetting -> setting.set(element.asBoolean)
-                    is ColorSetting -> setting.set(element.asInt)
+                    is ColorSetting -> {
+                        val rawValue = if (element.isJsonPrimitive && element.asJsonPrimitive.isNumber) {
+                            // backward compatibility: old config stores raw int
+                            element.asInt
+                        } else {
+                            ColorSetting.fromHexString(element.asString)
+                        }
+                        setting.set(rawValue)
+                    }
                     is NumberSetting -> setting.set(snapNumber(element.asDouble, setting.min, setting.max, setting.step))
+                    is KeybindSetting -> {
+                        val strVal = element.asString
+                        setting.set(KeybindSetting.glfwNameToKeyCode(strVal))
+                    }
                     is TextSetting -> setting.set(element.asString)
                     is SelectorSetting -> {
                         val strVal = element.asString
@@ -100,8 +112,9 @@ object ModuleConfig {
 
             when (setting) {
                 is BooleanSetting -> json.addProperty(key, value as Boolean)
-                is ColorSetting -> json.addProperty(key, value as Int)
+                is ColorSetting -> json.addProperty(key, ColorSetting.toHexString(value as Int))
                 is NumberSetting -> json.addProperty(key, (cleanDoubleForJson(value as Number)))
+                is KeybindSetting -> json.addProperty(key, KeybindSetting.keyCodeToGlfwName(value as Int))
                 is TextSetting -> json.addProperty(key, value as String)
                 is SelectorSetting -> json.addProperty(key, setting.getSelected())
             }
