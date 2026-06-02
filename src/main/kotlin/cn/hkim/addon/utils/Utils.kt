@@ -2,6 +2,7 @@ package cn.hkim.addon.utils
 
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.mixins.accessors.KeyMappingAccessor
+import net.minecraft.SharedConstants
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.resources.sounds.SimpleSoundInstance
@@ -41,6 +42,9 @@ inline val Entity.renderPos: Vec3
 
 inline val Entity.renderBoundingBox: AABB
     get() = boundingBox.move(renderX - x, renderY - y, renderZ - z)
+
+inline val mcVersion: String
+    get() = SharedConstants.getCurrentVersion().name()
 
 fun isPlayerInArea(corner1: BlockPos, corner2: BlockPos, playerPos: BlockPos): Boolean {
     val minX = minOf(corner1.x, corner2.x)

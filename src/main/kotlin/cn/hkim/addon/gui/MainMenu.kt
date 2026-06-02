@@ -4,10 +4,10 @@ import cn.hkim.addon.Hkim
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.utils.HudUtils.getChromaColor
 import cn.hkim.addon.utils.coloredChar
+import cn.hkim.addon.utils.mcVersion
 import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
 import cn.hkim.addon.utils.render.nvg.NVGRenderer
 import com.terraformersmc.modmenu.gui.ModsScreen
-import net.minecraft.SharedConstants
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.TitleScreen
@@ -45,7 +45,7 @@ class MainMenu : Screen(Component.literal("Main Menu")) {
     }
 
     override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
-        val s1 = "Minecraft ${SharedConstants.getCurrentVersion().id()}"
+        val s1 = "Minecraft $mcVersion"
         val s2 = "Hkim v${Hkim.VERSION}"
         val s3 = "Cheaters get banned!"
         val chromaColor = getChromaColor(Color(142, 221, 255), Color(166, 166, 166), 1, 4, 5).rgb
