@@ -9,7 +9,6 @@ import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.hud.HudElement
 import cn.hkim.addon.utils.HudUtils.getChromaColor
-import net.minecraft.client.DeltaTracker
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import java.awt.Color
 
@@ -25,29 +24,19 @@ object ModuleList : Module("Module List", "Enabled features list.") {
 
     private val moduleNames = listOf("AutoClicker", "AutoGG", "AutoLeap", "AutoWardrobe", "ChatCommands", "CropNuker", "Etherwarp", "EtherwarpRouter", "HurtCamera", "Nametags", "AutoI4")
 
-    private var positionInitialized = false
-
-    private val hud by HudElement("Array List", "Render enabled modules.") { graphics, tick ->
+    private val hud by HudElement("Array List", "Render enabled modules.") { graphics, _ ->
         if (this@ModuleList.enabled && !mc.options.hideGui) {
-            this@ModuleList.renderContent(graphics, tick)
+            this@ModuleList.renderContent(graphics)
         } else {
             Pair(0f, 0f)
         }
+    }.onFirstRender { hud ->
+        val maxW = moduleNames.maxOf { mc.font.width(it) }
+        hud.anchorX = mc.window.guiScaledWidth - (maxW + 6f) - 2f
+        hud.anchorY = 4f
     }
 
-    override fun render(graphics: GuiGraphicsExtractor, tickTracker: DeltaTracker) {
-        if (!positionInitialized) {
-            if (!hud.loadedFromConfig) {
-                val maxW = moduleNames.maxOf { mc.font.width(it) }
-                hud.anchorX = mc.window.guiScaledWidth - (maxW + 6f) - 2f
-                hud.anchorY = 4f
-            }
-            positionInitialized = true
-        }
-        super.render(graphics, tickTracker)
-    }
-
-    private fun renderContent(graphics: GuiGraphicsExtractor, tickTracker: DeltaTracker): Pair<Float, Float> {
+    private fun renderContent(graphics: GuiGraphicsExtractor): Pair<Float, Float> {
         if (moduleNames.isEmpty()) return Pair(0f, 0f)
 
         val bounds = hud.getScreenBounds()

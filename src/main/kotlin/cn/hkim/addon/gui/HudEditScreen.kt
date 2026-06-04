@@ -15,6 +15,7 @@ import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.network.chat.Component
 import org.lwjgl.glfw.GLFW
+import kotlin.math.abs
 
 class HudEditScreen(private val parent: Screen?) : Screen(Component.literal("HUD Editor")) {
 
@@ -108,8 +109,12 @@ class HudEditScreen(private val parent: Screen?) : Screen(Component.literal("HUD
 
     override fun mouseDragged(event: MouseButtonEvent, dx: Double, dy: Double): Boolean {
         val el = draggingElement ?: return super.mouseDragged(event, dx, dy)
-        el.anchorX = dragStartAnchorX + (event.x.toFloat() - dragStartMouseX)
-        el.anchorY = dragStartAnchorY + (event.y.toFloat() - dragStartMouseY)
+        val rawX = dragStartAnchorX + (event.x.toFloat() - dragStartMouseX)
+        val rawY = dragStartAnchorY + (event.y.toFloat() - dragStartMouseY)
+        el.anchorX = rawX
+        el.anchorY = rawY
+
+        if (isShiftDown()) snapToCrosshair(el)
         return true
     }
 
@@ -156,6 +161,38 @@ class HudEditScreen(private val parent: Screen?) : Screen(Component.literal("HUD
         }
     }
 
+    private fun snapToCrosshair(el: HudElement) {
+        val bounds = el.getScreenBounds()
+        val sw = width.toFloat()
+        val sh = height.toFloat()
+        val cx = sw / 2f
+        val cy = sh / 2f
+
+        val snapThreshold = maxOf(bounds.w, bounds.h) * 0.3f
+        if (snapThreshold <= 0f) return
+
+        fun snapAxis(
+            coord: Float, size: Float,
+            screenCenter: Float, base: Float,
+            setAnchor: (Float) -> Unit
+        ) {
+            val candidates = listOf(
+                coord to 0f,
+                coord + size / 2f to size / 2f,
+                coord + size to size
+            )
+            val (closest, offset) = candidates.minBy { abs(it.first - screenCenter) }
+            if (abs(closest - screenCenter) <= snapThreshold) {
+                setAnchor(screenCenter - base - offset)
+            }
+        }
+
+        snapAxis(bounds.x, bounds.w, cx, el.hudAlignment.baseX(sw.toInt())) { el.anchorX = it }
+
+        val newBounds = el.getScreenBounds()
+        snapAxis(newBounds.y, newBounds.h, cy, el.hudAlignment.baseY(sh.toInt())) { el.anchorY = it }
+    }
+
     override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
         if (scrollY == 0.0) return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY)
         val el = lastHoveredElement ?: return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY)
@@ -178,6 +215,12 @@ class HudEditScreen(private val parent: Screen?) : Screen(Component.literal("HUD
         }
         ModuleConfig.saveConfig()
         return true
+    }
+
+    private fun isShiftDown(): Boolean {
+        val handle = mc.window.handle()
+        return GLFW.glfwGetKey(handle, GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS ||
+               GLFW.glfwGetKey(handle, GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS
     }
 
     override fun onClose() {

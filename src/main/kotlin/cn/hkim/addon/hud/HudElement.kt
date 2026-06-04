@@ -38,7 +38,16 @@ class HudElement(
     var owner: Module? = null
         internal set
 
+    var onFirstRender: ((HudElement) -> Unit)? = null
+        private set
+
+    private var hasRendered = false
     private var dependsCondition: (() -> Boolean)? = null
+
+    fun onFirstRender(action: (HudElement) -> Unit): HudElement {
+        onFirstRender = action
+        return this
+    }
 
     fun depends(condition: () -> Boolean): HudElement {
         dependsCondition = condition
@@ -114,6 +123,14 @@ class HudElement(
 
     fun render(graphics: GuiGraphicsExtractor, tickTracker: DeltaTracker) {
         if (!isVisible()) return
+
+        if (!hasRendered) {
+            if (!loadedFromConfig) {
+                onFirstRender?.invoke(this)
+            }
+            hasRendered = true
+        }
+
         graphics.pose().pushMatrix()
         graphics.pose().translate(actualX(), actualY())
         graphics.pose().scale(hudScale, hudScale)
