@@ -27,6 +27,7 @@
     "MinecraftMixin",
     "MouseHandlerMixin",
     "ScreenMixin",
+    "ScoreboardMixin",
     "TitleScreenMixin",
     "TooltipRenderUtilMixin",
     "WindowMixin",

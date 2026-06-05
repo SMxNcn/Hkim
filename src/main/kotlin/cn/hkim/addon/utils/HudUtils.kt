@@ -8,11 +8,46 @@ import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.util.Util
+import net.minecraft.world.scores.DisplaySlot
+import net.minecraft.world.scores.PlayerTeam
 import java.awt.Color
 import java.net.URI
 import kotlin.math.sin
 
 object HudUtils {
+    data class ScoreboardData(val title: String, val lines: List<String>)
+
+    fun getScoreboard(): List<String> {
+        val scoreboard = mc.level?.scoreboard ?: return emptyList()
+        val objective = scoreboard.getDisplayObjective(DisplaySlot.SIDEBAR) ?: return emptyList()
+        val scores = scoreboard.listPlayerScores(objective).sortedBy { it.value() }.reversed()
+        return listOf(objective.displayName.cleanString) + scores.map { entry ->
+            val team = scoreboard.getPlayersTeam(entry.owner)
+            PlayerTeam.formatNameForTeam(team, entry.ownerName()).legacy
+        }
+    }
+
+    fun getScoreboardLines(formatted: Boolean = false): ScoreboardData? {
+        val scoreboard = mc.level?.scoreboard ?: return null
+        val objective = scoreboard.getDisplayObjective(DisplaySlot.SIDEBAR) ?: return null
+        val scores = scoreboard.listPlayerScores(objective).sortedBy { it.value() }.reversed()
+        val components = scores.map { entry ->
+            val team = scoreboard.getPlayersTeam(entry.owner)
+            PlayerTeam.formatNameForTeam(team, entry.ownerName())
+        }
+        if (formatted) {
+            val cleanCodes = Regex("§[^0-9a-fk-or]")
+            return ScoreboardData(
+                objective.displayName.legacy,
+                components.map { it.legacy.replace(cleanCodes, "") }
+            )
+        }
+        return ScoreboardData(
+            objective.displayName.cleanString,
+            components.map { it.cleanString }
+        )
+    }
+
     private fun GuiGraphicsExtractor.renderScaledText(renderer: (Int, Int) -> Unit, x: Int, y: Int, scale: Float) {
         if (scale == 1.0f) {
             renderer(x, y)
@@ -35,6 +70,29 @@ object HudUtils {
         renderScaledText({ sx, sy ->
             this.text(font, text, sx, sy, color, shadow)
         }, x, y, scale)
+    }
+
+    fun GuiGraphicsExtractor.gradientText(
+        font: Font,
+        text: String,
+        x: Int,
+        y: Int,
+        startColor: Int,
+        endColor: Int,
+        chromaSpeed: Int = 5,
+        chromaOffset: Int = 2,
+        shadow: Boolean = false,
+    ) {
+        if (text.isEmpty()) return
+        val start = Color(startColor)
+        val end = Color(endColor)
+        var currentX = x
+        for (i in text.indices) {
+            val ch = text[i].toString()
+            val color = getChromaColor(start, end, i, chromaSpeed, chromaOffset).rgb
+            this.text(font, ch, currentX, y, color, shadow)
+            currentX += font.width(ch)
+        }
     }
 
     fun GuiGraphicsExtractor.drawRectWithBorder(x: Float, y: Float, width: Float, height: Float, fillColor: Int, borderColor: Int? = null, borderWidth: Float = 1f) {
