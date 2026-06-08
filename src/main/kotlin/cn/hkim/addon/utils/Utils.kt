@@ -9,6 +9,7 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance
 import net.minecraft.core.BlockPos
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.player.Player
 import net.minecraft.world.inventory.ContainerInput
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
@@ -63,7 +64,7 @@ fun leapTo(name: String, screenHandler: AbstractContainerScreen<*>) {
     val index = screenHandler.menu.slots.subList(11, 16).firstOrNull {
         it.item.hoverName.string.substringAfter(' ').equals(name.clean, ignoreCase = true)
     }?.index ?: return
-    clickInventorySlot(index, screenHandler.menu.containerId)
+    mc.player?.clickInventorySlot(index, screenHandler.menu.containerId)
     modMessage("Teleport to $name!")
 }
 
@@ -81,21 +82,14 @@ fun romanToInt(s: String): Int {
     }
 }
 
-fun clickInventorySlot(slot: Int, containerId: Int, rightClick: Boolean = false) {
+fun Player.clickInventorySlot(slot: Int, containerId: Int, rightClick: Boolean = false) {
     if (mc.screen == null) return
-    val player = mc.player ?: return
-
-    mc.execute {
-        mc.gameMode?.handleContainerInput(containerId, slot, if (rightClick) 1 else 0, ContainerInput.PICKUP, player)
-    }
+    mc.gameMode?.handleContainerInput(containerId, slot, if (rightClick) 1 else 0, ContainerInput.PICKUP, this)
 }
 
-fun clickPlayerInventorySlot(slot: Int, containerId: Int) {
+fun Player.clickPlayerInventorySlot(slot: Int, containerId: Int) {
     if (mc.screen == null) return
-    val player = mc.player ?: return
-    val container = player.containerMenu
-
-    val containerSlots = container.slots.size
+    val containerSlots = containerMenu.slots.size
     val actualSlot: Int
 
     when (slot) {
@@ -110,9 +104,7 @@ fun clickPlayerInventorySlot(slot: Int, containerId: Int) {
 
     if (actualSlot !in 0 until containerSlots) return
 
-    mc.execute {
-        mc.gameMode?.handleContainerInput(containerId, actualSlot, 0, ContainerInput.PICKUP, player)
-    }
+    mc.gameMode?.handleContainerInput(containerId, actualSlot, 0, ContainerInput.PICKUP, this)
 }
 
 fun rightClick() {

@@ -33,6 +33,7 @@ object EquipmentUtils {
      * @return True if all swaps are successful, false otherwise.
      */
     suspend fun swapEquipment(itemIds: List<String>): Boolean {
+        if (calledFromThis || isProcessing) return false
         val slots = itemIds.mapNotNull { findItemByID(it).takeIf { slot -> slot != -1 } }
         if (slots.isEmpty()) return false
 
@@ -57,7 +58,7 @@ object EquipmentUtils {
         val chest = (screen as? AbstractContainerScreen<*>) ?: run { callback?.invoke(false); return }
         if (!chest.title.string.contains("Your Equipment")) run { callback?.invoke(false); return }
 
-        schedule((6..8).random()) {
+        schedule((8..10).random()) {
             if (!isProcessing) { processNextItem() }
         }
     }
@@ -75,7 +76,7 @@ object EquipmentUtils {
         isProcessing = true
         println(currentIndex)
 
-        clickPlayerInventorySlot(pendingSlots[currentIndex], containerId)
+        mc.player?.clickPlayerInventorySlot(pendingSlots[currentIndex], containerId)
         currentIndex++
 
         schedule((8..10).random()) { processNextItem() }
