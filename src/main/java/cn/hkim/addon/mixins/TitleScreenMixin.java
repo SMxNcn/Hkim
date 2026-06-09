@@ -1,5 +1,7 @@
 package cn.hkim.addon.mixins;
 
+import cn.hkim.addon.config.ModuleConfig;
+import cn.hkim.addon.features.impl.MainMenuModule;
 import cn.hkim.addon.gui.ClientButton;
 import cn.hkim.addon.gui.MainMenu;
 import cn.hkim.addon.mixins.accessors.ScreenAccessor;
@@ -18,7 +20,17 @@ public abstract class TitleScreenMixin {
     @Inject(method = "init", at = @At("RETURN"))
     public void init(CallbackInfo ci) {
         TitleScreen screen = (TitleScreen)(Object)this;
-        ClientButton ncBtn = new ClientButton(screen.width - 55, -7, 50, 18, coloredChar("Necron", 0xFF8EDDFF), _ -> mc.setScreen(new MainMenu()));
+
+        if (MainMenuModule.INSTANCE.getEnabled()) {
+            mc.setScreen(new MainMenu());
+            return;
+        }
+
+        ClientButton ncBtn = new ClientButton(screen.width - 55, -7, 50, 18, coloredChar("Necron", 0xFF8EDDFF), _ -> {
+            MainMenuModule.INSTANCE.setEnabled(true);
+            ModuleConfig.INSTANCE.saveConfig();
+            mc.setScreen(new MainMenu());
+        });
 
         ScreenAccessor accessor = (ScreenAccessor)screen;
         accessor.getRenderables().add(ncBtn);

@@ -2,6 +2,7 @@ package cn.hkim.addon.gui
 
 import cn.hkim.addon.Hkim
 import cn.hkim.addon.Hkim.mc
+import cn.hkim.addon.features.impl.MainMenuModule
 import com.mojang.blaze3d.platform.NativeImage
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -16,7 +17,6 @@ import javax.imageio.ImageIO
 
 object Background {
     private const val FADE_DURATION = 1000L
-    private const val DISPLAY_DURATION = 10_000L
     private const val BG_URL = "https://gitee.com/mixturedg/necron-client-repo/raw/master/bg/bg0.png"
 
     private val cacheDir: Path by lazy {
@@ -140,7 +140,7 @@ object Background {
         ensureInitialized()
         if (!isFading && backgrounds.size > 1) {
             val now = System.currentTimeMillis()
-            if (now - lastSwitchTime >= DISPLAY_DURATION) {
+            if (now - lastSwitchTime >= MainMenuModule.switchInterval.toLong() * 1000L) {
                 nextIndex = (currentIndex + 1) % backgrounds.size
                 fadeStartTime = now
                 isFading = true

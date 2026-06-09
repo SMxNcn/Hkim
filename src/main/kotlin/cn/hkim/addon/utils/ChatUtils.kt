@@ -6,12 +6,53 @@ import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
 import java.util.*
 
-val prefix = Component.literal("[").withStyle(*arrayOf(ChatFormatting.DARK_GRAY, ChatFormatting.BOLD))
-    .append(coloredChar("H", 0x9e65d7))
-    .append(coloredChar("k", 0x8b73dd))
-    .append(coloredChar("i", 0x7980e4))
-    .append(coloredChar("m", 0x668eea))
-    .append(Component.literal("]").withStyle(*arrayOf(ChatFormatting.DARK_GRAY, ChatFormatting.BOLD)))
+val prefix = Component.literal("[").withStyle(ChatFormatting.DARK_GRAY)
+    .append(coloredChar("H", 0xAD74E6).withStyle(ChatFormatting.BOLD))
+    .append(coloredChar("k", 0x9A82EC).withStyle(ChatFormatting.BOLD))
+    .append(coloredChar("i", 0x888FF3).withStyle(ChatFormatting.BOLD))
+    .append(coloredChar("m", 0x759DF9).withStyle(ChatFormatting.BOLD))
+    .append(Component.literal("]").withStyle(ChatFormatting.DARK_GRAY))
+
+/** Build a [Component] where each visible character gets a chroma-gradient color between [startArgb] and [endArgb],
+ *  with accumulated §-style formatting (§lomnkr). Set [speed] to 0 for a static gradient. */
+fun buildGradientComponent(text: String, startArgb: Int, endArgb: Int, speed: Int): Component {
+    val startCol = Color(startArgb and 0xFFFFFF, false)
+    val endCol = Color(endArgb and 0xFFFFFF, false)
+    val parts = mutableListOf<Component>()
+    var style = Style.EMPTY
+    var charPos = 0
+    val chars = text.toCharArray()
+    var i = 0
+    while (i < chars.size) {
+        if (chars[i] == '§' && i + 1 < chars.size) {
+            style = when (chars[i + 1]) {
+                'l' -> style.withBold(true)
+                'o' -> style.withItalic(true)
+                'n' -> style.withUnderlined(true)
+                'm' -> style.withStrikethrough(true)
+                'k' -> style.withObfuscated(true)
+                'r' -> Style.EMPTY
+                else -> style
+            }
+            i += 2
+            continue
+        }
+        val gradCol = HudUtils.getChromaColor(startCol, endCol, charPos, speed, 2)
+        val charStyle = style.withColor(TextColor.fromRgb(gradCol.rgb))
+        parts.add(Component.literal(chars[i].toString()).withStyle(charStyle))
+        charPos++
+        i++
+    }
+    return if (parts.isEmpty()) Component.literal("")
+    else {
+        val root = Component.literal("")
+        for (part in parts) root.append(part)
+        root
+    }
+}
+
+fun coloredChar(char: String, color: Int) =
+    Component.literal(char).withColor(color)
 
 fun modMessage(message: Any?) {
     val text = prefix.copy().append(Component.literal("§r §7$message"))
@@ -26,9 +67,6 @@ fun sendChatMessage(message: Any) {
 fun sendCommand(command: String) {
     mc.execute { mc.player?.connection?.sendCommand(command) }
 }
-
-fun coloredChar(char: String, color: Int) =
-    Component.literal(char).withColor(color)
 
 val String.clean: String
     get() = this.replace(Regex("§[0-9a-fk-or]"), "")

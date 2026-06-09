@@ -2,7 +2,9 @@ package cn.hkim.addon.gui
 
 import cn.hkim.addon.Hkim
 import cn.hkim.addon.Hkim.mc
-import cn.hkim.addon.utils.HudUtils.getChromaColor
+import cn.hkim.addon.config.ModuleConfig
+import cn.hkim.addon.features.impl.MainMenuModule
+import cn.hkim.addon.utils.buildGradientComponent
 import cn.hkim.addon.utils.coloredChar
 import cn.hkim.addon.utils.mcVersion
 import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
@@ -48,13 +50,13 @@ class MainMenu : Screen(Component.literal("Main Menu")) {
         val s1 = "Minecraft $mcVersion"
         val s2 = "Hkim v${Hkim.VERSION}"
         val s3 = "Cheaters get banned!"
-        val chromaColor = getChromaColor(Color(142, 221, 255), Color(166, 166, 166), 1, 4, 5).rgb
+        val versionComp = buildGradientComponent(s2, Color(142, 221, 255).rgb, Color(166, 166, 166).rgb, 3)
 
         Background.update()
         this.updateParallax(mouseX.toDouble(), mouseY.toDouble())
         this.extractBackground(graphics, mouseX, mouseY, partialTick)
         graphics.text(mc.font, s1, 2, height - 10, 0xFFFFFFFF.toInt())
-        graphics.text(mc.font, s2, 2, height - 20, chromaColor)
+        graphics.text(mc.font, versionComp, 2, height - 20, 0xFFFFFFFF.toInt(), true)
         graphics.text(mc.font, s3, width - mc.font.width(s3) - 2, height - 10, 0xFFFFFFFF.toInt())
         super.extractRenderState(graphics, mouseX, mouseY, partialTick)
     }
@@ -86,6 +88,8 @@ class MainMenu : Screen(Component.literal("Main Menu")) {
         })
 
         addRenderableWidget(ClientButton(width - 55, 5, 50, btnH, coloredChar("Vanilla", 0xFF4CAF50.toInt())) {
+            MainMenuModule.enabled = false
+            ModuleConfig.saveConfig()
             mc.setScreen(TitleScreen())
         })
     }
