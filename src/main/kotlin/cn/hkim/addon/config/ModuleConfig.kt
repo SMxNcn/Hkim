@@ -19,7 +19,7 @@ object ModuleConfig {
 
     fun loadConfig() {
         if (!configFile.exists()) {
-            Hkim.logger.info("[HKim] Config file not found, using defaults.")
+            Hkim.logger.info("Config file not found, using defaults.")
             return
         }
 
@@ -36,7 +36,7 @@ object ModuleConfig {
                 module.hudElements.forEach { it.loadFrom(moduleJson) }
             }
         } catch (e: Exception) {
-            Hkim.logger.error("[HKim] Failed to load config: ${e.message}")
+            Hkim.logger.error("Failed to load config: ${e.message}")
             e.printStackTrace()
         }
     }
@@ -59,7 +59,7 @@ object ModuleConfig {
 
             Files.writeString(configFile.toPath(), gson.toJson(rootJson), StandardCharsets.UTF_8)
         } catch (e: Exception) {
-            Hkim.logger.error("[HKim] Failed to save config: ${e.message}")
+            Hkim.logger.error("Failed to save config: ${e.message}")
             e.printStackTrace()
         }
     }
@@ -98,7 +98,7 @@ object ModuleConfig {
                     }
                 }
             } catch (e: Exception) {
-                Hkim.logger.warn("[HKim] Failed to load setting '${setting.name}' in module '${module.id}': ${e.message}")
+                Hkim.logger.warn("Failed to load setting '${setting.name}' in module '${module.id}': ${e.message}")
             }
         }
     }

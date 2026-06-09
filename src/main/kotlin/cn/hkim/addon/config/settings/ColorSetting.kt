@@ -43,7 +43,7 @@ class ColorSetting(name: String, desc: String, override val default: Int) : Sett
         }
 
         if (!isActive) {
-            graphics.text(mc.font, hexText, (previewX - mc.font.width(hexText) - 10).toInt(), y.toInt() + 6, value or 0xFF000000.toInt(), false)
+            graphics.text(mc.font, hexText, (previewX - mc.font.width(hexText) - 14).toInt(), y.toInt() + 6, value or 0xFF000000.toInt(), false)
         }
 
         renderDescriptionTooltip(graphics, isHovered, mouseX, mouseY)
@@ -53,19 +53,17 @@ class ColorSetting(name: String, desc: String, override val default: Int) : Sett
     override fun mouseClicked(mouseX: Float, mouseY: Float, button: Int, x: Float, y: Float, width: Float): Boolean {
         if (button != 0) return false
 
-        val previewX = x + width - 26f - 10f
+        val previewX = x + width - 16f - 10f
         val previewY = y + 2f
-        val clickW = 70f
+        val text = toHexString(value)
+        val tw = mc.font.width(text)
+        val rx = (previewX - tw - 14).toInt()
+        val ry = y.toInt() + 6
 
-        if (HudUtils.isPointInRect(mouseX, mouseY, previewX - 46f, previewY, clickW, 16f)) {
+        if (HudUtils.isPointInRect(mouseX, mouseY, (rx - 4).toFloat(), previewY, (tw + 8).toFloat(), 16f)) {
             val screen = mc.screen
             if (screen is ClickGUIScreen) {
-                val hexValue = toHexString(value)
-                screen.activateEditBox(
-                    this,
-                    (previewX - 50f).toInt() + 8, previewY.toInt() + 4, 70, 16,
-                    hexValue
-                )
+                screen.activateEditBox(this, rx, ry, tw + 12, 16, text)
                 playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value(), 0.3f)
             }
             return true

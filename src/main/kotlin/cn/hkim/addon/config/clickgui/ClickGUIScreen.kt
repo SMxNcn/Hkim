@@ -49,7 +49,6 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
 
     private val sidebarLogo = Identifier.fromNamespaceAndPath("hkim", "textures/clickgui/sidebar/icon20x.png")
     private val editIcon = Identifier.fromNamespaceAndPath("hkim", "textures/clickgui/sidebar/edit.png")
-    private val fileIcon = Identifier.fromNamespaceAndPath("hkim", "textures/clickgui/sidebar/file.png")
 
     private var selectedCategory: Category? = null
     private var searchQuery = ""
@@ -274,11 +273,6 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         if (HudUtils.isPointInRect(mouseX.toFloat(), mouseY.toFloat(), x + 10f, bottomY + 30f, 20f, 20f)) {
             graphics.setTooltipForNextFrame(mc.font, Component.literal("Edit HUD"), mouseX, mouseY)
         }
-
-        graphics.blit(RenderPipelines.GUI_TEXTURED, fileIcon, iconX.toInt(), bottomY.toInt(), 0f, 0f, 20, 20, 20, 20)
-        if (HudUtils.isPointInRect(mouseX.toFloat(), mouseY.toFloat(), x + 10f, bottomY, 20f, 20f)) {
-            graphics.setTooltipForNextFrame(mc.font, Component.literal("Open Config Folder"), mouseX, mouseY)
-        }
     }
 
     private fun renderHeader(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float) {
@@ -391,10 +385,6 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         }
 
         val bottomY = y + guiH - 70f
-        if (HudUtils.isPointInRect(mouseX, mouseY, iconX, bottomY, 20f, 20f)) {
-            Hkim.logger.info("[HKM] FILE clicked")
-            return true
-        }
         if (HudUtils.isPointInRect(mouseX, mouseY, iconX, bottomY + 30f, 20f, 20f)) {
             playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value(), 0.3f)
             mc.setScreen(HudEditScreen(this))
@@ -531,8 +521,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
 
     private fun parseColorHex(hex: String): Int? {
         return try {
-            val clean = hex.replace("#", "").uppercase()
-            if (clean.length == 6) (clean.toLong(16).toInt() or 0xFF000000.toInt()) else null
+            ColorSetting.fromHexString(hex)
         } catch (_: Exception) { null }
     }
 }

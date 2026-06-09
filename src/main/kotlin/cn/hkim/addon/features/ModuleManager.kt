@@ -57,5 +57,5 @@ object ModuleManager {
     fun getByCategory(cat: Category): List<Module> = modules.filter { it.category == cat }
     fun getEnabled(): List<Module> = modules.filter { it.enabled }
     fun getById(id: String): Module? = modules.find { it.id == id }
-    fun getEnabledToName(): List<String> = modules.filter { it.enabled && !it.name.containsOneOf("Test", "Click GUI") }.map { it.name }
+    fun getEnabledToName(): List<String> = modules.filter { it.enabled && !it.name.containsOneOf("Test", "Click GUI", "Main Menu") }.map { it.name.replace(" ", "") }
 }

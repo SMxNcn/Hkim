@@ -28,14 +28,4 @@ object CustomRenderType {
             .setLayeringTransform(LayeringTransform.VIEW_OFFSET_Z_LAYERING)
             .createRenderSetup()
     )
-
-    val ROUNDED_RECT: RenderType = RenderType.create(
-        "hkim:rounded_rect",
-        RenderSetup.builder(CustomRenderPipelines.ROUNDED_RECT).createRenderSetup()
-    )
-
-    val CIRCLE: RenderType = RenderType.create(
-        "hkim:circle",
-        RenderSetup.builder(CustomRenderPipelines.CIRCLE).createRenderSetup()
-    )
 }

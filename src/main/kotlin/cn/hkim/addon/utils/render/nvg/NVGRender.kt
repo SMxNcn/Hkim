@@ -172,7 +172,6 @@ object NVGRenderer {
     }
 
     fun text(text: String, x: Float, y: Float, size: Float, color: Color, font: Font) {
-        println("text called: '$text' x=$x y=$y size=$size fontId=${getFontID(font)} fontName=${font.name} color=$color vg=$vg")
         nvgFontSize(vg, size)
         nvgFontFaceId(vg, getFontID(font))
         color(color)
@@ -284,5 +283,4 @@ object NVGRenderer {
 
     private data class NVGImage(var count: Int, val nvg: Int)
     private data class NVGFont(val id: Int, val buffer: ByteBuffer)
-
 }
