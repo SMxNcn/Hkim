@@ -8,6 +8,7 @@ import net.minecraft.core.component.DataComponents
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
+import net.minecraft.tags.ItemTags
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.CustomData
@@ -36,6 +37,9 @@ inline val ItemStack.loreString: List<String>
 
 inline val ItemStack.petInfo: String
     get() = customData.getString("petInfo").orElse("")!!
+
+inline val ItemStack.isSword: Boolean
+    get() = `is` { it.`is`(ItemTags.SWORDS) }
 
 fun getItemRarity(itemStack: ItemStack): ItemRarity? {
     if (itemStack.itemId == "PET") {

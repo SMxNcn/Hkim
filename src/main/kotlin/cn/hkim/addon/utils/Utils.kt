@@ -13,6 +13,7 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.inventory.ContainerInput
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import kotlin.math.PI
 
 fun String.containsOneOf(vararg options: String, ignoreCase: Boolean = false): Boolean =
     containsOneOf(options.toList(), ignoreCase)
@@ -81,6 +82,8 @@ fun romanToInt(s: String): Int {
         result + (romanMap[s.last()] ?: 0)
     }
 }
+
+fun toRadians(degrees: Float): Float = degrees * (PI / 180f).toFloat()
 
 fun Player.clickInventorySlot(slot: Int, containerId: Int, rightClick: Boolean = false) {
     if (mc.screen == null) return
