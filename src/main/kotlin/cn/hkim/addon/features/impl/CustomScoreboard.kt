@@ -25,7 +25,7 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard background & l
         "§b  ✦ 128",
         "§e  Coins 100K",
         "§7  §m━━━━━━━━━",
-        "§d§l ✿ 宝马岛 ✿"
+        "§d§l✿ BMW ISLAND ✿"
     )
 
     private val showBackground by BooleanSetting("Background", "", true)
@@ -37,7 +37,6 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard background & l
     private val lastLineGradient by BooleanSetting("IP Gradient", "Render the custom IP line with a colour gradient.", false).depends { replaceIpLine }
     private val gradStart by ColorSetting("Gradient Start", "", Color(255, 85, 255).rgb).depends { replaceIpLine && lastLineGradient }
     private val gradEnd by ColorSetting("Gradient End", "", Color(85, 255, 255).rgb).depends { replaceIpLine && lastLineGradient }
-    private val gradSpeed by NumberSetting("Gradient Speed", "", 5, 1, 10, 1).depends { replaceIpLine && lastLineGradient }
     private val gradSpeed by NumberSetting("Gradient Speed", "", 5f, 1f, 10f, 1f).depends { replaceIpLine && lastLineGradient }
 
     private val resetPosition by ActionSetting("Reset Position", "Reset scoreboard position to default (top-right corner).") {
@@ -51,6 +50,7 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard background & l
     }
 
     private var prevContentWidth = 0f
+    private var initialPositionSet = false
 
     private val hud by HudElement("Scoreboard", "Replaces the vanilla scoreboard.",
         alignment = HudAlignment.TOP_RIGHT
@@ -76,6 +76,12 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard background & l
         val scale = hud.hudScale
         val screenW = mc.window.guiScaledWidth
 
+        if (!initialPositionSet && hud.loadedFromConfig) {
+            initialPositionSet = true
+            prevContentWidth = newW
+            return
+        }
+
         if (prevContentWidth == 0f) {
             val rightEdge = screenW - 4f
             val leftEdge = rightEdge - newW * scale
@@ -87,6 +93,7 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard background & l
             hud.anchorX = leftEdge - targetAlign.baseX(screenW)
             hud.anchorY = 4f
             prevContentWidth = newW
+            initialPositionSet = true
             return
         }
 
@@ -133,7 +140,7 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard background & l
         val lines = data.lines
         val lastIdx = lines.size - 1
         val lastLineRaw = if (lastIdx >= 0) lines[lastIdx] else null
-        val useGradient = lastLineGradient && lastLineRaw != null && "§x" in lastLineRaw
+        val useGradient = lastLineGradient && lastLineRaw != null
 
         val cleanLines = if (useGradient) {
             lines.mapIndexed { i, s -> if (i == lastIdx) s.replace(Regex("§."), "") else s }
