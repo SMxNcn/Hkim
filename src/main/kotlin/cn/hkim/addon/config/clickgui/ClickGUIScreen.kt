@@ -5,6 +5,7 @@ import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.ModuleConfig
 import cn.hkim.addon.config.Setting
 import cn.hkim.addon.config.settings.ColorSetting
+import cn.hkim.addon.config.settings.DropdownSetting
 import cn.hkim.addon.config.settings.KeybindSetting
 import cn.hkim.addon.config.settings.TextSetting
 import cn.hkim.addon.features.Category
@@ -60,6 +61,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
     private var activeEditBox: EditBox? = null
     private var searchEditBox: EditBox? = null
     var activeEditBoxSetting: Setting<*>? = null
+    private var activeEditBoxModule: Module? = null
 
     override fun init() {
         guiX = (mc.window.guiScaledWidth - guiW) / 2f
@@ -78,6 +80,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
 
     override fun tick() {
         cardStates.values.forEach { it.update(0.07f) }
+        updateActiveEditBoxPosition()
         super.tick()
     }
 
@@ -299,7 +302,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         val displayText = searchQuery.ifEmpty { "Search modules..." }
         val textColor = if (searchQuery.isEmpty()) 0xFF666666.toInt() else 0xFFFFFFFF.toInt()
         if (!isSearchActive) {
-            graphics.text(mc.font, displayText, sbX.toInt() + 6, sbY.toInt() + 6, textColor, false)
+            graphics.text(mc.font, displayText, sbX.toInt() + 6, sbY.toInt() + 7, textColor, false)
         }
 
         val closeX = x + w - 32f
@@ -307,11 +310,11 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
             NVGRenderer.hollowRect(sbX * 2, sbY * 2, sbW * 2, sbH * 2, 2f, Color(0x555555), 6f)
 
-            NVGRenderer.rect(closeX * 2, sbY * 2, 40f, 40f, Color(0x3A2A2A), 6f)
-            NVGRenderer.hollowRect(closeX * 2, sbY * 2, 40f, 40f, 2f, Color(0xAA4444), 6f)
+            NVGRenderer.rect(closeX * 2, sbY * 2, 40f, sbH * 2, Color(0x3A2A2A), 6f)
+            NVGRenderer.hollowRect(closeX * 2, sbY * 2, 40f, sbH * 2, 2f, Color(0xAA4444), 6f)
         }
 
-        graphics.text(mc.font, "×", closeX.toInt() + 8, sbY.toInt() + 6, 0xFFFFFFFF.toInt(), false)
+        graphics.text(mc.font, "×", closeX.toInt() + 8, sbY.toInt() + 7, 0xFFFFFFFF.toInt(), false)
 
         if (HudUtils.isPointInRect(mouseX.toFloat(), mouseY.toFloat(), closeX, sbY, 20f, 20f)) {
             graphics.setTooltipForNextFrame(mc.font, Component.literal("Close"), mouseX, mouseY)
@@ -463,6 +466,8 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
             isFocused = true
             moveCursorToEnd(false)
         }
+
+        activeEditBoxModule = cardStates.entries.find { setting in it.value.module.settings }?.value?.module
     }
 
     private fun activateSearchBox(x: Int, y: Int, width: Int, height: Int) {
@@ -519,6 +524,29 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         }
     }
 
+    private fun updateActiveEditBoxPosition() {
+        val editBox = activeEditBox ?: return
+        val setting = activeEditBoxSetting ?: return
+        val module = activeEditBoxModule ?: return
+
+        var y = guiY + headerH + contentPadding + contentScrollY
+        val x = guiX + sidebarW + contentPadding
+
+        for (m in getFilteredModules()) {
+            if (m == module) {
+                var sy = y + 44f + 6f
+                for (s in m.settings.filter { it.isVisible() }) {
+                    if (s == setting) {
+                        editBox.setPosition(editBox.x, (sy + 6).toInt())
+                        return
+                    }
+                    sy += 20f + 3f
+                }
+            }
+            y += (cardStates[m.id]?.totalHeight ?: 44f) + 4f
+        }
+    }
+
     private fun parseColorHex(hex: String): Int? {
         return try {
             ColorSetting.fromHexString(hex)
@@ -546,7 +574,15 @@ private class ModuleCardState(val module: Module) {
     private var draggingSettingY: Float = 0f
 
     private val visibleSettings: List<Setting<*>>
-        get() = module.settings.filter { it.isVisible() }
+        get() {
+            val visible = module.settings.filter { it.isVisible() }
+            for (s in module.settings) {
+                if (s is DropdownSetting && s !in visible && s.get()) {
+                    s.set(false)
+                }
+            }
+            return visible
+        }
 
     val totalHeight: Float
         get() = 44f + expandAnim.getValue()
@@ -622,20 +658,28 @@ private class ModuleCardState(val module: Module) {
     }
 
     fun handleClick(mouseX: Float, mouseY: Float, button: Int, x: Float, y: Float, width: Float): Boolean {
-        if (HudUtils.isPointInRect(mouseX, mouseY, x, y, width, 44f)) {
+        val cardH = 44f
+
+        if (HudUtils.isPointInRect(mouseX, mouseY, x, y, width, cardH)) {
             when (button) {
                 0 -> { module.toggle(); return true }
                 1 -> {
                     if (visibleSettings.isNotEmpty()) {
                         targetExpanded = !targetExpanded
+                        if (targetExpanded) {
+                            animatedExpandedHeight = calculateCurrentVisibleHeight() + 8f  // 底部留 8f
+                            expandAnim.animateTo(animatedExpandedHeight)
+                        } else {
+                            expandAnim.animateTo(0f)
+                        }
                     }
                     return true
                 }
             }
         }
 
-        if (targetExpanded) {
-            var sy = y + 44f + 6f
+        if (expandAnim.getProgress() > 0.5f) {
+            var sy = y + cardH + 6f
             for (setting in visibleSettings) {
                 if (!setting.isVisible()) continue
                 val indent = 24f
