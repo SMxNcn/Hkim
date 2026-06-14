@@ -26,7 +26,7 @@ object Animations : Module("Animations", "Changes the appearance of the first-pe
     @JvmStatic val pitch by NumberSetting("Pitch", "Rotates your held item. Default: 0", 0f, -180f, 180f, 1f)
     @JvmStatic val roll by NumberSetting("Roll", "Rotates your held item. Default: 0", 0f, -180f, 180f, 1f)
     @JvmStatic val ignoreHaste by BooleanSetting("Ignore Effects", "Makes the chosen speed override haste modifiers.", false)
-    @JvmStatic val speed by NumberSetting("Speed", "Speed of the swing animation.", 6, 0, 32, 1).depends { ignoreHaste }
+    @JvmStatic val speed by NumberSetting("Speed", "Speed of the swing animation.", 6f, 0f, 32f, 1f).depends { ignoreHaste }
     @JvmStatic val oldAnimation by BooleanSetting("Old Animation", "1.7 block animation.", false)
     @JvmStatic val disableReSwing by BooleanSetting("Disable Re-Swing", "Prevents the swing animation from playing again if you try to swing while already swinging.", false)
 

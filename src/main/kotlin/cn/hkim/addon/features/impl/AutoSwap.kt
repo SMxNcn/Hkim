@@ -21,8 +21,8 @@ import meteordevelopment.orbit.EventHandler
 object AutoSwap : Module("Auto Swap", "Auto swap spirit/bonzo.") {
     private val useCustomDelay by BooleanSetting("Custom Swap Delay", "Customize delay before swapping items.", false)
     private val custom by DropdownSetting("Delay", "Delay settings.", false).depends { useCustomDelay }
-    private val spiritDelay by NumberSetting("Spirit Swap Delay", "Delay before equipping Spirit Mask.", 200, 100, 2000, 50).depends { custom }
-    private val phoenixDelay by NumberSetting("Phoenix Swap Delay", "Delay before use Auto Pet rod.", 200, 100, 2000, 50).depends { custom }
+    private val spiritDelay by NumberSetting("Spirit Swap Delay", "Delay before equipping Spirit Mask.", 200f, 100f, 2000f, 50f).depends { custom }
+    private val phoenixDelay by NumberSetting("Phoenix Swap Delay", "Delay before use Auto Pet rod.", 200f, 100f, 2000f, 50f).depends { custom }
 
     private val bonzoRegex = Regex("^Your (?:. )?Bonzo's Mask saved your life!$")
     private val spiritRegex = Regex("^Second Wind Activated! Your Spirit Mask saved your life!$")

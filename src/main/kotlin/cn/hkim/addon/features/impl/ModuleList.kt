@@ -7,6 +7,7 @@ import cn.hkim.addon.config.settings.NumberSetting
 import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
+import cn.hkim.addon.features.ModuleManager
 import cn.hkim.addon.hud.HudElement
 import cn.hkim.addon.utils.HudUtils.getChromaColor
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -15,14 +16,15 @@ import java.awt.Color
 @ModuleInfo("module_list", Category.MISC, false)
 object ModuleList : Module("Module List", "Enabled features list.") {
     private val chromaColor by BooleanSetting("Use Chroma Color", "", false)
-    private val staticColor by ColorSetting("Static Color", "", Color(5, 186, 115).rgb).depends { !chromaColor }
+    private val staticColor by ColorSetting("Static Color", "", Color(ClickGUI.getGuiColor()).rgb).depends { !chromaColor }
     private val startColor by ColorSetting("Start Color", "", Color(200, 200, 200).rgb).depends { chromaColor }
     private val endColor by ColorSetting("End Color", "", Color(131, 131, 131).rgb).depends { chromaColor }
-    private val chromaSpeed by NumberSetting("Chroma Speed ", "", 5, 1, 10, 1).depends { chromaColor }
+    private val chromaSpeed by NumberSetting("Chroma Speed ", "", 5f, 1f, 10f, 1f).depends { chromaColor }
 
     private var timeOffset = 0L
 
-    private val moduleNames = listOf("AutoClicker", "AutoGG", "AutoLeap", "AutoWardrobe", "ChatCommands", "CropNuker", "Etherwarp", "EtherwarpRouter", "HurtCamera", "Nametags", "AutoI4")
+    private val moduleNames: List<String>
+        get() = ModuleManager.getEnabledToName()
 
     private val hud by HudElement("Array List", "Render enabled modules.") { graphics, _ ->
         if (this@ModuleList.enabled && !mc.options.hideGui) {
@@ -31,8 +33,10 @@ object ModuleList : Module("Module List", "Enabled features list.") {
             Pair(0f, 0f)
         }
     }.onFirstRender { hud ->
-        val maxW = moduleNames.maxOf { mc.font.width(it) }
-        hud.anchorX = mc.window.guiScaledWidth - (maxW + 6f) - 2f
+        if (moduleNames.isNotEmpty()) {
+            val maxW = moduleNames.maxOf { mc.font.width(it) }
+            hud.anchorX = mc.window.guiScaledWidth - (maxW + 6f) - 2f
+        }
         hud.anchorY = 4f
     }
 

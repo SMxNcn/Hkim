@@ -45,14 +45,14 @@ public abstract class ItemInHandRendererMixin {
 
         if (!Animations.INSTANCE.getEnabled() || itemStack.isEmpty() || itemStack.has(DataComponents.MAP_ID)) return;
 
-        float xOffset = Animations.getX().floatValue();
-        float yOffset = Animations.getY().floatValue();
-        float zOffset = Animations.getZ().floatValue();
+        float xOffset = Animations.getX();
+        float yOffset = Animations.getY();
+        float zOffset = Animations.getZ();
 
         instance.translate(hand == InteractionHand.MAIN_HAND ? xOffset : -xOffset, yOffset, zOffset);
-        instance.mulPose(Axis.XP.rotationDegrees(Animations.getPitch().floatValue()));
-        instance.mulPose(Axis.YP.rotationDegrees(Animations.getYaw().floatValue()));
-        instance.mulPose(Axis.ZP.rotationDegrees(Animations.getRoll().floatValue()));
+        instance.mulPose(Axis.XP.rotationDegrees(Animations.getPitch()));
+        instance.mulPose(Axis.YP.rotationDegrees(Animations.getYaw()));
+        instance.mulPose(Axis.ZP.rotationDegrees(Animations.getRoll()));
     }
 
     @Inject(method = "swingArm", at = @At("HEAD"), cancellable = true)
@@ -66,7 +66,7 @@ public abstract class ItemInHandRendererMixin {
     @Inject(method = "renderArmWithItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;I)V"))
     private void applySizeTransform(AbstractClientPlayer player, float frameInterp, float xRot, InteractionHand hand, float attack, ItemStack itemStack, float inverseArmHeight, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
         if (!Animations.INSTANCE.getEnabled() || itemStack.isEmpty() || itemStack.has(DataComponents.MAP_ID)) return;
-        poseStack.scale(Animations.getSize().floatValue(), Animations.getSize().floatValue(), Animations.getSize().floatValue());
+        poseStack.scale(Animations.getSize(), Animations.getSize(), Animations.getSize());
     }
 
     @Inject(method = "tick", at = @At("TAIL"))

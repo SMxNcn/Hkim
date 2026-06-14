@@ -12,7 +12,7 @@ import java.awt.Color
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-class NumberSetting(name: String, desc: String, override val default: Number, val min: Number, val max: Number, val step: Number) : Setting<Number>(name, desc) {
+class NumberSetting(name: String, desc: String, override val default: Float, val min: Float, val max: Float, val step: Float) : Setting<Float>(name, desc) {
     private var isDragging = false
 
     private var animationProgress: Float
@@ -26,12 +26,12 @@ class NumberSetting(name: String, desc: String, override val default: Number, va
         animationProgress = targetProgress
     }
 
-    override var value: Number = snapToStep(default)
+    override var value: Float = snapToStep(default)
         set(newValue) {
             field = snapToStep(newValue)
         }
 
-    override fun set(newValue: Number) {
+    override fun set(newValue: Float) {
         val snapped = snapToStep(newValue)
         if (value != snapped) {
             value = snapped
@@ -138,11 +138,11 @@ class NumberSetting(name: String, desc: String, override val default: Number, va
 
     private fun updateValueFromMouse(mx: Float, sliderX: Float, sliderW: Float) {
         val ratio = ((mx - sliderX) / sliderW).coerceIn(0.0F, 1.0F)
-        val newValue = min.toDouble() + ratio * (max.toDouble() - min.toDouble())
-        set(if (default is Int) newValue.roundToInt() else newValue)
+        val newValue = min + ratio * (max - min)
+        set(newValue)
     }
 
-    private fun snapToStep(value: Number): Number {
+    private fun snapToStep(value: Float): Float {
         val stepVal = step.toDouble()
         if (stepVal <= 0) return value
 
@@ -152,7 +152,7 @@ class NumberSetting(name: String, desc: String, override val default: Number, va
 
         snapped = snapped.coerceIn(min.toDouble(), max.toDouble())
 
-        return if (default is Int) snapped.roundToInt() else snapped
+        return snapped.toFloat()
     }
 
     private fun updateAnimation() {

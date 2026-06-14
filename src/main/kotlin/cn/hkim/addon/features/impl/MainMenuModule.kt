@@ -11,7 +11,7 @@ import java.io.File
 
 @ModuleInfo("main_menu", Category.MISC, true)
 object MainMenuModule : Module("Main Menu", "Custom main menu.") {
-    val switchInterval by NumberSetting("Switch Interval (s)", "Background image switching interval.", 10, 3, 60, 1)
+    val switchInterval by NumberSetting("Switch Interval (s)", "Background image switching interval.", 10f, 3f, 60f, 1f)
 
     private val openBackgroundsFolder by ActionSetting("Open Backgrounds Folder", "Open the background images folder.") {
         val bgDir = File(FabricLoader.getInstance().configDir.toFile(), "hkim/backgrounds")

@@ -123,14 +123,14 @@ object ModuleConfig {
 
     private fun cleanDoubleForJson(number: Number) = (number.toDouble() * 10000.0).roundToInt() / 10000.0
 
-    private fun snapNumber(value: Double, min: Number, max: Number, step: Number): Number {
+    private fun snapNumber(value: Double, min: Float, max: Float, step: Float): Float {
         val stepVal = step.toDouble()
-        if (stepVal <= 0) return value
+        if (stepVal <= 0) return value.toFloat()
 
         val steps = ((value - min.toDouble()) / stepVal).roundToInt()
         var snapped = min.toDouble() + steps * stepVal
         snapped = snapped.coerceIn(min.toDouble(), max.toDouble())
 
-        return if (min is Int && max is Int && step is Int) snapped.roundToInt() else snapped
+        return snapped.toFloat()
     }
 }

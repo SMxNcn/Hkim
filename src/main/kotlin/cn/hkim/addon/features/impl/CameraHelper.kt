@@ -26,5 +26,5 @@ object CameraHelper : Module("Camera Helper", "Modify your camera") {
 
     fun canCameraClip() = enabled && cameraClip
 
-    fun getDistance() = cameraDist.toFloat()
+    fun getDistance() = cameraDist
 }

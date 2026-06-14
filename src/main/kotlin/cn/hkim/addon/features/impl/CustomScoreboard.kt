@@ -1,10 +1,8 @@
 package cn.hkim.addon.features.impl
 
 import cn.hkim.addon.Hkim.mc
-import cn.hkim.addon.config.settings.BooleanSetting
-import cn.hkim.addon.config.settings.ColorSetting
-import cn.hkim.addon.config.settings.NumberSetting
-import cn.hkim.addon.config.settings.TextSetting
+import cn.hkim.addon.config.ModuleConfig
+import cn.hkim.addon.config.settings.*
 import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
@@ -32,14 +30,25 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard background & l
 
     private val showBackground by BooleanSetting("Background", "", true)
     private val bgColor by ColorSetting("BG Color", "", 0x4C000000.toInt()).depends { showBackground }
-    private val padding by NumberSetting("Padding", "Space between content and background edge.", 2, 0, 6, 1)
+    private val padding by NumberSetting("Padding", "Space between content and background edge.", 2f, 0f, 6f, 0.5f)
     private val replaceIpLine by BooleanSetting("Replace Last Line", "Replace the last row (e.g. server IP) with custom text.", true)
-    private val customServerIp by TextSetting("Custom IP Line", "Use & instead of § for colour codes. Add &x to enable gradient below.", "").depends { replaceIpLine }
+    private val customServerIp by TextSetting("Custom IP Line", "Use & instead of § for colour codes.", "").depends { replaceIpLine }
     private val centerIpLine by BooleanSetting("Center IP Line", "Center the custom IP line horizontally.", false).depends { replaceIpLine }
-    private val lastLineGradient by BooleanSetting("IP Gradient", "Render the custom IP line with a colour gradient (requires &x in the text).", false).depends { replaceIpLine }
+    private val lastLineGradient by BooleanSetting("IP Gradient", "Render the custom IP line with a colour gradient.", false).depends { replaceIpLine }
     private val gradStart by ColorSetting("Gradient Start", "", Color(255, 85, 255).rgb).depends { replaceIpLine && lastLineGradient }
     private val gradEnd by ColorSetting("Gradient End", "", Color(85, 255, 255).rgb).depends { replaceIpLine && lastLineGradient }
     private val gradSpeed by NumberSetting("Gradient Speed", "", 5, 1, 10, 1).depends { replaceIpLine && lastLineGradient }
+    private val gradSpeed by NumberSetting("Gradient Speed", "", 5f, 1f, 10f, 1f).depends { replaceIpLine && lastLineGradient }
+
+    private val resetPosition by ActionSetting("Reset Position", "Reset scoreboard position to default (top-right corner).") {
+        hud.hudAlignment = HudAlignment.TOP_LEFT
+        hud.anchorX = 50f
+        hud.anchorY = 50f
+        hud.hudScale = 1f
+        prevContentWidth = 0f
+        initialPositionSet = false
+        ModuleConfig.saveConfig()
+    }
 
     private var prevContentWidth = 0f
 
