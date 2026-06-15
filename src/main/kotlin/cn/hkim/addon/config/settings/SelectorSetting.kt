@@ -21,13 +21,16 @@ class SelectorSetting(name: String, desc: String, val options: List<String>, def
         graphics: GuiGraphicsExtractor,
         x: Float, y: Float, width: Float,
         mouseX: Float, mouseY: Float,
-        themeColor: Int
+        themeColor: Int,
+        delta: Float
     ): Float {
         val height = 20f
         val isHovered = HudUtils.isPointInRect(mouseX, mouseY, x, y, width, height)
 
         if (isHovered) {
-            graphics.fill(x.toInt(), y.toInt(), (x + width).toInt(), (y + height).toInt(), 0x15FFFFFF)
+            NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
+                NVGRenderer.rect(x * 2, y * 2, width * 2, height * 2, Color(0x15FFFFFF, true), 6f)
+            }
         }
 
         graphics.text(mc.font, name, x.toInt() + 10, y.toInt() + 6, 0xFFCCCCCC.toInt(), false)

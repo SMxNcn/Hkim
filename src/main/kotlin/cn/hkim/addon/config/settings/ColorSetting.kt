@@ -7,6 +7,7 @@ import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.playSoundAtPlayer
 import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
 import cn.hkim.addon.utils.render.nvg.NVGRenderer
+import com.mojang.blaze3d.platform.cursor.CursorType
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
 import java.awt.Color
@@ -18,13 +19,16 @@ class ColorSetting(name: String, desc: String, override val default: Int) : Sett
         graphics: GuiGraphicsExtractor,
         x: Float, y: Float, width: Float,
         mouseX: Float, mouseY: Float,
-        themeColor: Int
+        themeColor: Int,
+        delta: Float
     ): Float {
         val height = 20f
         val isHovered = HudUtils.isPointInRect(mouseX, mouseY, x, y, width, height)
 
         if (isHovered) {
-            graphics.fill(x.toInt(), y.toInt(), (x + width).toInt(), (y + height).toInt(), 0x15FFFFFF)
+            NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
+                NVGRenderer.rect(x * 2, y * 2, width * 2, height * 2, Color(0x15FFFFFF, true), 6f)
+            }
         }
 
         graphics.text(mc.font, name, x.toInt() + 10, y.toInt() + 6, 0xFFCCCCCC.toInt(), false)
@@ -42,7 +46,18 @@ class ColorSetting(name: String, desc: String, override val default: Int) : Sett
             NVGRenderer.hollowRect(previewX * 2, previewY * 2, 32f, 32f, 2f, Color(0x444444), 6f)
         }
 
-        if (!isActive) {
+        if (isActive) {
+            val editBox = screen.activeEditBox
+            if (editBox != null) {
+                val tw = mc.font.width(hexText)
+                val rx = (previewX - tw - 14).toInt()
+                val ry = y.toInt() + 6
+                editBox.setPosition(rx, ry)
+                editBox.setSize(tw + 12, 16)
+                if (editBox.isFocused) graphics.requestCursor(CursorType.DEFAULT)
+                editBox.extractWidgetRenderState(graphics, mouseX.toInt(), mouseY.toInt(), delta)
+            }
+        } else {
             graphics.text(mc.font, hexText, (previewX - mc.font.width(hexText) - 14).toInt(), y.toInt() + 6, value or 0xFF000000.toInt(), false)
         }
 

@@ -53,7 +53,8 @@ class NumberSetting(name: String, desc: String, override val default: Float, val
         graphics: GuiGraphicsExtractor,
         x: Float, y: Float, width: Float,
         mouseX: Float, mouseY: Float,
-        themeColor: Int
+        themeColor: Int,
+        delta: Float
     ): Float {
         val height = 20f
         val isHovered = HudUtils.isPointInRect(mouseX, mouseY, x, y, width, height)
@@ -61,18 +62,19 @@ class NumberSetting(name: String, desc: String, override val default: Float, val
         updateAnimation()
 
         if (isHovered) {
-            graphics.fill(x.toInt(), y.toInt(), (x + width).toInt(), (y + height).toInt(), 0x15FFFFFF)
+            NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
+                NVGRenderer.rect(x * 2, y * 2, width * 2, height * 2, Color(0x15FFFFFF, true), 6f)
+            }
         }
 
         graphics.text(mc.font, name, x.toInt() + 10, y.toInt() + 6, 0xFFCCCCCC.toInt(), false)
 
-        val decimals = when {
-            step.toDouble() % 1.0 == 0.0 -> 0
-            step.toDouble() in 0.01..<0.1 -> 2
-            step.toDouble() < 1.0 -> 1
-            else -> 2
+        val decimals = if (step % 1f == 0f) 0 else {
+            val str = step.toString()
+            val dot = str.indexOf('.')
+            if (dot < 0) 0 else str.length - dot - 1
         }
-        val valueText = if (default is Int) value.toInt().toString() else String.format("%.${decimals}f", value.toDouble())
+        val valueText = "%.${decimals}f".format(value.toDouble())
         val valueWidth = mc.font.width(valueText)
         graphics.text(mc.font, valueText, (x + width - valueWidth - 8).toInt(), y.toInt() + 6, themeColor, false)
 

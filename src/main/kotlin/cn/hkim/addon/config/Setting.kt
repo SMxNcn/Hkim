@@ -56,7 +56,8 @@ abstract class Setting<T>(
         graphics: GuiGraphicsExtractor,
         x: Float, y: Float, width: Float,
         mouseX: Float, mouseY: Float,
-        themeColor: Int
+        themeColor: Int,
+        delta: Float
     ): Float
 
     protected fun renderDescriptionTooltip(

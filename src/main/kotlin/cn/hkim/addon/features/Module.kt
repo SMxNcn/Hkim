@@ -48,7 +48,7 @@ abstract class Module(
         }
     }
 
-    fun toggle() {
+    open fun toggle() {
         if (enabled) disable() else enable()
         ModuleConfig.saveConfig()
     }

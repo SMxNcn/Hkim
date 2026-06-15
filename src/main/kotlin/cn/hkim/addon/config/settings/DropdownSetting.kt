@@ -17,7 +17,8 @@ class DropdownSetting(name: String, desc: String, defaultExpanded: Boolean = fal
         graphics: GuiGraphicsExtractor,
         x: Float, y: Float, width: Float,
         mouseX: Float, mouseY: Float,
-        themeColor: Int
+        themeColor: Int,
+        delta: Float
     ): Float {
         val height = 20f
         val isHovered = HudUtils.isPointInRect(mouseX, mouseY, x, y, width, height)

@@ -5,7 +5,6 @@ import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.ModuleConfig
 import cn.hkim.addon.config.Setting
 import cn.hkim.addon.config.settings.ColorSetting
-import cn.hkim.addon.config.settings.DropdownSetting
 import cn.hkim.addon.config.settings.KeybindSetting
 import cn.hkim.addon.config.settings.TextSetting
 import cn.hkim.addon.features.Category
@@ -34,11 +33,13 @@ import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
 import net.minecraft.sounds.SoundEvents
 import java.awt.Color
-import kotlin.math.abs
 import kotlin.math.max
-import kotlin.math.min
 
 class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Click GUI")) {
+    companion object {
+        private var lastSelectedCategory: Category? = null
+    }
+
     private var guiX = 0f
     private var guiY = 0f
     private val guiW = 480f
@@ -58,10 +59,17 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
     private val themeColor = ClickGUI.getGuiColor()
     private val cardStates = mutableMapOf<String, ModuleCardState>()
 
-    private var activeEditBox: EditBox? = null
+    private val highlightAlphaAnim = GuiAnimation.create(0f, 0f)
+        .duration(150L)
+        .easing(Easing.CUBIC_OUT)
+
+    private val highlightYAnim = GuiAnimation.create(0f, 0f)
+        .duration(200L)
+        .easing(Easing.CUBIC_OUT)
+
+    var activeEditBox: EditBox? = null
     private var searchEditBox: EditBox? = null
     var activeEditBoxSetting: Setting<*>? = null
-    private var activeEditBoxModule: Module? = null
 
     override fun init() {
         guiX = (mc.window.guiScaledWidth - guiW) / 2f
@@ -72,15 +80,42 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
             cardStates[module.id] = ModuleCardState(module)
         }
 
+        restoreCategory()
+
         activeEditBox = null
         searchEditBox = null
         activeEditBoxSetting = null
         super.init()
     }
 
+    override fun added() {
+        super.added()
+        restoreCategory()
+    }
+
+    override fun removed() {
+        lastSelectedCategory = selectedCategory
+        super.removed()
+    }
+
+    private fun restoreCategory() {
+        selectedCategory = lastSelectedCategory
+        if (selectedCategory != null) {
+            highlightYAnim.reset()
+            highlightYAnim.from(getIconHighlightY(selectedCategory!!))
+            highlightAlphaAnim.animateTo(1f)
+        } else {
+            highlightAlphaAnim.animateTo(0f)
+        }
+    }
+
+    private fun getIconHighlightY(category: Category): Float {
+        val index = Category.entries.indexOf(category)
+        return guiY + 50f + index * 34f - 4f
+    }
+
     override fun tick() {
         cardStates.values.forEach { it.update(0.07f) }
-        updateActiveEditBoxPosition()
         super.tick()
     }
 
@@ -96,10 +131,6 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         renderHeader(graphics, mouseX, mouseY, delta)
         renderContentArea(graphics, mouseX, mouseY, delta)
 
-        activeEditBox?.let { editBox ->
-            if (editBox.isFocused) graphics.requestCursor(CursorType.DEFAULT)
-            editBox.extractWidgetRenderState(graphics, mouseX, mouseY, delta)
-        }
         searchEditBox?.let { editBox ->
             if (editBox.isFocused) graphics.requestCursor(CursorType.DEFAULT)
             editBox.extractWidgetRenderState(graphics, mouseX, mouseY, delta)
@@ -201,6 +232,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
                 return true
             }
             onClose()
+            mc.setScreen(parent)
             return true
         }
         return super.keyPressed(event)
@@ -217,6 +249,8 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
     override fun extractTransparentBackground(graphics: GuiGraphicsExtractor) {}
 
     override fun onClose() {
+        lastSelectedCategory = selectedCategory
+
         deactivateSearchBox()
 
         if (activeEditBox != null) {
@@ -226,7 +260,6 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         }
 
         ModuleConfig.saveConfig()
-        mc.setScreen(parent)
     }
 
     private fun renderSidebar(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float) {
@@ -241,22 +274,26 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         val logoY = y + 12f
         graphics.blit(RenderPipelines.GUI_TEXTURED, sidebarLogo, logoX.toInt(), logoY.toInt(), 0f, 0f, 20, 20, 20, 20)
 
+        val hlAlpha = highlightAlphaAnim.getValue()
+        if (hlAlpha > 0.001f) {
+            val hlX = x + 4f
+            val hlW = w - 8f
+            val hlH = 28f
+            val hlY = highlightYAnim.getValue()
+            val alphaInt = (0x33 * hlAlpha).toInt().coerceIn(0, 0xFF)
+            val hlColor = (alphaInt shl 24) or (this.themeColor and 0x00FFFFFF)
+
+            NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
+                NVGRenderer.rect(hlX * 2, hlY * 2, hlW * 2, hlH * 2, Color(hlColor, true), 8f)
+            }
+        }
+
         val iconSize = 20f
         val iconPadding = 14f
         val iconX = x + (w - iconSize) / 2f
         var iconY = y + 50f
 
         for (category in Category.entries) {
-            val isSelected = selectedCategory == category
-
-            if (isSelected) {
-                graphics.fill(
-                    (x + 4).toInt(), (iconY - 4).toInt(),
-                    (x + w - 4).toInt(), (iconY + iconSize + 4).toInt(),
-                    0xFF1C1C1C.toInt()
-                )
-            }
-
             val iconTex = Identifier.fromNamespaceAndPath("hkim", "textures/clickgui/sidebar/${category.name.lowercase()}.png")
             graphics.blit(RenderPipelines.GUI_TEXTURED, iconTex, iconX.toInt(), iconY.toInt(), 0f, 0f, 20, 20, 20, 20)
 
@@ -284,7 +321,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         val w = guiW - sidebarW
         val h = headerH
 
-        graphics.drawHorizontalSeparator(x, y + h - 1, w, 0xFF333333.toInt())
+        graphics.drawHorizontalSeparator(x + 6, y + h - 1, w - 12, 0xFF444444.toInt())
 
         val titleText = when {
             searchQuery.isNotEmpty() -> "Search: \"$searchQuery\""
@@ -294,7 +331,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         graphics.text(mc.font, titleText, x.toInt() + 16, y.toInt() + 18, 0xFFFFFFFF.toInt(), false)
 
         val sbX = x + w - 180f
-        val sbY = y + 12f
+        val sbY = y + 13f
         val sbW = 140f
         val sbH = 20f
         val isSearchActive = searchEditBox != null
@@ -302,7 +339,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         val displayText = searchQuery.ifEmpty { "Search modules..." }
         val textColor = if (searchQuery.isEmpty()) 0xFF666666.toInt() else 0xFFFFFFFF.toInt()
         if (!isSearchActive) {
-            graphics.text(mc.font, displayText, sbX.toInt() + 6, sbY.toInt() + 7, textColor, false)
+            graphics.text(mc.font, displayText, sbX.toInt() + 6, sbY.toInt() + 6, textColor, false)
         }
 
         val closeX = x + w - 32f
@@ -345,7 +382,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
             val state = cardStates[module.id] ?: continue
             val currentModuleY = baseY + scrollOffset
 
-            state.render(graphics, baseX, currentModuleY, availW, mouseX.toFloat(), mouseY.toFloat(), contentTop, contentBottom, themeColor)
+            state.render(graphics, baseX, currentModuleY, availW, mouseX.toFloat(), mouseY.toFloat(), contentTop, contentBottom, themeColor, delta)
             baseY += state.totalHeight + 4f
         }
 
@@ -380,7 +417,24 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         for (category in Category.entries) {
             if (HudUtils.isPointInRect(mouseX, mouseY, iconX, iconY, iconSize, iconSize)) {
                 playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value(), 0.3f)
-                selectedCategory = if (selectedCategory == category) null else category
+
+                val oldCategory = selectedCategory
+                val newCategory = if (oldCategory == category) null else category
+                selectedCategory = newCategory
+
+                if (newCategory != null) {
+                    val targetY = getIconHighlightY(newCategory)
+                    if (oldCategory == null) {
+                        highlightYAnim.reset()
+                        highlightYAnim.from(targetY)
+                    } else {
+                        highlightYAnim.animateTo(targetY)
+                    }
+                    highlightAlphaAnim.animateTo(1f)
+                } else {
+                    highlightAlphaAnim.animateTo(0f)
+                }
+
                 searchQuery = ""
                 return true
             }
@@ -414,6 +468,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         if (HudUtils.isPointInRect(mouseX, mouseY, closeX, closeY, 20f, 20f)) {
             playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value(), 0.3f)
             onClose()
+            mc.setScreen(parent)
             return true
         }
 
@@ -467,7 +522,6 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
             moveCursorToEnd(false)
         }
 
-        activeEditBoxModule = cardStates.entries.find { setting in it.value.module.settings }?.value?.module
     }
 
     private fun activateSearchBox(x: Int, y: Int, width: Int, height: Int) {
@@ -524,202 +578,9 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         }
     }
 
-    private fun updateActiveEditBoxPosition() {
-        val editBox = activeEditBox ?: return
-        val setting = activeEditBoxSetting ?: return
-        val module = activeEditBoxModule ?: return
-
-        var y = guiY + headerH + contentPadding + contentScrollY
-        val x = guiX + sidebarW + contentPadding
-
-        for (m in getFilteredModules()) {
-            if (m == module) {
-                var sy = y + 44f + 6f
-                for (s in m.settings.filter { it.isVisible() }) {
-                    if (s == setting) {
-                        editBox.setPosition(editBox.x, (sy + 6).toInt())
-                        return
-                    }
-                    sy += 20f + 3f
-                }
-            }
-            y += (cardStates[m.id]?.totalHeight ?: 44f) + 4f
-        }
-    }
-
     private fun parseColorHex(hex: String): Int? {
         return try {
             ColorSetting.fromHexString(hex)
         } catch (_: Exception) { null }
-    }
-}
-
-private class ModuleCardState(val module: Module) {
-    var targetExpanded = false
-        private set
-
-    private val expandAnim = GuiAnimation.create(0f, 0f)
-        .duration(150L)
-        .easing(Easing.CUBIC_OUT)
-
-    private var animatedExpandedHeight = 0f
-
-    private var targetEnabled = module.enabled
-    private var lerpEnabled = if (targetEnabled) 1f else 0f
-
-    private val settingHeight = 20f
-    private val settingGap = 3f
-
-    private var draggingSetting: Setting<*>? = null
-    private var draggingSettingY: Float = 0f
-
-    private val visibleSettings: List<Setting<*>>
-        get() {
-            val visible = module.settings.filter { it.isVisible() }
-            for (s in module.settings) {
-                if (s is DropdownSetting && s !in visible && s.get()) {
-                    s.set(false)
-                }
-            }
-            return visible
-        }
-
-    val totalHeight: Float
-        get() = 44f + expandAnim.getValue()
-
-    fun update(deltaTime: Float) {
-        val factor = min(1f, deltaTime * 10f)
-
-        if (targetEnabled != module.enabled) targetEnabled = module.enabled
-        lerpEnabled = HudUtils.lerp(lerpEnabled, if (targetEnabled) 1f else 0f, factor)
-
-        if (targetExpanded) {
-            val currentH = calculateCurrentVisibleHeight() + 8f
-            if (abs(currentH - animatedExpandedHeight) > 0.5f) {
-                animatedExpandedHeight = currentH
-                expandAnim.animateTo(currentH)
-            }
-        }
-    }
-
-    fun render(graphics: GuiGraphicsExtractor, x: Float, y: Float, width: Float, mouseX: Float, mouseY: Float, visibleTop: Float, visibleBottom: Float, themeColor: Int): Float {
-        val cardH = 44f
-        val currentExpandedH = expandAnim.getValue()
-
-        val isHovered = HudUtils.isPointInRect(mouseX, mouseY, x, y, width, 44f)
-
-        val borderColor = HudUtils.lerpColor(0xFF333333.toInt(), themeColor, lerpEnabled)
-        val nameColor = HudUtils.lerpColor(0xFFFFFFFF.toInt(), themeColor, lerpEnabled)
-        val bgColor = if (isHovered) 0x10BFBFBF else 0x10222222
-
-        NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
-            val nvgX = x * 2f
-            val nvgY = y * 2f
-            val nvgW = width * 2f
-            val nvgH = totalHeight * 2f
-            NVGRenderer.rect(nvgX, nvgY, nvgW, nvgH, Color(bgColor, true), 8f)
-            NVGRenderer.hollowRect(nvgX, nvgY, nvgW, nvgH, 2f, Color(borderColor, true), 8f)
-            if (targetExpanded) {
-                NVGRenderer.line((x + 12f) * 2f, (y + cardH) * 2f, (x + width - 12f) * 2f, (y + cardH) * 2f, 1f, Color(0x30FFFFFF, true))
-            }
-        }
-
-        graphics.text(mc.font, Component.literal(module.name).withStyle(ChatFormatting.BOLD), x.toInt() + 14, y.toInt() + 12, nameColor, false)
-        graphics.text(mc.font, module.description, x.toInt() + 14, y.toInt() + 28, 0xFF888888.toInt(), false)
-
-        if (currentExpandedH > 0.01f) {
-            val scissorTop = y + cardH
-            val scissorBottom = y + totalHeight
-
-            if (scissorBottom > visibleTop && scissorTop < visibleBottom) {
-                graphics.enableScissor(
-                    (x - 4f).toInt(),
-                    max(scissorTop, visibleTop).toInt(),
-                    (x + width + 4f).toInt(),
-                    min(scissorBottom, visibleBottom).toInt()
-                )
-
-                var sy = y + cardH + 6f
-                for (setting in visibleSettings) {
-                    val settingTop = sy
-                    val settingBottom = sy + settingHeight + settingGap
-                    if (settingBottom >= scissorTop && settingTop <= scissorBottom) {
-                        val indent = 24f
-                        setting.render(graphics, x + indent, sy, width - indent * 2, mouseX, mouseY, themeColor)
-                    }
-                    sy += settingHeight + settingGap
-                }
-
-                graphics.disableScissor()
-            }
-        }
-
-        return totalHeight
-    }
-
-    fun handleClick(mouseX: Float, mouseY: Float, button: Int, x: Float, y: Float, width: Float): Boolean {
-        val cardH = 44f
-
-        if (HudUtils.isPointInRect(mouseX, mouseY, x, y, width, cardH)) {
-            when (button) {
-                0 -> { module.toggle(); return true }
-                1 -> {
-                    if (visibleSettings.isNotEmpty()) {
-                        targetExpanded = !targetExpanded
-                        if (targetExpanded) {
-                            animatedExpandedHeight = calculateCurrentVisibleHeight() + 8f  // 底部留 8f
-                            expandAnim.animateTo(animatedExpandedHeight)
-                        } else {
-                            expandAnim.animateTo(0f)
-                        }
-                    }
-                    return true
-                }
-            }
-        }
-
-        if (expandAnim.getProgress() > 0.5f) {
-            var sy = y + cardH + 6f
-            for (setting in visibleSettings) {
-                if (!setting.isVisible()) continue
-                val indent = 24f
-                if (setting.mouseClicked(mouseX, mouseY, button, x + indent, sy, width - indent * 2)) {
-                    draggingSetting = setting
-                    draggingSettingY = sy
-                    return true
-                }
-                sy += settingHeight + settingGap
-            }
-        }
-
-        return false
-    }
-
-    fun handleDrag(mouseX: Float, mouseY: Float, button: Int, x: Float, y: Float, width: Float): Boolean {
-        if (draggingSetting != null) {
-            val indent = 24f
-            return draggingSetting!!.mouseDragged(
-                mouseX, mouseY, button, 0f, 0f,
-                x + indent, draggingSettingY, width - indent * 2
-            )
-        }
-        return false
-    }
-
-    fun handleRelease(mouseX: Float, mouseY: Float, button: Int, x: Float, y: Float, width: Float): Boolean {
-        if (draggingSetting != null) {
-            val indent = 24f
-            draggingSetting!!.mouseReleased(
-                mouseX, mouseY, button,
-                x + indent, draggingSettingY, width - indent * 2
-            )
-            draggingSetting = null
-            return true
-        }
-        return false
-    }
-
-    private fun calculateCurrentVisibleHeight(): Float {
-        return visibleSettings.sumOf { (settingHeight + settingGap).toDouble() }.toFloat()
     }
 }

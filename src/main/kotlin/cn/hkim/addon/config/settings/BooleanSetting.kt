@@ -23,13 +23,16 @@ open class BooleanSetting(name: String, desc: String, override val default: Bool
         graphics: GuiGraphicsExtractor,
         x: Float, y: Float, width: Float,
         mouseX: Float, mouseY: Float,
-        themeColor: Int
+        themeColor: Int,
+        delta: Float
     ): Float {
         val height = 20f
         val isHovered = HudUtils.isPointInRect(mouseX, mouseY, x, y, width, height)
 
         if (isHovered) {
-            graphics.fill(x.toInt(), y.toInt(), (x + width).toInt(), (y + height).toInt(), 0x15FFFFFF)
+            NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
+                NVGRenderer.rect(x * 2, y * 2, width * 2, height * 2, Color(0x15FFFFFF, true), 6f)
+            }
         }
 
         graphics.text(mc.font, name, x.toInt() + 10, y.toInt() + 6, 0xFFCCCCCC.toInt(), false)
@@ -47,7 +50,7 @@ open class BooleanSetting(name: String, desc: String, override val default: Bool
         NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
             val bgColor = lerpColor(0xFF3A3A3A.toInt(), themeColor, animationProgress)
             NVGRenderer.rect(toggleX * 2, toggleY * 2, toggleW * 2, toggleH * 2, Color(bgColor), toggleH)
-            NVGRenderer.circle(knobX * 2 + 10f, toggleY * 2 + toggleH, 10f, Color(0xFFFFFF))
+            NVGRenderer.circle(knobX * 2 + 9f, toggleY * 2 + toggleH, 9f, Color(0xFFFFFF))
         }
 
         renderDescriptionTooltip(graphics, isHovered, mouseX, mouseY)

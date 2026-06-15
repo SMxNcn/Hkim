@@ -7,6 +7,7 @@ import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.playSoundAtPlayer
 import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
 import cn.hkim.addon.utils.render.nvg.NVGRenderer
+import com.mojang.blaze3d.platform.cursor.CursorType
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
 import java.awt.Color
@@ -18,13 +19,16 @@ class TextSetting(name: String, desc: String, override val default: String) : Se
         graphics: GuiGraphicsExtractor,
         x: Float, y: Float, width: Float,
         mouseX: Float, mouseY: Float,
-        themeColor: Int
+        themeColor: Int,
+        delta: Float
     ): Float {
         val height = 20f
         val isHovered = HudUtils.isPointInRect(mouseX, mouseY, x, y, width, height)
 
         if (isHovered) {
-            graphics.fill(x.toInt(), y.toInt(), (x + width).toInt(), (y + height).toInt(), 0x15FFFFFF)
+            NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
+                NVGRenderer.rect(x * 2, y * 2, width * 2, height * 2, Color(0x15FFFFFF, true), 6f)
+            }
         }
 
         graphics.text(mc.font, name, x.toInt() + 10, y.toInt() + 6, 0xFFCCCCCC.toInt(), false)
@@ -44,7 +48,15 @@ class TextSetting(name: String, desc: String, override val default: String) : Se
             NVGRenderer.hollowRect(inputX * 2, inputY * 2, inputW * 2, inputH * 2, 2f, Color(borderColor), 6f)
         }
 
-        if (!isActive) {
+        if (isActive) {
+            val editBox = screen.activeEditBox
+            if (editBox != null) {
+                editBox.setPosition((inputX + 4).toInt(), (inputY + 4).toInt())
+                editBox.setSize(inputW.toInt() - 2, inputH.toInt())
+                if (editBox.isFocused) graphics.requestCursor(CursorType.DEFAULT)
+                editBox.extractWidgetRenderState(graphics, mouseX.toInt(), mouseY.toInt(), delta)
+            }
+        } else {
             graphics.text(mc.font, value, inputX.toInt() + 4, inputY.toInt() + 4, 0xFFFFFFFF.toInt(), false)
         }
 
