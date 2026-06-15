@@ -57,7 +57,9 @@ abstract class Setting<T>(
         x: Float, y: Float, width: Float,
         mouseX: Float, mouseY: Float,
         themeColor: Int,
-        delta: Float
+        delta: Float,
+        visibleTop: Float = -1f,
+        visibleBottom: Float = -1f
     ): Float
 
     protected fun renderDescriptionTooltip(

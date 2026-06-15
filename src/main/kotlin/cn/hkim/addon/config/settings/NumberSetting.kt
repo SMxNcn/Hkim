@@ -54,10 +54,10 @@ class NumberSetting(name: String, desc: String, override val default: Float, val
         x: Float, y: Float, width: Float,
         mouseX: Float, mouseY: Float,
         themeColor: Int,
-        delta: Float
+        delta: Float, visibleTop: Float, visibleBottom: Float
     ): Float {
         val height = 20f
-        val isHovered = HudUtils.isPointInRect(mouseX, mouseY, x, y, width, height)
+        val isHovered = (visibleTop == -1f || mouseY in visibleTop..visibleBottom) && HudUtils.isPointInRect(mouseX, mouseY, x, y, width, height)
 
         updateAnimation()
 

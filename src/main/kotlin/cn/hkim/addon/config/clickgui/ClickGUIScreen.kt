@@ -490,13 +490,12 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         var y = guiY + headerH + contentPadding + contentScrollY
         val x = guiX + sidebarW + contentPadding
         val w = guiW - sidebarW - contentPadding * 2
-        val h = guiH - headerH
-
-        if (!HudUtils.isPointInRect(mouseX, mouseY, x, guiY + headerH, w, h)) return false
+        val visibleTop = guiY + headerH
+        val visibleBottom = guiY + guiH
 
         for (module in getFilteredModules()) {
             val state = cardStates[module.id] ?: continue
-            if (state.handleClick(mouseX, mouseY, button, x, y, w)) return true
+            if (state.handleClick(mouseX, mouseY, button, x, y, w, visibleTop, visibleBottom)) return true
             y += state.totalHeight + 4f
         }
         return false

@@ -109,7 +109,7 @@ class ModuleCardState(val module: Module) {
                     val settingBottom = sy + settingHeight + settingGap
                     if (settingBottom >= scissorTop && settingTop <= scissorBottom) {
                         val indent = 24f
-                        setting.render(graphics, x + indent, sy, width - indent * 2, mouseX, mouseY, themeColor, delta)
+                        setting.render(graphics, x + indent, sy, width - indent * 2, mouseX, mouseY, themeColor, delta, visibleTop, visibleBottom)
                     }
                     sy += settingHeight + settingGap
                 }
@@ -121,10 +121,11 @@ class ModuleCardState(val module: Module) {
         return totalHeight
     }
 
-    fun handleClick(mouseX: Float, mouseY: Float, button: Int, x: Float, y: Float, width: Float): Boolean {
+    fun handleClick(mouseX: Float, mouseY: Float, button: Int, x: Float, y: Float, width: Float, visibleTop: Float, visibleBottom: Float): Boolean {
         val cardH = 44f
 
-        if (HudUtils.isPointInRect(mouseX, mouseY, x, y, width, cardH)) {
+        if (mouseY in visibleTop..visibleBottom
+            && HudUtils.isPointInRect(mouseX, mouseY, x, y, width, cardH)) {
             when (button) {
                 0 -> { module.toggle(); return true }
                 1 -> {
@@ -146,6 +147,10 @@ class ModuleCardState(val module: Module) {
             var sy = y + cardH + 6f
             for (setting in visibleSettings) {
                 if (!setting.isVisible()) continue
+                if (sy + settingHeight < visibleTop || sy > visibleBottom) {
+                    sy += settingHeight + settingGap
+                    continue
+                }
                 val indent = 24f
                 if (setting.mouseClicked(mouseX, mouseY, button, x + indent, sy, width - indent * 2)) {
                     draggingSetting = setting

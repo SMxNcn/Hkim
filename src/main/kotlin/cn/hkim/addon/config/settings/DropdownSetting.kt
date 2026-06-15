@@ -18,10 +18,10 @@ class DropdownSetting(name: String, desc: String, defaultExpanded: Boolean = fal
         x: Float, y: Float, width: Float,
         mouseX: Float, mouseY: Float,
         themeColor: Int,
-        delta: Float
+        delta: Float, visibleTop: Float, visibleBottom: Float
     ): Float {
         val height = 20f
-        val isHovered = HudUtils.isPointInRect(mouseX, mouseY, x, y, width, height)
+        val isHovered = (visibleTop == -1f || mouseY in visibleTop..visibleBottom) && HudUtils.isPointInRect(mouseX, mouseY, x, y, width, height)
 
         graphics.fill(x.toInt(), y.toInt(), (x + width).toInt(), (y + height).toInt(), 0x80181818.toInt())
 
