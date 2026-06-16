@@ -1,0 +1,20 @@
+{
+    "enable": {
+        "sounds": [
+            "hkim:enable"
+        ],
+        "subtitle": "Module Enabled"
+    },
+    "disable": {
+        "sounds": [
+            "hkim:disable"
+        ],
+        "subtitle": "Module Disabled"
+    },
+    "zxf2": {
+        "sounds": [
+            "hkim:zxf2"
+        ],
+        "subtitle": "你跑不过我你信不信"
+    }
+}

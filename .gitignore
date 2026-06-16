@@ -1,0 +1,9 @@
+.idea/
+.gradle/
+
+build/
+run/
+temp/
+
+.claude/
+CLAUDE.md
