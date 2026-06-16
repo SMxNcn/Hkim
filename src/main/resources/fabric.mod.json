@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "id": "hkim",
   "version": "${version}",
-  "name": "HkiM",
-  "description": "Orbit test mod.",
+  "name": "Hkim",
+  "description": "A Hypixel Skyblock mod.",
   "authors": ["SMxNcn"],
   "contact": {
     "homepage": "https://nckim.top",
@@ -29,7 +29,7 @@
   "depends": {
     "fabricloader": ">=${loader_version}",
     "fabric-api": ">=${fabric_api_version}",
-    "minecraft": "~${minecraft_version}",
+    "minecraft": "~26.1",
     "fabric-language-kotlin": ">=${fabric_kotlin_version}",
     "modmenu": ">=${modmenu_version}"
   }
