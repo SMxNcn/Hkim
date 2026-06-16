@@ -119,11 +119,19 @@ object Background {
         val drawWidth = screen.width + extraSize * 2
         val drawHeight = screen.height + extraSize * 2
 
-        val startX = -extraSize + offsetX.toInt()
-        val startY = -extraSize + offsetY.toInt()
+        val intOffX = offsetX.toInt()
+        val intOffY = offsetY.toInt()
+        val fracOffX = offsetX - intOffX
+        val fracOffY = offsetY - intOffY
+
+        val startX = -extraSize + intOffX
+        val startY = -extraSize + intOffY
 
         val alphaInt = (alpha * 255).toInt()
         val color = (alphaInt shl 24) or 0x00FFFFFF
+
+        graphics.pose().pushMatrix()
+        graphics.pose().translate(fracOffX, fracOffY)
         graphics.blit(
             RenderPipelines.GUI_TEXTURED,
             texture,
@@ -134,6 +142,7 @@ object Background {
             drawWidth, drawHeight,
             color
         )
+        graphics.pose().popMatrix()
     }
 
     fun update() {
