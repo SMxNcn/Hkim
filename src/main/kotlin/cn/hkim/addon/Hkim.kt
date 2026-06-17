@@ -17,6 +17,7 @@ import meteordevelopment.orbit.EventBus
 import meteordevelopment.orbit.IEventBus
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
+import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.Minecraft
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
@@ -31,7 +32,7 @@ object Hkim : ClientModInitializer {
     @JvmField
     val EVENT_BUS: IEventBus = EventBus()
 
-    const val VERSION = "0.0.1"
+    val VERSION: String = FabricLoader.getInstance().getModContainer("hkim").get().metadata.version.friendlyString
 
     override fun onInitializeClient() {
         ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->

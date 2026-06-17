@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "hkim",
-  "version": "${version}",
+  "version": "${mod_version}",
   "name": "Hkim",
   "description": "A Hypixel Skyblock mod.",
   "authors": ["SMxNcn"],
