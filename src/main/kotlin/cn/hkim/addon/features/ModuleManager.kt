@@ -1,11 +1,17 @@
 package cn.hkim.addon.features
 
 import cn.hkim.addon.Hkim
+import cn.hkim.addon.Hkim.mc
+import cn.hkim.addon.gui.HudEditScreen
 import cn.hkim.addon.utils.containsOneOf
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry
+import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements
+import net.minecraft.resources.Identifier
 import java.lang.invoke.MethodHandles
 
 object ModuleManager {
     private val modules = mutableListOf<Module>()
+    private var hudHookRegistered = false
 
     fun initOrbit() {
         Hkim.EVENT_BUS.registerLambdaFactory("cn.hkim.addon") { lookupInMethod, klass ->
@@ -21,6 +27,23 @@ object ModuleManager {
         if (module in modules) return
         modules.add(module)
         Hkim.EVENT_BUS.subscribe(module)
+        initHudRenderHook()
+    }
+
+    private fun initHudRenderHook() {
+        if (hudHookRegistered) return
+        hudHookRegistered = true
+        HudElementRegistry.attachElementBefore(VanillaHudElements.SLEEP,
+            Identifier.fromNamespaceAndPath("hkim", "hud_elements")
+        ) { graphics, tick ->
+            if (mc.gui.hud.isHidden || mc.gui.screen() is HudEditScreen) return@attachElementBefore
+            for (module in modules) {
+                if (module.enabled) {
+                    module.render(graphics, tick)
+                }
+            }
+        }
+        Hkim.logger.info("HUD element render hook registered")
     }
 
     fun registerAll(vararg modules: Module) {
