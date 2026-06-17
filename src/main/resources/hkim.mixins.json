@@ -18,6 +18,7 @@
     "ContainerScreenMixin",
     "EntityMixin",
     "GameRendererMixin",
+    "LightmapRenderStateExtractorMixin",
     "GuiGraphicsExtractorMixin",
     "GuiMixin",
     "HudMixin",

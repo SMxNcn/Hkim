@@ -2,7 +2,9 @@ package cn.hkim.addon.mixins;
 
 import cn.hkim.addon.Hkim;
 import cn.hkim.addon.events.impl.PlayerEvent;
+import cn.hkim.addon.features.impl.AutoSprint;
 import cn.hkim.addon.utils.RotationUtils;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.client.player.LocalPlayer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -30,13 +32,10 @@ public class LocalPlayerMixin {
             Hkim.EVENT_BUS.post(new PlayerEvent.Sneak());
         }
         lastSneaking = sneaking;
-
-        RotationUtils.syncClientRotation(self.getYRot(), self.getXRot());
     }
 
     @Inject(method = "tick", at = @At("RETURN"))
     private void onTickEnd(CallbackInfo ci) {
-        LocalPlayer self = (LocalPlayer) (Object) this;
         if (!RotationUtils.isSilentAiming() && !RotationUtils.isStoppingAiming()) return;
         RotationUtils.applyModelRotation(RotationUtils.getServerYaw());
     }
@@ -59,5 +58,10 @@ public class LocalPlayerMixin {
 
         self.setYRot(this.savedYaw);
         self.setXRot(this.savedPitch);
+    }
+
+    @ModifyExpressionValue(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Input;sprint()Z"))
+    private boolean onSprintCheck(boolean original) {
+        return original || AutoSprint.INSTANCE.getEnabled();
     }
 }
