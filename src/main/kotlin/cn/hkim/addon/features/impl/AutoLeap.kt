@@ -19,7 +19,6 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players based on predefined 
     private var inLeapGui = false
     private var shouldAutoLeap = false
     private var targetClass: DungeonClass? = null
-//    private val leapedRegex = Regex("You have teleported to (\\w{1,16})!")
 
     @EventHandler
     fun onMouseClick(event: MouseButtonEvent) {

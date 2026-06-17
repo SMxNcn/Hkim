@@ -197,7 +197,6 @@ object NVGRenderer {
         return nvgTextBounds(vg, 0f, 0f, text, fontBounds)
     }
 
-    // ---- [ Other functions ] ----
 
     fun loadFontResource(resourcePath: String, fontName: String): Font? {
         return try {

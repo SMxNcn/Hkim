@@ -102,8 +102,8 @@ class NumberSetting(name: String, desc: String, override val default: Float, val
         if (isHovered) {
             val isOverSlider = HudUtils.isPointInRect(mouseX, mouseY, sliderX, sliderY - 2f, sliderW, 12f)
             if (isOverSlider) {
-                val knobW = 8f
-                val isOverKnob = HudUtils.isPointInRect(mouseX, mouseY, knobX, sliderY - 2f, knobW, 8f)
+                val knobSize = 8f
+                val isOverKnob = HudUtils.isPointInRect(mouseX, mouseY, knobX, sliderY - 2f, knobSize, knobSize)
                 graphics.requestCursor(if (isOverKnob) CursorTypes.RESIZE_EW else CursorTypes.POINTING_HAND)
             } else {
                 graphics.requestCursor(CursorTypes.POINTING_HAND)

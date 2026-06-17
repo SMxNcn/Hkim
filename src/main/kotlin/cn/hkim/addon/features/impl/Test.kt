@@ -19,7 +19,7 @@ import net.minecraft.world.inventory.ChestMenu
 import org.lwjgl.glfw.GLFW
 import java.awt.Color
 
-@ModuleInfo("test", Category.MISC, true)
+@ModuleInfo("test", Category.MISC, false)
 object Test : Module("Test", "A Test Module.") {
     private val dropdown1 by DropdownSetting("Dropdown 1", "D1", false)
     private val test1 by BooleanSetting("Boolean 1", "这是一个Boolean", true).depends { dropdown1 }
@@ -34,7 +34,6 @@ object Test : Module("Test", "A Test Module.") {
 
     @EventHandler
     fun onExtract(event: RenderEvent.Extract) {
-        //println("Receive packet: ${event.packet.type()}")
         if (!enabled || !test1) return
         val level = mc.level ?: return
         val player = mc.player ?: return

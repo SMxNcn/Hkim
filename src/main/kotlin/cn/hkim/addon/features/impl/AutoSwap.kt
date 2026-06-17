@@ -41,12 +41,10 @@ object AutoSwap : Module("Auto Swap", "Auto swap spirit/bonzo.") {
         val delayTime = if (useCustomDelay) spiritDelay.toInt() else 250
         delay(delayTime + (0..99).random().toLong())
 
-//        if (Auto4.isDeviceIncomplete()) Auto4.pauseShooting()
         delay(100)
 
         if (swapEquipment(listOf("SPIRIT_MASK"))) {
             delay(50)
-//            if (Auto4.isDeviceIncomplete()) Auto4.resumeShooting()
         }
     }
 
@@ -58,7 +56,6 @@ object AutoSwap : Module("Auto Swap", "Auto swap spirit/bonzo.") {
         val delayTime = if (useCustomDelay) phoenixDelay.toInt() else 250
         delay(delayTime + (0..99).random().toLong())
 
-//        if (Auto4.isDeviceIncomplete()) Auto4.pauseShooting()
         delay(100)
 
         mc.player?.inventory?.selectedSlot = rodSlot
@@ -68,6 +65,5 @@ object AutoSwap : Module("Auto Swap", "Auto swap spirit/bonzo.") {
         mc.player?.inventory?.selectedSlot = lastSlot
         delay(50)
 
-//        if (Auto4.isDeviceIncomplete()) Auto4.resumeShooting()
     }
 }
