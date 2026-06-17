@@ -6,6 +6,7 @@ import cn.hkim.addon.events.EventDispatcher
 import cn.hkim.addon.features.ModuleManager
 import cn.hkim.addon.features.impl.*
 import cn.hkim.addon.gui.Background
+import cn.hkim.addon.utils.ServerUtils
 import cn.hkim.addon.utils.TickTasks
 import cn.hkim.addon.utils.skyblock.DungeonUtils
 import cn.hkim.addon.utils.skyblock.EquipmentUtils
@@ -40,10 +41,10 @@ object Hkim : ClientModInitializer {
         }
 
         EventDispatcher.postEvents()
-        EventDispatcher.registerListeners(DungeonUtils, EquipmentUtils, LocationUtils, TickTasks, WardrobeUtils)
+        EventDispatcher.registerListeners(DungeonUtils, EquipmentUtils, LocationUtils, ServerUtils, TickTasks, WardrobeUtils)
         ModuleManager.registerAll(
             Test, Animations, AutoLeap, AutoSprint, AutoSwap, CameraHelper, CleanView, ClickGUI, CloseChest, CustomScoreboard, Etherwarp,
-            FullBright, HurtCamera, ItemStar, LeapMenu, MainMenuModule, ModuleList, Nametags, RerollProtector, TitleManager
+            FullBright, HurtCamera, ItemStar, LeapMenu, MainMenuModule, ModuleList, Nametags, PerformanceHUD, RerollProtector, TitleManager
         )
         ModuleConfig.loadConfig()
         Background.getDefaultBackground()
