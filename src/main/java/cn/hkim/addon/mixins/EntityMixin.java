@@ -1,5 +1,6 @@
 package cn.hkim.addon.mixins;
 
+import cn.hkim.addon.features.impl.CleanView;
 import cn.hkim.addon.features.impl.Nametags;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -18,7 +19,12 @@ public class EntityMixin {
 
         if (Nametags.shouldRemoveGlowing() && Nametags.isDungeonTeammate(player)) {
             cir.setReturnValue(false);
-            cir.cancel();
         }
+    }
+
+    @Inject(method = "displayFireAnimation", at = @At("HEAD"), cancellable = true)
+    private void onDisplayFireAnimation(CallbackInfoReturnable<Boolean> cir) {
+        if (!CleanView.shouldHideEntityFire()) return;
+        cir.setReturnValue(false);
     }
 }
