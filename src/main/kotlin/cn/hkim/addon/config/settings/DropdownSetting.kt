@@ -4,6 +4,7 @@ import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.render.Easing
 import cn.hkim.addon.utils.render.GuiAnimation
+import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
 
 class DropdownSetting(name: String, desc: String, defaultExpanded: Boolean = false) : BooleanSetting(name, desc, defaultExpanded) {
@@ -53,6 +54,10 @@ class DropdownSetting(name: String, desc: String, defaultExpanded: Boolean = fal
             if (isHovered) 0xFFFFFFFF.toInt() else 0xFF888888.toInt(),
             false
         )
+
+        if (isHovered) {
+            graphics.requestCursor(CursorTypes.POINTING_HAND)
+        }
 
         renderDescriptionTooltip(graphics, isHovered, mouseX, mouseY)
         return height

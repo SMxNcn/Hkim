@@ -11,6 +11,7 @@ import cn.hkim.addon.utils.render.GuiAnimation
 import cn.hkim.addon.utils.render.pip.ShapeRenderer.drawCircle
 import cn.hkim.addon.utils.render.pip.ShapeRenderer.drawRoundedRect
 import cn.hkim.addon.utils.render.pip.ShapeRenderer.drawRoundedRectWithBorder
+import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
 
@@ -48,6 +49,10 @@ open class BooleanSetting(name: String, desc: String, override val default: Bool
         val bgColor = lerpColor(0xFF3A3A3A.toInt(), themeColor, animationProgress)
         graphics.drawRoundedRect(toggleX, toggleY, toggleW, toggleH, bgColor, 6f)
         graphics.drawCircle(knobX + 4f, toggleY + toggleH / 2f, 0xFFFFFFFF.toInt(), 4.5f)
+
+        if (isHovered && HudUtils.isPointInRect(mouseX, mouseY, toggleX, toggleY, toggleW, toggleH)) {
+            graphics.requestCursor(CursorTypes.POINTING_HAND)
+        }
 
         renderDescriptionTooltip(graphics, isHovered, mouseX, mouseY)
         return height

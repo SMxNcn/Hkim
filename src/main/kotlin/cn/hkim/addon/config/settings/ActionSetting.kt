@@ -5,6 +5,7 @@ import cn.hkim.addon.config.Setting
 import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.playSoundAtPlayer
 import cn.hkim.addon.utils.render.pip.ShapeRenderer.drawRoundedRectWithBorder
+import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
 
@@ -40,6 +41,10 @@ class ActionSetting(name: String, desc: String, val action: () -> Unit) : Settin
         graphics.drawRoundedRectWithBorder(btnX, btnY, btnW, btnH, 0xFF3A3A3A.toInt(), btnColor, 1f, 3f)
 
         graphics.text(mc.font, "Execute", (btnX + btnW / 2 - mc.font.width("Execute") / 2).toInt(), btnY.toInt() + 4, 0xFFFFFFFF.toInt(), false)
+
+        if (isBtnHovered) {
+            graphics.requestCursor(CursorTypes.POINTING_HAND)
+        }
 
         renderDescriptionTooltip(graphics, isHovered, mouseX, mouseY)
         return height

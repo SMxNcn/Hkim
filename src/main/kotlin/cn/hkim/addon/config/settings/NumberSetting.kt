@@ -7,6 +7,7 @@ import cn.hkim.addon.utils.playSoundAtPlayer
 import cn.hkim.addon.utils.render.pip.ShapeRenderer.drawCircleWithBorder
 import cn.hkim.addon.utils.render.pip.ShapeRenderer.drawRoundedRect
 import cn.hkim.addon.utils.render.pip.ShapeRenderer.drawRoundedRectWithBorder
+import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
 import kotlin.math.abs
@@ -93,6 +94,17 @@ class NumberSetting(name: String, desc: String, override val default: Float, val
         val knobCx = sliderX + filledW
         val knobCy = sliderY + sliderH / 2f
         graphics.drawCircleWithBorder(knobCx, knobCy, themeColor, 0xFFFFFFFF.toInt(), 0.5f, knobRadius)
+
+        if (isHovered) {
+            val isOverSlider = HudUtils.isPointInRect(mouseX, mouseY, sliderX, sliderY - 2f, sliderW, 12f)
+            if (isOverSlider) {
+                val knobSize = knobRadius * 2f
+                val isOverKnob = HudUtils.isPointInRect(mouseX, mouseY, knobCx - knobRadius, knobCy - knobRadius, knobSize, knobSize)
+                graphics.requestCursor(if (isOverKnob) CursorTypes.RESIZE_EW else CursorTypes.POINTING_HAND)
+            } else {
+                graphics.requestCursor(CursorTypes.POINTING_HAND)
+            }
+        }
 
         renderDescriptionTooltip(graphics, isHovered, mouseX, mouseY)
         return height
