@@ -71,6 +71,10 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
     var activeEditBoxSetting: Setting<*>? = null
 
     override fun init() {
+        if (selectedCategory != null) {
+            lastSelectedCategory = selectedCategory
+        }
+
         guiX = (mc.window.guiScaledWidth - guiW) / 2f
         guiY = (mc.window.guiScaledHeight - guiH) / 2f
 
