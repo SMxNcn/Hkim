@@ -6,6 +6,7 @@ import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.playSoundAtPlayer
 import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
 import cn.hkim.addon.utils.render.nvg.NVGRenderer
+import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
 import java.awt.Color
@@ -55,6 +56,10 @@ class SelectorSetting(name: String, desc: String, val options: List<String>, def
         graphics.text(mc.font, ">", (selectorX + selectorW - 12).toInt(), selectorY.toInt() + 4, rightArrowColor, false)
 
         graphics.centeredText(mc.font, _selected, optionsX, selectorY.toInt() + 4, 0xFFFFFFFF.toInt())
+
+        if (leftArrowHovered || rightArrowHovered) {
+            graphics.requestCursor(CursorTypes.POINTING_HAND)
+        }
 
         renderDescriptionTooltip(graphics, isHovered, mouseX, mouseY)
         return height

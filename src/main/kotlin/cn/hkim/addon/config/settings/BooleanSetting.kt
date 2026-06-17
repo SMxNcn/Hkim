@@ -10,6 +10,7 @@ import cn.hkim.addon.utils.render.Easing
 import cn.hkim.addon.utils.render.GuiAnimation
 import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
 import cn.hkim.addon.utils.render.nvg.NVGRenderer
+import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
 import java.awt.Color
@@ -51,6 +52,16 @@ open class BooleanSetting(name: String, desc: String, override val default: Bool
             val bgColor = lerpColor(0xFF3A3A3A.toInt(), themeColor, animationProgress)
             NVGRenderer.rect(toggleX * 2, toggleY * 2, toggleW * 2, toggleH * 2, Color(bgColor), toggleH)
             NVGRenderer.circle(knobX * 2 + 9f, toggleY * 2 + toggleH, 9f, Color(0xFFFFFF))
+        }
+
+        if (isHovered) {
+            val toggleX = x + width - 34f
+            val toggleY = y + 4f
+            val toggleW = 28f
+            val toggleH = 12f
+            if (HudUtils.isPointInRect(mouseX, mouseY, toggleX, toggleY, toggleW, toggleH)) {
+                graphics.requestCursor(CursorTypes.POINTING_HAND)
+            }
         }
 
         renderDescriptionTooltip(graphics, isHovered, mouseX, mouseY)

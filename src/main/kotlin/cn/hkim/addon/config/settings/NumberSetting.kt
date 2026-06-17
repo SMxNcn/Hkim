@@ -6,6 +6,7 @@ import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.playSoundAtPlayer
 import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
 import cn.hkim.addon.utils.render.nvg.NVGRenderer
+import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
 import java.awt.Color
@@ -96,6 +97,17 @@ class NumberSetting(name: String, desc: String, override val default: Float, val
 
             NVGRenderer.rect(knobX * 2, (sliderY - 2) * 2, 16f, (sliderH + 4) * 2, Color(themeColor), 8f)
             NVGRenderer.hollowRect(knobX * 2, (sliderY - 2) * 2, 16f, (sliderH + 4) * 2, 1f, Color(0xA0181818.toInt(), true), 8f)
+        }
+
+        if (isHovered) {
+            val isOverSlider = HudUtils.isPointInRect(mouseX, mouseY, sliderX, sliderY - 2f, sliderW, 12f)
+            if (isOverSlider) {
+                val knobW = 8f
+                val isOverKnob = HudUtils.isPointInRect(mouseX, mouseY, knobX, sliderY - 2f, knobW, 8f)
+                graphics.requestCursor(if (isOverKnob) CursorTypes.RESIZE_EW else CursorTypes.POINTING_HAND)
+            } else {
+                graphics.requestCursor(CursorTypes.POINTING_HAND)
+            }
         }
 
         renderDescriptionTooltip(graphics, isHovered, mouseX, mouseY)

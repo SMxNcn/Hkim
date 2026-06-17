@@ -21,6 +21,7 @@ import cn.hkim.addon.utils.render.GuiAnimation
 import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
 import cn.hkim.addon.utils.render.nvg.NVGRenderer
 import com.mojang.blaze3d.platform.cursor.CursorType
+import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.EditBox
@@ -298,6 +299,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
             graphics.blit(RenderPipelines.GUI_TEXTURED, iconTex, iconX.toInt(), iconY.toInt(), 0f, 0f, 20, 20, 20, 20)
 
             if (HudUtils.isPointInRect(mouseX.toFloat(), mouseY.toFloat(), iconX, iconY, iconSize, iconSize)) {
+                graphics.requestCursor(CursorTypes.POINTING_HAND)
                 graphics.setTooltipForNextFrame(mc.font, Component.literal(category.name.lowercase().replaceFirstChar { it.uppercase() }), mouseX, mouseY)
             }
 
@@ -307,10 +309,12 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         val bottomY = y + h - 70f
         val isVerHovered = HudUtils.isPointInRect(mouseX.toFloat(), mouseY.toFloat(), x + 1f, bottomY + 58f, sidebarW - 6f, 10f)
         val versionText = if (isVerHovered) Component.literal("v${Hkim.VERSION}").withStyle(ChatFormatting.UNDERLINE) else Component.literal("v${Hkim.VERSION}")
+        if (isVerHovered) graphics.requestCursor(CursorTypes.POINTING_HAND)
         graphics.text(mc.font, versionText, (guiX + 4).toInt(), (guiY + guiH - mc.font.lineHeight - 2).toInt(), 0xFF888888.toInt(), false)
 
         graphics.blit(RenderPipelines.GUI_TEXTURED, editIcon, iconX.toInt(), (bottomY + 30).toInt(), 0f, 0f, 20, 20, 20, 20)
         if (HudUtils.isPointInRect(mouseX.toFloat(), mouseY.toFloat(), x + 10f, bottomY + 30f, 20f, 20f)) {
+            graphics.requestCursor(CursorTypes.POINTING_HAND)
             graphics.setTooltipForNextFrame(mc.font, Component.literal("Edit HUD"), mouseX, mouseY)
         }
     }
@@ -354,7 +358,12 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         graphics.text(mc.font, "×", closeX.toInt() + 8, sbY.toInt() + 7, 0xFFFFFFFF.toInt(), false)
 
         if (HudUtils.isPointInRect(mouseX.toFloat(), mouseY.toFloat(), closeX, sbY, 20f, 20f)) {
+            graphics.requestCursor(CursorTypes.POINTING_HAND)
             graphics.setTooltipForNextFrame(mc.font, Component.literal("Close"), mouseX, mouseY)
+        }
+
+        if (!isSearchActive && HudUtils.isPointInRect(mouseX.toFloat(), mouseY.toFloat(), sbX, sbY, sbW, sbH)) {
+            graphics.requestCursor(CursorTypes.POINTING_HAND)
         }
     }
 

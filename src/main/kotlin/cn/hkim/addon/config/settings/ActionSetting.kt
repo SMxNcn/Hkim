@@ -6,6 +6,7 @@ import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.playSoundAtPlayer
 import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
 import cn.hkim.addon.utils.render.nvg.NVGRenderer
+import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
 import java.awt.Color
@@ -48,6 +49,10 @@ class ActionSetting(name: String, desc: String, val action: () -> Unit) : Settin
         }
 
         graphics.text(mc.font, "Execute", (btnX + btnW / 2 - mc.font.width("Execute") / 2).toInt(), btnY.toInt() + 4, 0xFFFFFFFF.toInt(), false)
+
+        if (isBtnHovered) {
+            graphics.requestCursor(CursorTypes.POINTING_HAND)
+        }
 
         renderDescriptionTooltip(graphics, isHovered, mouseX, mouseY)
         return height

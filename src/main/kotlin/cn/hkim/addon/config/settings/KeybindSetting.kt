@@ -7,6 +7,7 @@ import cn.hkim.addon.utils.playSoundAtPlayer
 import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
 import cn.hkim.addon.utils.render.nvg.NVGRenderer
 import com.mojang.blaze3d.platform.InputConstants
+import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
 import org.lwjgl.glfw.GLFW
@@ -54,6 +55,10 @@ class KeybindSetting(name: String, desc: String, defaultKey: Int = GLFW.GLFW_KEY
         }
 
         graphics.text(mc.font, displayText, (btnX + btnW / 2 - mc.font.width(displayText) / 2).toInt(), btnY.toInt() + 4, 0xFFFFFFFF.toInt(), false)
+
+        if (isBtnHovered) {
+            graphics.requestCursor(CursorTypes.POINTING_HAND)
+        }
 
         renderDescriptionTooltip(graphics, isHovered, mouseX, mouseY)
         return height

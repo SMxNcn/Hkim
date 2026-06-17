@@ -77,7 +77,6 @@ object ModuleConfig {
                     is BooleanSetting -> setting.set(element.asBoolean)
                     is ColorSetting -> {
                         val rawValue = if (element.isJsonPrimitive && element.asJsonPrimitive.isNumber) {
-                            // backward compatibility: old config stores raw int
                             element.asInt
                         } else {
                             ColorSetting.fromHexString(element.asString)

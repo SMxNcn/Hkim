@@ -8,6 +8,7 @@ import cn.hkim.addon.utils.playSoundAtPlayer
 import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
 import cn.hkim.addon.utils.render.nvg.NVGRenderer
 import com.mojang.blaze3d.platform.cursor.CursorType
+import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
 import java.awt.Color
@@ -57,6 +58,9 @@ class TextSetting(name: String, desc: String, override val default: String) : Se
                 editBox.extractWidgetRenderState(graphics, mouseX.toInt(), mouseY.toInt(), delta)
             }
         } else {
+            if (HudUtils.isPointInRect(mouseX, mouseY, inputX, inputY, inputW, inputH)) {
+                graphics.requestCursor(CursorTypes.POINTING_HAND)
+            }
             graphics.text(mc.font, value, inputX.toInt() + 4, inputY.toInt() + 4, 0xFFFFFFFF.toInt(), false)
         }
 

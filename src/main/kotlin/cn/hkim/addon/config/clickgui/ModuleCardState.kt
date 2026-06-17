@@ -9,6 +9,7 @@ import cn.hkim.addon.utils.render.Easing
 import cn.hkim.addon.utils.render.GuiAnimation
 import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
 import cn.hkim.addon.utils.render.nvg.NVGRenderer
+import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.network.chat.Component
@@ -90,6 +91,10 @@ class ModuleCardState(val module: Module) {
 
         graphics.text(mc.font, Component.literal(module.name).withStyle(ChatFormatting.BOLD), x.toInt() + 14, y.toInt() + 12, nameColor, false)
         graphics.text(mc.font, module.description, x.toInt() + 14, y.toInt() + 28, 0xFF888888.toInt(), false)
+
+        if (isHovered) {
+            graphics.requestCursor(CursorTypes.POINTING_HAND)
+        }
 
         if (currentExpandedH > 0.01f) {
             val scissorTop = y + cardH

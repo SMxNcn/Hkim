@@ -8,6 +8,7 @@ import cn.hkim.addon.utils.playSoundAtPlayer
 import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
 import cn.hkim.addon.utils.render.nvg.NVGRenderer
 import com.mojang.blaze3d.platform.cursor.CursorType
+import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
 import java.awt.Color
@@ -58,7 +59,12 @@ class ColorSetting(name: String, desc: String, override val default: Int) : Sett
                 editBox.extractWidgetRenderState(graphics, mouseX.toInt(), mouseY.toInt(), delta)
             }
         } else {
-            graphics.text(mc.font, hexText, (previewX - mc.font.width(hexText) - 14).toInt(), y.toInt() + 6, value or 0xFF000000.toInt(), false)
+            val hexAreaX = (previewX - mc.font.width(hexText) - 14).toInt()
+            val hexAreaW = mc.font.width(hexText) + 8
+            if (HudUtils.isPointInRect(mouseX, mouseY, (hexAreaX - 4).toFloat(), previewY, hexAreaW.toFloat(), 16f)) {
+                graphics.requestCursor(CursorTypes.POINTING_HAND)
+            }
+            graphics.text(mc.font, hexText, hexAreaX, y.toInt() + 6, value or 0xFF000000.toInt(), false)
         }
 
         renderDescriptionTooltip(graphics, isHovered, mouseX, mouseY)
