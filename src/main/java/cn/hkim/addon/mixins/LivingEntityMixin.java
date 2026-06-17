@@ -16,7 +16,7 @@ public class LivingEntityMixin {
     @Shadow
     public boolean swinging;
 
-    @ModifyExpressionValue(method = "updateSwingTime", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getCurrentSwingDuration()I"))
+    @ModifyExpressionValue(method = {"updateSwingTime", "swing(Lnet/minecraft/world/InteractionHand;Z)V"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getCurrentSwingDuration()I"))
     private int modifySwingDuration(int original) {
         if (Animations.INSTANCE.getEnabled() && Animations.getIgnoreHaste()) return (int) Animations.getSpeed();
         return original;
