@@ -6,6 +6,7 @@ import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.playSoundAtPlayer
 import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
 import cn.hkim.addon.utils.render.nvg.NVGRenderer
+import cn.hkim.addon.utils.startsWithOneOf
 import com.mojang.blaze3d.platform.InputConstants
 import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -54,7 +55,7 @@ class KeybindSetting(name: String, desc: String, defaultKey: Int = GLFW.GLFW_KEY
             NVGRenderer.hollowRect(btnX * 2, btnY * 2, btnW * 2, btnH * 2, 2f, Color(btnColor), 6f)
         }
 
-        graphics.text(mc.font, displayText, (btnX + btnW / 2 - mc.font.width(displayText) / 2).toInt(), btnY.toInt() + 4, 0xFFFFFFFF.toInt(), false)
+        graphics.text(mc.font, displayText, (btnX + btnW / 2 - mc.font.width(displayText) / 2).toInt(), btnY.toInt() + 5, 0xFFFFFFFF.toInt(), false)
 
         if (isBtnHovered) {
             graphics.requestCursor(CursorTypes.POINTING_HAND)
@@ -65,6 +66,8 @@ class KeybindSetting(name: String, desc: String, defaultKey: Int = GLFW.GLFW_KEY
     }
 
     override fun mouseClicked(mouseX: Float, mouseY: Float, button: Int, x: Float, y: Float, width: Float): Boolean {
+        if (isBinding) return true
+
         if (button != 0) return false
         val btnX = x + width - 80f
         val btnY = y + 2f
@@ -98,8 +101,33 @@ class KeybindSetting(name: String, desc: String, defaultKey: Int = GLFW.GLFW_KEY
         return true
     }
 
+    fun handleMouseButton(button: Int): Boolean {
+        if (!isBinding) return false
+
+        if (button <= 1) {
+            isBinding = false
+            return true
+        }
+
+        value = button
+        isBinding = false
+        settingsChanged()
+        playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value(), 0.3f)
+        return true
+    }
+
     private fun getKeyDisplayName(keyCode: Int): String {
         if (keyCode == GLFW.GLFW_KEY_UNKNOWN) return "None"
+
+        if (keyCode in 0..7) {
+            return try {
+                val key = InputConstants.Type.MOUSE.getOrCreate(keyCode)
+                key.displayName.string
+            } catch (_: Exception) {
+                getMouseButtonFallbackName(keyCode)
+            }
+        }
+
         return try {
             val key = InputConstants.Type.KEYSYM.getOrCreate(keyCode)
             key.displayName.string
@@ -108,10 +136,17 @@ class KeybindSetting(name: String, desc: String, defaultKey: Int = GLFW.GLFW_KEY
         }
     }
 
+    private fun getMouseButtonFallbackName(button: Int): String {
+        return when (button) {
+            2 -> "Mouse Middle"
+            else -> "Mouse ${button + 1}"
+        }
+    }
+
     companion object {
         private val keyCodeToName: Map<Int, String> by lazy {
             GLFW::class.java.declaredFields
-                .filter { f -> f.type == Int::class.javaPrimitiveType && f.name.startsWith("GLFW_KEY_") }
+                .filter { f -> f.type == Int::class.javaPrimitiveType && f.name.startsWithOneOf("GLFW_KEY_", "GLFW_MOUSE_BUTTON_") }
                 .mapNotNull { f ->
                     try {
                         f.isAccessible = true

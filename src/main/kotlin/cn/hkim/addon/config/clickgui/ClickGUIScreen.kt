@@ -147,6 +147,14 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         val mouseY = event.y.toFloat()
         val button = event.button()
 
+        for (state in cardStates.values) {
+            for (setting in state.module.settings) {
+                if (setting is KeybindSetting && setting.isBinding) {
+                    if (setting.handleMouseButton(button)) return true
+                }
+            }
+        }
+
         if (searchEditBox != null && !isPointInSearchBox(mouseX, mouseY)) {
             deactivateSearchBox()
         }
