@@ -2,6 +2,8 @@ package cn.hkim.addon.mixins;
 
 import cn.hkim.addon.Hkim;
 import cn.hkim.addon.events.impl.PlayerEvent;
+import cn.hkim.addon.features.impl.AutoSprint;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.client.player.LocalPlayer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -19,11 +21,14 @@ public class LocalPlayerMixin {
     private void onTick(CallbackInfo ci) {
         LocalPlayer self = (LocalPlayer) (Object) this;
         boolean sneaking = self.input.keyPresses.shift();
-
         if (!lastSneaking && sneaking) {
             Hkim.EVENT_BUS.post(new PlayerEvent.Sneak());
         }
-
         lastSneaking = sneaking;
+    }
+
+    @ModifyExpressionValue(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Input;sprint()Z"))
+    private boolean autoSprint(boolean original) {
+        return original || AutoSprint.INSTANCE.getEnabled();
     }
 }

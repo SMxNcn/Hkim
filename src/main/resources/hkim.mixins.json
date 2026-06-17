@@ -17,6 +17,7 @@
     "ConnectionMixin",
     "ContainerScreenMixin",
     "EntityMixin",
+    "LightmapRenderStateExtractorMixin",
     "GuiGraphicsExtractorMixin",
     "GuiMixin",
     "ItemInHandRendererMixin",
