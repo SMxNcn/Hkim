@@ -3,12 +3,12 @@ package cn.hkim.addon.gui
 import cn.hkim.addon.Hkim
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.ModuleConfig
-import cn.hkim.addon.config.clickgui.ClickGUIScreen
 import cn.hkim.addon.features.impl.MainMenuModule
 import cn.hkim.addon.utils.buildGradientComponent
 import cn.hkim.addon.utils.coloredChar
 import cn.hkim.addon.utils.mcVersion
 import cn.hkim.addon.utils.render.pip.ShapeRenderer.drawRoundedRectWithBorder
+import com.terraformersmc.modmenu.gui.ModsScreen
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.TitleScreen
@@ -74,8 +74,8 @@ class MainMenu : Screen(Component.literal("Main Menu")) {
             mc.gui.setScreen(JoinMultiplayerScreen(this))
         })
 
-        addRenderableWidget(ClientButton(centerX - 90, centerY + 45, btnW, btnH, Component.translatable("Hkim ClickGUI")) {
-            mc.gui.setScreen(ClickGUIScreen(this))
+        addRenderableWidget(ClientButton(centerX - 90, centerY + 45, btnW, btnH, Component.translatable("modmenu.title")) {
+            mc.gui.setScreen(ModsScreen(this))
         })
 
         addRenderableWidget(ClientButton(centerX - 90, centerY + 67, 88, btnH, Component.translatable("menu.options")) {

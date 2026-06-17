@@ -30,9 +30,9 @@ dependencies {
 
     implementation("meteordevelopment:orbit:${property("orbit_version")}")
     implementation("com.github.stivais:Commodore:${property("commodore_version")}")
-    //implementation("com.terraformersmc:modmenu:${property("modmenu_version")}")
+    implementation("com.terraformersmc:modmenu:${property("modmenu_version")}")
     runtimeOnly("me.djtheredstoner:DevAuth-fabric:${property("devauth_version")}")
-    //compileOnly("eu.pb4:placeholder-api:${property("placeholder_api_version")}")
+    compileOnly("eu.pb4:placeholder-api:${property("placeholder_api_version")}")
 
     include("meteordevelopment:orbit:${property("orbit_version")}")
     include("com.github.stivais:Commodore:${property("commodore_version")}")

@@ -18,6 +18,9 @@
         "adapter": "kotlin",
         "value": "cn.hkim.addon.Hkim"
       }
+    ],
+    "modmenu": [
+      "cn.hkim.addon.config.ModMenuIntegration"
     ]
   },
   "mixins": [
@@ -27,6 +30,7 @@
     "fabricloader": ">=${loader_version}",
     "fabric-api": ">=${fabric_api_version}",
     "minecraft": ">=26.1",
-    "fabric-language-kotlin": ">=${fabric_kotlin_version}"
+    "fabric-language-kotlin": ">=${fabric_kotlin_version}",
+    "modmenu": ">=${modmenu_version}"
   }
 }
