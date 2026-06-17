@@ -263,6 +263,10 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         ModuleConfig.saveConfig()
     }
 
+    override fun isPauseScreen(): Boolean {
+        return false
+    }
+
     private fun renderSidebar(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float) {
         val x = guiX
         val y = guiY
