@@ -84,11 +84,11 @@ class HudEditScreen(private val parent: Screen?) : Screen(Component.literal("HUD
         graphics.pose().translate(bounds.x - off, bounds.y - off)
         val w = bounds.w + 2 * off
         val h = bounds.h + 2 * off
-        graphics.fill(0, 0, w.toInt(), h.toInt(), 0)
+        val ext = bw / 2f
         graphics.drawHorizontalLine(0f, 0f, w, borderColor, bw)
         graphics.drawHorizontalLine(0f, h - bw, w, borderColor, bw)
-        graphics.drawVerticalLine(0f, 0f, h, borderColor, bw)
-        graphics.drawVerticalLine(w - bw, 0f, h, borderColor, bw)
+        graphics.drawVerticalLine(0f, -ext, h + ext * 2, borderColor, bw)
+        graphics.drawVerticalLine(w - bw, -ext, h + ext * 2, borderColor, bw)
         graphics.pose().popMatrix()
     }
 
@@ -151,7 +151,7 @@ class HudEditScreen(private val parent: Screen?) : Screen(Component.literal("HUD
 
         val newAlign = when {
             regionV == "MIDDLE" && regionH == "MIDDLE" -> return
-            regionV == "MIDDLE" -> if (regionH == "LEFT") HudAlignment.TOP_LEFT else HudAlignment.TOP_RIGHT
+            regionV == "MIDDLE" -> HudAlignment.valueOf("MIDDLE_${regionH}")
             regionH == "MIDDLE" -> if (regionV == "TOP") HudAlignment.TOP_MIDDLE else HudAlignment.BOTTOM_MIDDLE
             else -> HudAlignment.valueOf("${regionV}_${regionH}")
         }
