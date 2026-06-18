@@ -126,6 +126,14 @@ fun leftClick() {
     KeyMapping.set(actualKey, false)
 }
 
+fun clickKey(key: KeyMapping) {
+    val actualKey = (key as KeyMappingAccessor).boundKey
+    KeyMapping.click(actualKey)
+}
+
 fun playSoundAtPlayer(event: SoundEvent, volume: Float = 1f, pitch: Float = 1f) = mc.execute {
     mc.soundManager.playDelayed(SimpleSoundInstance.forUI(event, pitch, volume), 0)
 }
+
+fun randomDelay(base: Int, variance: Int): Long =
+    base + (0..variance).random().toLong()
