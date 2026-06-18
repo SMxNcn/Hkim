@@ -22,7 +22,7 @@ object PerformanceHUD : Module("Performance HUD", "Shows performance information
     private val showPing by BooleanSetting("Show Ping", "Shows the ping in the HUD.", true)
 
     private val hud by HudElement("Performance", "Shows performance information on the screen.",
-        x = 6f, y = 6f, alignment = HudAlignment.TOP_LEFT
+        x = 5f, y = 5f, alignment = HudAlignment.TOP_LEFT
     ) { graphics, _ ->
         if (this@PerformanceHUD.enabled) renderContent(graphics) else Pair(0f, 0f)
     }

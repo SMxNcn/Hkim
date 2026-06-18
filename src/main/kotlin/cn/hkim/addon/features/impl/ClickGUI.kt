@@ -13,7 +13,7 @@ import org.lwjgl.glfw.GLFW
 
 @ModuleInfo("click_gui", category = Category.MISC, true)
 object ClickGUI : Module("Click GUI", "Click GUI settings.") {
-    private val themeColor by ColorSetting("Theme Color", "Theme color of click gui.", 0xFF4A90E2.toInt())
+    private val themeColor by ColorSetting("Theme Color", "Theme color of click gui.", 0xFF3C96DC.toInt())
     private val keybind by KeybindSetting("Click GUI Keybind", "", GLFW.GLFW_KEY_RIGHT_ALT)
 
     fun getGuiColor() = themeColor
