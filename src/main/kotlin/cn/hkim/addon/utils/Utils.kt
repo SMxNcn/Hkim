@@ -90,7 +90,7 @@ fun Player.clickInventorySlot(slot: Int, containerId: Int, rightClick: Boolean =
     mc.gameMode?.handleContainerInput(containerId, slot, if (rightClick) 1 else 0, ContainerInput.PICKUP, this)
 }
 
-fun Player.clickPlayerInventorySlot(slot: Int, containerId: Int) {
+fun Player.clickPlayerInventorySlot(slot: Int, containerId: Int, clickType: ContainerInput = ContainerInput.PICKUP) {
     if (mc.screen == null) return
     val containerSlots = containerMenu.slots.size
     val actualSlot: Int
@@ -107,7 +107,7 @@ fun Player.clickPlayerInventorySlot(slot: Int, containerId: Int) {
 
     if (actualSlot !in 0 until containerSlots) return
 
-    mc.gameMode?.handleContainerInput(containerId, actualSlot, 0, ContainerInput.PICKUP, this)
+    mc.gameMode?.handleContainerInput(containerId, actualSlot, 0, clickType, this)
 }
 
 fun rightClick() {

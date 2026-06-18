@@ -1,5 +1,6 @@
 package cn.hkim.addon
 
+import cn.hkim.addon.commands.autoSellCommand
 import cn.hkim.addon.commands.hkimCommand
 import cn.hkim.addon.config.ModuleConfig
 import cn.hkim.addon.events.EventDispatcher
@@ -37,15 +38,15 @@ object Hkim : ClientModInitializer {
 
     override fun onInitializeClient() {
         ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
-            arrayOf(hkimCommand).forEach { commodore -> commodore.register(dispatcher) }
+            arrayOf(hkimCommand, autoSellCommand).forEach { commodore -> commodore.register(dispatcher) }
         }
 
         EventDispatcher.postEvents()
         EventDispatcher.registerListeners(DungeonUtils, EquipmentUtils, LocationUtils, ServerUtils, TickTasks, WardrobeUtils)
         ModuleManager.registerAll(
-            Test, Animations, AutoClicker, AutoLeap, AutoSprint, AutoSwap, CameraHelper, CleanView, ClickGUI, CloseChest, CommandKeybinds,
-            CustomScoreboard, Etherwarp, FullBright, HurtCamera, ItemStar, LeapMenu, MainMenuModule, ModuleList, Nametags, PerformanceHUD, RerollProtector,
-            TitleManager
+            Test, Animations, AutoClicker, AutoLeap, AutoSell, AutoSprint, AutoSwap, CameraHelper, CleanView, ClickGUI, CloseChest, CommandKeybinds,
+            CustomScoreboard, Etherwarp, FullBright, HurtCamera, ItemStar, LeapMenu, MainMenuModule, ModuleList, Nametags, PerformanceHUD,/* Ragnarock,*/
+            RerollProtector, TitleManager
         )
         ModuleConfig.loadConfig()
         Background.getDefaultBackground()
