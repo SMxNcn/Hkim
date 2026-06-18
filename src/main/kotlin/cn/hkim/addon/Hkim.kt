@@ -43,8 +43,9 @@ object Hkim : ClientModInitializer {
         EventDispatcher.postEvents()
         EventDispatcher.registerListeners(DungeonUtils, EquipmentUtils, LocationUtils, ServerUtils, TickTasks, WardrobeUtils)
         ModuleManager.registerAll(
-            Test, Animations, AutoLeap, AutoSprint, AutoSwap, CameraHelper, CleanView, ClickGUI, CloseChest, CustomScoreboard, Etherwarp,
-            FullBright, HurtCamera, ItemStar, LeapMenu, MainMenuModule, ModuleList, Nametags, PerformanceHUD, RerollProtector, TitleManager
+            Test, Animations,/* AutoClicker,*/ AutoLeap, AutoSprint, AutoSwap, CameraHelper, CleanView, ClickGUI, CloseChest, CommandKeybinds,
+            CustomScoreboard, Etherwarp, FullBright, HurtCamera, ItemStar, LeapMenu, MainMenuModule, ModuleList, Nametags, PerformanceHUD, RerollProtector,
+            TitleManager
         )
         ModuleConfig.loadConfig()
         Background.getDefaultBackground()
