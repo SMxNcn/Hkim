@@ -27,7 +27,7 @@ import net.minecraft.resources.Identifier
 import org.lwjgl.glfw.GLFW
 import java.awt.Color
 
-@ModuleInfo("leap_menu", Category.SKYBLOCK, false)
+@ModuleInfo("leap_menu", Category.SKYBLOCK)
 object LeapMenu : Module("Leap Menu", "Custom leap menu.") {
     val type by SelectorSetting("Sorting", "How to sort the leap menu.", arrayListOf("Default", "A-Z Class", "A-Z Name", "No Sorting"), "Default")
     private val leapAnnounce by BooleanSetting("Leap Announce", "Announces when you leap to a player.", false)

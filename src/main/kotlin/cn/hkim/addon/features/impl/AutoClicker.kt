@@ -13,7 +13,7 @@ import cn.hkim.addon.utils.itemId
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.world.item.BlockItem
 
-@ModuleInfo("auto_clicker", Category.SKYBLOCK, false)
+@ModuleInfo("auto_clicker", Category.SKYBLOCK)
 object AutoClicker : Module("Auto Clicker", "Auto clicker with options for left-click, right-click, or both.") {
     private val mode by SelectorSetting("Mode", "Click mode.", listOf("Normal", "Terminator"), "Normal")
     private val cps by NumberSetting("CPS", "Clicks per second.", 5.0f, 3.0f, 15.0f, 0.5f).depends { mode == 1 }

@@ -21,7 +21,7 @@ import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 
-@ModuleInfo("auto_sell", Category.SKYBLOCK, false)
+@ModuleInfo("auto_sell", Category.SKYBLOCK)
 object AutoSell : Module("Auto Sell", "Automatically sell items in trades and cookie menus. (/autosell)") {
     private val delay by NumberSetting("Delay", "Tick delay between each sell action.", 100f, 75f, 300f, 5f)
     private val clickType by SelectorSetting("Click Type", "Click type to use when selling.", listOf("Shift", "Middle", "Left"), "Shift")

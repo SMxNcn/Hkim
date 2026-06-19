@@ -17,7 +17,7 @@ import meteordevelopment.orbit.EventHandler
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.Vec3
 
-@ModuleInfo("nametag", Category.RENDER, false)
+@ModuleInfo("nametag", Category.RENDER)
 object Nametags : Module("Nametags", "Render a nametag above players.") {
     private val dropdown by DropdownSetting("Show Settings", "")
     private val removeGlowing by BooleanSetting("Remove Glowing Effect", "Removes glowing effect on dungeon teammates.", true).depends { dropdown && teammateESP }

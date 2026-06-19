@@ -16,7 +16,7 @@ import meteordevelopment.orbit.EventHandler
 import net.minecraft.network.protocol.game.ClientboundSoundPacket
 import net.minecraft.sounds.SoundEvents
 
-@ModuleInfo("ragnarock", Category.SKYBLOCK, false)
+@ModuleInfo("ragnarock", Category.SKYBLOCK)
 object Ragnarock : Module("Ragnarock", "Alerts when you cast the Ragnarock or it gets cancelled.") {
     private val castAlert by BooleanSetting("Cast alert", "Alerts when you cast Ragnarock.", true)
     private val cancelAlert by BooleanSetting("Cancel alert", "Alerts when Ragnarock is cancelled.", true)

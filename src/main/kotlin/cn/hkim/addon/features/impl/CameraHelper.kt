@@ -10,7 +10,7 @@ import cn.hkim.addon.features.ModuleInfo
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.client.CameraType
 
-@ModuleInfo("camera", Category.RENDER, false)
+@ModuleInfo("camera", Category.RENDER)
 object CameraHelper : Module("Camera Helper", "Modify your camera") {
     private val frontCamera by BooleanSetting("Front Camera", "Disables front camera.", true)
     private val cameraDist by NumberSetting("Camera Distance", "Third-person camera distance.", 4.0f, 2.0f, 10.0f, 0.1f)

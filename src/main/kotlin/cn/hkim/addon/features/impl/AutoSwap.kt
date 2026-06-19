@@ -17,7 +17,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import meteordevelopment.orbit.EventHandler
 
-@ModuleInfo("auto_swap", Category.SKYBLOCK, false)
+@ModuleInfo("auto_swap", Category.SKYBLOCK)
 object AutoSwap : Module("Auto Swap", "Auto swap spirit/bonzo.") {
     private val useCustomDelay by BooleanSetting("Custom Swap Delay", "Customize delay before swapping items.", false)
     private val custom by DropdownSetting("Delay", "Delay settings.", false).depends { useCustomDelay }

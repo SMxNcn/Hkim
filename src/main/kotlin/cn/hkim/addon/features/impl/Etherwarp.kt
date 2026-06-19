@@ -10,7 +10,7 @@ import cn.hkim.addon.utils.rightClick
 import cn.hkim.addon.utils.skyblock.LocationUtils
 import meteordevelopment.orbit.EventHandler
 
-@ModuleInfo("etherwarp", Category.SKYBLOCK, false)
+@ModuleInfo("etherwarp", Category.SKYBLOCK)
 object Etherwarp : Module("Etherwarp", "Sneak to instantly Etherwarp with AOTV/AOTE.") {
     var lastEtherwarpTime: Long = 0
 

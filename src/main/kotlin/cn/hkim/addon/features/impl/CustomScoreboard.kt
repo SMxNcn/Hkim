@@ -14,7 +14,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.network.chat.Component
 import java.awt.Color
 
-@ModuleInfo("custom_scoreboard", Category.MISC, false)
+@ModuleInfo("custom_scoreboard", Category.MISC)
 object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard background & last-line replacement.") {
     private const val EXAMPLE_TITLE = "§e§lSKYBLOCK"
     private val EXAMPLE_LINES = listOf(

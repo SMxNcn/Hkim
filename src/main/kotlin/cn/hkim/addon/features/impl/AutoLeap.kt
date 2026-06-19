@@ -12,7 +12,7 @@ import cn.hkim.addon.utils.skyblock.*
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 
-@ModuleInfo("auto_leap", Category.SKYBLOCK, false)
+@ModuleInfo("auto_leap", Category.SKYBLOCK)
 object AutoLeap : Module("Auto Leap", "Auto leap to players based on predefined rules.") {
     private val forceMageCore by BooleanSetting("Force Mage Core", "Always treat mage as core in P3 S3.", true)
 

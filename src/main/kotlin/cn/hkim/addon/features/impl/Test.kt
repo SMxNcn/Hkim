@@ -3,23 +3,17 @@ package cn.hkim.addon.features.impl
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.settings.*
 import cn.hkim.addon.events.impl.GuiEvent
-import cn.hkim.addon.events.impl.MouseButtonEvent
-import cn.hkim.addon.events.impl.RenderEvent
 import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.features.ModuleManager
 import cn.hkim.addon.utils.cleanString
-import cn.hkim.addon.utils.modMessage
-import cn.hkim.addon.utils.render.drawStyledBox
-import cn.hkim.addon.utils.renderBoundingBox
 import cn.hkim.addon.utils.skyblock.LocationUtils
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.world.inventory.ChestMenu
 import org.lwjgl.glfw.GLFW
-import java.awt.Color
 
-@ModuleInfo("test", Category.MISC, false)
+@ModuleInfo("test", Category.MISC)
 object Test : Module("Test", "A Test Module.") {
     private val dropdown1 by DropdownSetting("Dropdown 1", "D1", false)
     private val test1 by BooleanSetting("Boolean 1", "这是一个Boolean", true).depends { dropdown1 }
@@ -31,26 +25,6 @@ object Test : Module("Test", "A Test Module.") {
     private val cleanGui by BooleanSetting("Clean Gui View", "Stop clicking on blank name items in SkyBlock menus.", true).depends { dropdown2 }
     private val action1 by ActionSetting("Action 1", "这是一个Action") { println(ModuleManager.getEnabledToName()) }
     private val key1 by KeybindSetting("Keybind 1", "这是一个按键绑定", GLFW.GLFW_KEY_UNKNOWN)
-
-    @EventHandler
-    fun onExtract(event: RenderEvent.Extract) {
-        if (!enabled || !test1) return
-        val level = mc.level ?: return
-        val player = mc.player ?: return
-
-        for (entity in level.players()) {
-            if (entity == player) continue
-            event.drawStyledBox(entity.renderBoundingBox, Color(255, 255, 255), selector1, false)
-        }
-    }
-
-    @EventHandler
-    fun onMouse(event: MouseButtonEvent) {
-        if (!enabled) return
-        if (event.button == 0 && LocationUtils.inSkyBlock) {
-            modMessage("Left Click")
-        }
-    }
 
     @EventHandler
     fun onGuiClick(event: GuiEvent.SlotClick) {

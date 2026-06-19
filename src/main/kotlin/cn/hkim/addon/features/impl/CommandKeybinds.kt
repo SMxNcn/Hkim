@@ -10,7 +10,7 @@ import cn.hkim.addon.utils.sendCommand
 import cn.hkim.addon.utils.skyblock.LocationUtils
 import meteordevelopment.orbit.EventHandler
 
-@ModuleInfo("command_keybinds", Category.SKYBLOCK, false)
+@ModuleInfo("command_keybinds", Category.SKYBLOCK)
 object CommandKeybinds : Module("Command Keybinds", "Various keybinds for common skyblock commands.") {
     private val pet by KeybindSetting("Pets", "Open the pets menu.")
     private val wardrobe by KeybindSetting("Wardrobe", "Opens the wardrobe menu.")
