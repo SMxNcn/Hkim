@@ -16,7 +16,6 @@ import java.awt.Color
 
 @ModuleInfo("custom_scoreboard", Category.MISC, false)
 object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard background & last-line replacement.") {
-
     private const val EXAMPLE_TITLE = "§e§lSKYBLOCK"
     private val EXAMPLE_LINES = listOf(
         "§6  5,234,567",
@@ -25,12 +24,12 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard background & l
         "§b  ✦ 128",
         "§e  Coins 100K",
         "§7  §m━━━━━━━━━",
-        "§d§l✿ BMW ISLAND ✿"
+        "§d§l✿ BMW ✿"
     )
 
     private val showBackground by BooleanSetting("Background", "", true)
-    private val bgColor by ColorSetting("BG Color", "", 0x4C000000.toInt()).depends { showBackground }
-    private val padding by NumberSetting("Padding", "Space between content and background edge.", 2f, 0f, 6f, 0.5f)
+    private val bgColor by ColorSetting("Color", "", 0x4C000000).depends { showBackground }
+    private val padding by NumberSetting("Padding", "Space between content and background edge.", 2f, 0f, 6f, 0.5f).depends { showBackground }
     private val replaceIpLine by BooleanSetting("Replace Last Line", "Replace the last row (e.g. server IP) with custom text.", true)
     private val customServerIp by TextSetting("Custom IP Line", "Use & instead of § for colour codes.", "").depends { replaceIpLine }
     private val centerIpLine by BooleanSetting("Center IP Line", "Center the custom IP line horizontally.", false).depends { replaceIpLine }
@@ -40,9 +39,9 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard background & l
     private val gradSpeed by NumberSetting("Gradient Speed", "", 5f, 1f, 10f, 1f).depends { replaceIpLine && lastLineGradient }
 
     private val resetPosition by ActionSetting("Reset Position", "Reset scoreboard position to default (top-right corner).") {
-        hud.hudAlignment = HudAlignment.TOP_LEFT
-        hud.anchorX = 50f
-        hud.anchorY = 50f
+        hud.hudAlignment = HudAlignment.MIDDLE_RIGHT
+        hud.anchorX = -100f
+        hud.anchorY = -25f
         hud.hudScale = 1f
         prevContentWidth = 0f
         initialPositionSet = false
@@ -76,24 +75,9 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard background & l
         val scale = hud.hudScale
         val screenW = mc.window.guiScaledWidth
 
-        if (!initialPositionSet && hud.loadedFromConfig) {
+        if (!initialPositionSet) {
             initialPositionSet = true
             prevContentWidth = newW
-            return
-        }
-
-        if (prevContentWidth == 0f) {
-            val rightEdge = screenW - 4f
-            val leftEdge = rightEdge - newW * scale
-            val centerX = (leftEdge + rightEdge) / 2f
-            val isLeftHalf = centerX < screenW / 2f
-            val targetAlign = if (isLeftHalf) HudAlignment.TOP_LEFT else HudAlignment.TOP_RIGHT
-
-            hud.hudAlignment = targetAlign
-            hud.anchorX = leftEdge - targetAlign.baseX(screenW)
-            hud.anchorY = 4f
-            prevContentWidth = newW
-            initialPositionSet = true
             return
         }
 
@@ -103,15 +87,16 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard background & l
         val oldRight = oldLeft + prevContentWidth * scale
         val oldCenterX = (oldLeft + oldRight) / 2f
 
-        if (oldCenterX < screenW / 2f) {
-            hud.hudAlignment = HudAlignment.TOP_LEFT
-            hud.anchorX = oldLeft
+        val newLeft = if (oldCenterX < screenW / 2f) {
+            oldLeft
         } else {
-            val newLeft = oldRight - newW * scale
-            hud.hudAlignment = HudAlignment.TOP_RIGHT
-            hud.anchorX = newLeft - screenW
+            oldRight - newW * scale
         }
 
+        val maxLeft = (screenW - newW * scale - 4f).coerceAtLeast(4f)
+        val clampedLeft = newLeft.coerceIn(4f, maxLeft)
+
+        hud.anchorX = clampedLeft - hud.hudAlignment.baseX(screenW)
         prevContentWidth = newW
     }
 
