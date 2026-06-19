@@ -11,6 +11,7 @@ import java.lang.invoke.MethodHandles
 
 object ModuleManager {
     private val modules = mutableListOf<Module>()
+    private var isInitialized = false
     private var hudHookRegistered = false
 
     fun initOrbit() {
@@ -23,13 +24,20 @@ object ModuleManager {
         }
     }
 
+    fun initModules() {
+        if (isInitialized) return
+        val modules = ModuleScanner.discoverModules()
+        registerAll(modules)
+        isInitialized = true
+    }
+
     private fun register(module: Module) {
         if (module in modules) return
         modules.add(module)
         Hkim.EVENT_BUS.subscribe(module)
     }
 
-    fun registerAll(vararg modules: Module) {
+    private fun registerAll(modules: List<Module>) {
         if (this.modules.isEmpty()) {
             initOrbit()
         }

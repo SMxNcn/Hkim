@@ -5,7 +5,6 @@ import cn.hkim.addon.commands.hkimCommand
 import cn.hkim.addon.config.ModuleConfig
 import cn.hkim.addon.events.EventDispatcher
 import cn.hkim.addon.features.ModuleManager
-import cn.hkim.addon.features.impl.*
 import cn.hkim.addon.gui.Background
 import cn.hkim.addon.utils.ServerUtils
 import cn.hkim.addon.utils.TickTasks
@@ -43,11 +42,7 @@ object Hkim : ClientModInitializer {
 
         EventDispatcher.postEvents()
         EventDispatcher.registerListeners(DungeonUtils, EquipmentUtils, LocationUtils, ServerUtils, TickTasks, WardrobeUtils)
-        ModuleManager.registerAll(
-            Test, Animations, AutoClicker, AutoLeap, AutoSell, AutoSprint, AutoSwap, CameraHelper, CleanView, ClickGUI, CloseChest, CommandKeybinds,
-            CustomScoreboard, Etherwarp, FullBright, HurtCamera, ItemStar, LeapMenu, MainMenuModule, ModuleList, Nametags, PerformanceHUD, Ragnarock,
-            RerollProtector, TitleManager
-        )
+        ModuleManager.initModules()
         ModuleConfig.loadConfig()
         Background.getDefaultBackground()
     }
