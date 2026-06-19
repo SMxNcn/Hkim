@@ -55,7 +55,7 @@ object PerformanceHUD : Module("Performance HUD", "Shows performance information
             }
         }
 
-        if (showTPS) metric("TPS: ", "${ServerUtils.averageTps.toInt()} ")
+        if (showTPS) metric("TPS: ", "${"%.1f".format(ServerUtils.averageTps)} ")
         if (showFPS) metric("FPS: ", "${mc.fps} ")
         if (showPing) metric("Ping: ", "${ServerUtils.averagePing}ms")
 

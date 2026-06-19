@@ -14,16 +14,17 @@
     "AbstractContainerScreenMixin",
     "CameraMixin",
     "ChatComponentMixin",
+    "ClientPacketListenerMixin",
     "ConnectionMixin",
     "ContainerScreenMixin",
     "EntityMixin",
     "EntityRendererMixin",
     "FallingBlockRendererMixin",
-    "LightmapRenderStateExtractorMixin",
     "GuiGraphicsExtractorMixin",
     "GuiMixin",
     "ItemInHandRendererMixin",
     "KeyMappingMixin",
+    "LightmapRenderStateExtractorMixin",
     "LivingEntityMixin",
     "LivingEntityRendererMixin",
     "LocalPlayerMixin",
@@ -36,8 +37,8 @@
     "TitleScreenMixin",
     "TooltipRenderUtilMixin",
     "WindowMixin",
+    "accessors.CameraAccessor",
     "accessors.KeyMappingAccessor",
-    "accessors.ScreenAccessor",
-    "accessors.CameraAccessor"
+    "accessors.ScreenAccessor"
   ]
 }

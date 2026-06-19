@@ -5,7 +5,7 @@ import cn.hkim.addon.events.impl.PacketReceiveEvent
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.network.protocol.game.ClientboundSetTimePacket
 import net.minecraft.network.protocol.ping.ClientboundPongResponsePacket
-import net.minecraft.network.protocol.ping.ServerboundPingRequestPacket
+import kotlin.math.min
 
 object ServerUtils {
     private var prevTime = 0L
@@ -17,9 +17,6 @@ object ServerUtils {
 
     var averagePing: Int = 0
         private set
-
-    private val pingSamples = mutableListOf<Int>()
-    private var lastPingSend = 0L
 
     @EventHandler
     fun onPacket(event: PacketReceiveEvent) {
@@ -36,19 +33,21 @@ object ServerUtils {
             averageTps = (20000f / interval).coerceIn(0f, 20f)
         }
         prevTime = now
-
-        if (now - lastPingSend >= 200) {
-            lastPingSend = now
-            mc.connection?.send(ServerboundPingRequestPacket(now))
-        }
     }
 
     private fun updatePing(sentTime: Long) {
         currentPing = (System.currentTimeMillis() - sentTime).toInt().coerceAtLeast(0)
 
-        pingSamples.add(currentPing)
-        if (pingSamples.size > 20) pingSamples.removeAt(0)
+        val pingLog = mc.debugOverlay.pingLogger
+        val sampleSize = min(pingLog.size(), 20)
+        if (sampleSize == 0) {
+            averagePing = currentPing
+            return
+        }
 
-        averagePing = pingSamples.average().toInt()
+        var total = 0L
+        for (i in 0 until sampleSize) total += pingLog[i]
+
+        averagePing = (total / sampleSize).toInt()
     }
 }
