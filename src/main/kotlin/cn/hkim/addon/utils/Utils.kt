@@ -110,6 +110,11 @@ fun Player.clickPlayerInventorySlot(slot: Int, containerId: Int, clickType: Cont
     mc.gameMode?.handleContainerInput(containerId, actualSlot, 0, clickType, this)
 }
 
+fun fillItemFromSack(amount: Int, itemId: String, sackName: String) {
+    val needed = mc.player?.inventory?.find { it.itemId == itemId }?.count ?: 0
+    if (needed != amount) sendCommand("gfs $sackName ${amount - needed}") else modMessage("§cAlready at max stack size.")
+}
+
 fun rightClick() {
     val key = mc.options.keyUse
     val actualKey = (key as KeyMappingAccessor).boundKey

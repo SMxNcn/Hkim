@@ -72,7 +72,7 @@ fun getItemRarity(itemStack: ItemStack): ItemRarity? {
     return null
 }
 
-fun getTooltipStyle(rarity: ItemRarity): Identifier = Identifier.withDefaultNamespace(/*"hkim", */rarity.name.lowercase())
+fun getTooltipStyle(rarity: ItemRarity): Identifier = Identifier.withDefaultNamespace(rarity.name.lowercase())
 
 fun ItemStack.isEtherwarpItem(): CompoundTag? =
     customData.takeIf { it.getInt("ethermerge").orElse(0) == 1 || it.itemId == "ETHERWARP_CONDUIT" }
