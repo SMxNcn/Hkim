@@ -41,6 +41,18 @@ inline val ItemStack.petInfo: String
 inline val ItemStack.isSword: Boolean
     get() = `is` { it.`is`(ItemTags.SWORDS) }
 
+val strengthRegex = Regex("Strength: §.\\+(\\d+)")
+
+inline val ItemStack.strength: Int
+    get() = this.loreString.firstOrNull {
+        it.contains("Strength:")
+    }?.let { lineString ->
+        strengthRegex.find(lineString)?.groups?.get(1)?.value?.toIntOrNull()
+    } ?: 0
+
+inline val ItemStack.hasGlint: Boolean
+    get() = get(DataComponents.ENCHANTMENT_GLINT_OVERRIDE) ?: false
+
 fun getItemRarity(itemStack: ItemStack): ItemRarity? {
     if (itemStack.itemId == "PET") {
         val petInfo = itemStack.petInfo
