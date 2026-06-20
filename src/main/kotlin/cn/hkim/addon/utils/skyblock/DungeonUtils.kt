@@ -135,6 +135,8 @@ object DungeonUtils {
     var floor: Floor? = null
     var inBoss = false
     var doorOpener: String = "Unknown"
+    val inClear: Boolean
+        get() = LocationUtils.inDungeons && !inBoss
 
     private val floorRegex = Regex("The Catacombs \\((\\w+)\\)$")
     private val doorOpenRegex = Regex("^(?:\\[\\w+] )?(\\w+) opened a (?:WITHER|Blood) door!")
