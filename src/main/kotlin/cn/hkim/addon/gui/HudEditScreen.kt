@@ -45,7 +45,7 @@ class HudEditScreen(private val parent: Screen?) : Screen(Component.literal("HUD
             }
         }
 
-        val elements = ModuleManager.getAll().flatMap { it.hudElements }
+        val elements = ModuleManager.getAll().filter { it.enabled }.flatMap { it.hudElements }
         var hovered: HudElement? = null
         for (i in elements.indices.reversed()) {
             val el = elements[i]
@@ -95,7 +95,7 @@ class HudEditScreen(private val parent: Screen?) : Screen(Component.literal("HUD
     override fun mouseClicked(event: MouseButtonEvent, doubleClick: Boolean): Boolean {
         if (event.button() != 0) return super.mouseClicked(event, doubleClick)
         val mx = event.x.toFloat(); val my = event.y.toFloat()
-        val hit = ModuleManager.getAll().flatMap { it.hudElements }.asReversed().firstOrNull { el ->
+        val hit = ModuleManager.getAll().filter { it.enabled }.flatMap { it.hudElements }.asReversed().firstOrNull { el ->
             el.isVisible() && el.getScreenBounds().contains(mx, my)
         } ?: return super.mouseClicked(event, doubleClick)
 
