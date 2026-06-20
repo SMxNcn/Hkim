@@ -136,6 +136,11 @@ fun clickKey(key: KeyMapping) {
     KeyMapping.click(actualKey)
 }
 
+fun holdKey(key: KeyMapping, holding: Boolean) {
+    val actualKey = (key as KeyMappingAccessor).boundKey
+    KeyMapping.set(actualKey, holding)
+}
+
 fun playSoundAtPlayer(event: SoundEvent, volume: Float = 1f, pitch: Float = 1f) = mc.execute {
     mc.soundManager.playDelayed(SimpleSoundInstance.forUI(event, pitch, volume), 0)
 }

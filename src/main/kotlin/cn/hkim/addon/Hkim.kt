@@ -2,7 +2,9 @@ package cn.hkim.addon
 
 import cn.hkim.addon.commands.autoSellCommand
 import cn.hkim.addon.commands.hkimCommand
+import cn.hkim.addon.commands.hwpCommand
 import cn.hkim.addon.config.ModuleConfig
+import cn.hkim.addon.events.CustomEventDispatcher
 import cn.hkim.addon.events.EventDispatcher
 import cn.hkim.addon.features.ModuleManager
 import cn.hkim.addon.gui.Background
@@ -37,11 +39,11 @@ object Hkim : ClientModInitializer {
 
     override fun onInitializeClient() {
         ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
-            arrayOf(hkimCommand, autoSellCommand).forEach { commodore -> commodore.register(dispatcher) }
+            arrayOf(hkimCommand, autoSellCommand, hwpCommand).forEach { commodore -> commodore.register(dispatcher) }
         }
 
         EventDispatcher.postEvents()
-        EventDispatcher.registerListeners(DungeonUtils, EquipmentUtils, LocationUtils, ServerUtils, TickTasks, WardrobeUtils)
+        EventDispatcher.registerListeners(CustomEventDispatcher, DungeonUtils, EquipmentUtils, LocationUtils, ServerUtils, TickTasks, WardrobeUtils)
         ModuleManager.initModules()
         ModuleConfig.loadConfig()
         Background.getDefaultBackground()
