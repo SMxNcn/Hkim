@@ -11,8 +11,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
 import java.awt.Color
 
-class ActionSetting(name: String, desc: String, val action: () -> Unit) : Setting<Unit>(name, desc) {
-    override val default: Unit = Unit
+class ActionSetting(name: String, desc: String, val action: () -> Unit) : Setting<Unit>(name, desc, Unit) {
     override var value: Unit = Unit
     fun execute() = action()
     init { noSave() }

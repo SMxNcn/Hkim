@@ -13,7 +13,7 @@ import java.awt.Color
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-class NumberSetting(name: String, desc: String, override val default: Float, val min: Float, val max: Float, val step: Float) : Setting<Float>(name, desc) {
+class NumberSetting(name: String, desc: String, default: Float, val min: Float, val max: Float, val step: Float) : Setting<Float>(name, desc, default) {
     private var isDragging = false
 
     private var animationProgress: Float

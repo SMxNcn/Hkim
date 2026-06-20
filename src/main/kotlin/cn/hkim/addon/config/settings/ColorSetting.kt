@@ -13,8 +13,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
 import java.awt.Color
 
-class ColorSetting(name: String, desc: String, override val default: Int) : Setting<Int>(name, desc) {
-    init { value = default }
+class ColorSetting(name: String, desc: String, default: Int) : Setting<Int>(name, desc, default) {
 
     override fun render(
         graphics: GuiGraphicsExtractor,

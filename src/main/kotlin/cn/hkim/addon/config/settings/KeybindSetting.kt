@@ -14,8 +14,7 @@ import net.minecraft.sounds.SoundEvents
 import org.lwjgl.glfw.GLFW
 import java.awt.Color
 
-class KeybindSetting(name: String, desc: String, defaultKey: Int = GLFW.GLFW_KEY_UNKNOWN) : Setting<Int>(name, desc) {
-    override val default: Int = defaultKey
+class KeybindSetting(name: String, desc: String, defaultKey: Int = GLFW.GLFW_KEY_UNKNOWN) : Setting<Int>(name, desc, defaultKey) {
     override var value: Int = defaultKey
 
     internal var isBinding = false
