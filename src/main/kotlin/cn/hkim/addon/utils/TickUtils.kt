@@ -48,12 +48,12 @@ object TickTasks {
     }
 
     @EventHandler
-    fun onClientTick(event: TickEvent.End) {
+    private fun onClientTick(event: TickEvent.End) {
         clientTickTasks.forEach { it.run() }
     }
 
     @EventHandler
-    fun onServerTick(event: TickEvent.Server) {
+    private fun onServerTick(event: TickEvent.Server) {
         serverTickTasks.forEach { it.run() }
     }
 }

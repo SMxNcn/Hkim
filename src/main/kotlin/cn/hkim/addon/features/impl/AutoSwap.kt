@@ -28,7 +28,7 @@ object AutoSwap : Module("Auto Swap", "Auto swap spirit/bonzo.") {
     private val spiritRegex = Regex("^Second Wind Activated! Your Spirit Mask saved your life!$")
 
     @EventHandler
-    fun onChat(event: ChatReceiveEvent) {
+    private fun onChat(event: ChatReceiveEvent) {
         if (!LocationUtils.inDungeons) return
 
         when {

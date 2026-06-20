@@ -19,7 +19,7 @@ object ClickGUI : Module("Click GUI", "Click GUI settings.") {
     fun getGuiColor() = themeColor
 
     @EventHandler
-    fun onKeyEvent(event: InputEvent) {
+    private fun onKeyEvent(event: InputEvent) {
         if (mc.screen != null) return
         if (event.key.value == keybind) mc.setScreen(ClickGUIScreen(null))
     }

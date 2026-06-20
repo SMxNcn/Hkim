@@ -19,7 +19,7 @@ object CommandKeybinds : Module("Command Keybinds", "Various keybinds for common
     private val cookie by KeybindSetting("Cookie Menu", "Opens the cookie menu.")
 
     @EventHandler
-    fun onKeyPressed(event: InputEvent) {
+    private fun onKeyPressed(event: InputEvent) {
         if (!enabled || mc.screen != null || !LocationUtils.inSkyBlock) return
         when (event.key.value) {
             pet -> sendCommand("pets")

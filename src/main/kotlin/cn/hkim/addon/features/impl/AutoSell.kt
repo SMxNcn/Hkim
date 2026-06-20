@@ -67,7 +67,7 @@ object AutoSell : Module("Auto Sell", "Automatically sell items in trades and co
     }
 
     @EventHandler
-    fun onTick(event: TickEvent.Start) {
+    private fun onTick(event: TickEvent.Start) {
         schedule(randomDelay(delay.toInt(), 50).toInt()) {
             if (!enabled || sellList.isEmpty()) return@schedule
 

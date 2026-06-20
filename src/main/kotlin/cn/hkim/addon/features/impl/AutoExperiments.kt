@@ -39,7 +39,7 @@ object AutoExperiments : Module("Auto Experiments", "Automatically click on the 
     }
     
     @EventHandler
-    fun onGuiOpen(event: GuiEvent.Open) {
+    private fun onGuiOpen(event: GuiEvent.Open) {
         val title = event.screen.title.string
 
         handler = when {
@@ -50,12 +50,12 @@ object AutoExperiments : Module("Auto Experiments", "Automatically click on the 
     }
 
     @EventHandler
-    fun onSlotUpdate(event: GuiEvent.SlotUpdate) {
+    private fun onSlotUpdate(event: GuiEvent.SlotUpdate) {
         handler?.onSlotUpdate(event)
     }
     
     @EventHandler
-    fun onTick(event: TickEvent.End) {
+    private fun onTick(event: TickEvent.End) {
         val handler = handler ?: return
         val player = mc.player ?: return
         val screen = mc.screen as? AbstractContainerScreen<*> ?: return

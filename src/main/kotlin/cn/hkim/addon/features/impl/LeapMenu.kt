@@ -53,7 +53,7 @@ object LeapMenu : Module("Leap Menu", "Custom leap menu.") {
     private const val TEXT_PADDING = 8
 
     @EventHandler
-    fun onGuiDraw(event: GuiEvent.Draw) {
+    private fun onGuiDraw(event: GuiEvent.Draw) {
         if (!(isLeapMenu(event.screen) && enabled)) return
 
         val graphics = event.graphics
@@ -84,13 +84,13 @@ object LeapMenu : Module("Leap Menu", "Custom leap menu.") {
     }
 
     @EventHandler
-    fun onGuiBackground(event: GuiEvent.DrawBackground) {
+    private fun onGuiBackground(event: GuiEvent.DrawBackground) {
         if (!isLeapMenu(event.screen)) return
         event.cancel()
     }
 
     @EventHandler
-    fun onGuiKey(event: GuiEvent.KeyPress) {
+    private fun onGuiKey(event: GuiEvent.KeyPress) {
         if (!isLeapMenu(event.screen)) return
         val screen = event.screen as AbstractContainerScreen<*>
 
@@ -107,7 +107,7 @@ object LeapMenu : Module("Leap Menu", "Custom leap menu.") {
     }
 
     @EventHandler
-    fun onGuiClick(event: GuiEvent.MouseClick) {
+    private fun onGuiClick(event: GuiEvent.MouseClick) {
         if (!isLeapMenu(event.screen)) return
         val screen = event.screen as AbstractContainerScreen<*>
 
@@ -136,7 +136,7 @@ object LeapMenu : Module("Leap Menu", "Custom leap menu.") {
     }
 
     @EventHandler
-    fun onChat(event: ChatReceiveEvent) {
+    private fun onChat(event: ChatReceiveEvent) {
         if (!(leapAnnounce && LocationUtils.inDungeons)) return
         leapedRegex.find(event.message)?.groupValues?.get(1)?.let { sendCommand("pc Leaped to ${it}.") }
     }

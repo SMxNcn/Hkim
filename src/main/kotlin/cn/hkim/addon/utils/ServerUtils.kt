@@ -19,7 +19,7 @@ object ServerUtils {
         private set
 
     @EventHandler
-    fun onPacket(event: PacketReceiveEvent) {
+    private fun onPacket(event: PacketReceiveEvent) {
         when (event.packet) {
             is ClientboundSetTimePacket -> updateTps()
             is ClientboundPongResponsePacket -> updatePing(event.packet.time)

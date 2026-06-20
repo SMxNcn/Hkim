@@ -29,7 +29,7 @@ object AutoClicker : Module("Auto Clicker", "Auto clicker with options for left-
     private var nextBlockClick = 0.0
 
     @EventHandler
-    fun onTick(event: TickEvent.Start) {
+    private fun onTick(event: TickEvent.Start) {
         if (mc.screen != null || mc.player == null) return
         if (mc.player!!.isUsingItem) return
 

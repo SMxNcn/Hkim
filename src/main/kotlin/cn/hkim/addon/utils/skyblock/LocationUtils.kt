@@ -20,7 +20,7 @@ object LocationUtils {
     inline val inKuudra: Boolean get() = currentArea == Island.Kuudra
 
     @EventHandler
-    fun onPacketReceive(event: PacketReceiveEvent) {
+    private fun onPacketReceive(event: PacketReceiveEvent) {
         when (event.packet) {
             is ClientboundSetObjectivePacket -> {
                 if (!inSkyBlock) inSkyBlock = event.packet.objectiveName == "SBScoreboard"
@@ -34,7 +34,7 @@ object LocationUtils {
     }
 
     @EventHandler
-    fun onWorldLoad(event: WorldEvent.Load) {
+    private fun onWorldLoad(event: WorldEvent.Load) {
         currentArea = if (mc.isSingleplayer) Island.SinglePlayer else Island.Unknown
         inSkyBlock = false
     }

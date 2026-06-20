@@ -21,17 +21,17 @@ object Ragnarock : Module("Ragnarock", "Alerts when you cast the Ragnarock or it
     private val castAlert by BooleanSetting("Cast alert", "Alerts when you cast Ragnarock.", true)
     private val cancelAlert by BooleanSetting("Cancel alert", "Alerts when Ragnarock is cancelled.", true)
     private val strengthGainedMessage by BooleanSetting("Strength gained", "Shows Ragnarock strength gained.", true)
-    private val announceStrengthGained by BooleanSetting("Announce strength", "Announce gained strength in party chat", false).depends { strengthGainedMessage }
+    private val announceStrengthGained by BooleanSetting("Announce strength", "Announce gained strength in party chat.", false).depends { strengthGainedMessage }
 
     private val cancelRegex = Regex("Ragnarock was cancelled due to (?:being hit|taking damage)!")
 
     @EventHandler
-    fun onChat(event: ChatReceiveEvent) {
+    private fun onChat(event: ChatReceiveEvent) {
         if (cancelAlert && event.message.matches(cancelRegex)) alert("§cRagnarock Cancelled!")
     }
 
     @EventHandler
-    fun onPacket(event: PacketReceiveEvent) {
+    private fun onPacket(event: PacketReceiveEvent) {
         if (event.packet !is ClientboundSoundPacket) return
         if (event.packet.pitch == 1.4920635f && mc.player?.mainHandItem?.itemId == "RAGNAROCK_AXE" &&
             SoundEvents.WOLF_SOUNDS.entries.any {
