@@ -5,6 +5,8 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
+import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket
+import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.Slot
 
 sealed class GuiEvent(open val screen: Screen) : Cancellable() {
@@ -14,6 +16,8 @@ sealed class GuiEvent(open val screen: Screen) : Cancellable() {
     class Close(screen: Screen) : GuiEvent(screen)
 
     class SlotClick(screen: Screen, val slotId: Int, val button: Int) : GuiEvent(screen)
+
+    class SlotUpdate(screen: Screen, val packet: ClientboundContainerSetSlotPacket, val menu: AbstractContainerMenu) : GuiEvent(screen)
 
     class MouseClick(screen: Screen, val click: MouseButtonEvent, val doubled: Boolean) : GuiEvent(screen)
 
