@@ -10,12 +10,12 @@ import cn.hkim.addon.utils.rightClick
 import cn.hkim.addon.utils.skyblock.LocationUtils
 import meteordevelopment.orbit.EventHandler
 
-@ModuleInfo("etherwarp", Category.SKYBLOCK, false)
+@ModuleInfo("etherwarp", Category.SKYBLOCK)
 object Etherwarp : Module("Etherwarp", "Sneak to instantly Etherwarp with AOTV/AOTE.") {
     var lastEtherwarpTime: Long = 0
 
     @EventHandler
-    fun onSneak(event: PlayerEvent.Sneak) {
+    private fun onSneak(event: PlayerEvent.Sneak) {
         if (!LocationUtils.inSkyBlock || mc.player == null || mc.gui.screen() != null) return
         val stack = mc.player?.mainHandItem ?: return
         if (stack.isEtherwarpItem()?.contains("ethermerge") == true) {

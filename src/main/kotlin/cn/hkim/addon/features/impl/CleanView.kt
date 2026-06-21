@@ -8,15 +8,15 @@ import cn.hkim.addon.features.ModuleInfo
 
 @ModuleInfo("clean_view", Category.RENDER)
 object CleanView : Module("Clean View", "Hide unnecessary renderings.") {
-    private val entity by DropdownSetting("Entity", "Entity-related settings.", true)
+    private val entity by DropdownSetting("Entity", defaultExpanded = true)
     private val hideFallingBlock by BooleanSetting("Hide Falling Block", "Stop rendering falling blocks.", false).depends { entity }
     private val hideExperienceOrbs by BooleanSetting("Hide Experience Orbs", "Hide experience orbs.", false).depends { entity }
     private val hideLightning by BooleanSetting("Hide Lightning", "Hide lightning bolts.", false).depends { entity }
 
-    private val particle by DropdownSetting("Particle", "Particle-related settings.", true)
+    private val particle by DropdownSetting("Particle", defaultExpanded = true)
     private val hideWitherImpact by BooleanSetting("Hide Wither Impact", "Hide explosion particles.", false).depends { particle }
 
-    private val effect by DropdownSetting("Effect", "Effect-related settings.", true)
+    private val effect by DropdownSetting("Others", defaultExpanded = true)
     private val hideBlindness by BooleanSetting("Hide Blindness", "Remove blindness effect.", false).depends { effect }
     private val hideFireOverlay by BooleanSetting("Hide Fire Overlay", "Hide fire overlay on screen.", false).depends { effect }
     private val hideEntityFire by BooleanSetting("Hide Entity Fire", "Hide fire overlay on other entities.", false).depends { effect && hideFireOverlay }

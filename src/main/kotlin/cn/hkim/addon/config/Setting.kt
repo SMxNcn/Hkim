@@ -10,9 +10,9 @@ import kotlin.reflect.KProperty
 
 abstract class Setting<T>(
     val name: String,
-    val desc: String
+    val desc: String,
+    val default: T
 ) : ReadWriteProperty<Module, T>, PropertyDelegateProvider<Module, Setting<T>> {
-    abstract val default: T
     open var value: T = default
     var configKey: String = name.replace(" ", "_").lowercase()
     var dependsCondition: (() -> Boolean)? = null

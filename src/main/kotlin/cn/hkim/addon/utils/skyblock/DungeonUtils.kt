@@ -133,6 +133,8 @@ object DungeonUtils {
     var floor: Floor? = null
     var inBoss = false
     var doorOpener: String = "Unknown"
+    val inClear: Boolean
+        get() = LocationUtils.inDungeons && !inBoss
 
     private val floorRegex = Regex("The Catacombs \\((\\w+)\\)$")
     private val doorOpenRegex = Regex("^(?:\\[\\w+] )?(\\w+) opened a (?:WITHER|Blood) door!")
@@ -151,12 +153,12 @@ object DungeonUtils {
     }
 
     @EventHandler
-    fun onTickEnd(event: TickEvent.End) {
+    private fun onTickEnd(event: TickEvent.End) {
         if (LocationUtils.inDungeons) inBoss = getBoss()
     }
 
     @EventHandler
-    fun onWorldLoad(event: WorldEvent.Load) {
+    private fun onWorldLoad(event: WorldEvent.Load) {
         dungeonTeammates.clear()
         dungeonTeammatesNoSelf = emptyList()
         leapTeammates = emptyList()
@@ -165,7 +167,7 @@ object DungeonUtils {
     }
 
     @EventHandler
-    fun onChat(event: ChatReceiveEvent) {
+    private fun onChat(event: ChatReceiveEvent) {
         doorOpenRegex.find(event.message)?.let { doorOpener = it.groupValues[1] }
         deathRegex.find(event.message)?.let { match ->
             dungeonTeammates.find { teammate ->
@@ -175,7 +177,7 @@ object DungeonUtils {
     }
 
     @EventHandler
-    fun onPacket(event: PacketReceiveEvent) {
+    private fun onPacket(event: PacketReceiveEvent) {
         when (event.packet) {
             is ClientboundPlayerInfoUpdatePacket -> {
                 val tabListEntries = event.packet.entries().mapNotNull { it.displayName?.string }.ifEmpty { return }

@@ -24,7 +24,7 @@ import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
 import org.lwjgl.glfw.GLFW
 
-@ModuleInfo("leap_menu", Category.SKYBLOCK, false)
+@ModuleInfo("leap_menu", Category.SKYBLOCK)
 object LeapMenu : Module("Leap Menu", "Custom leap menu.") {
     val type by SelectorSetting("Sorting", "How to sort the leap menu.", arrayListOf("Default", "A-Z Class", "A-Z Name", "No Sorting"), "Default")
     private val leapAnnounce by BooleanSetting("Leap Announce", "Announces when you leap to a player.", false)
@@ -57,7 +57,7 @@ object LeapMenu : Module("Leap Menu", "Custom leap menu.") {
     )
 
     @EventHandler
-    fun onGuiDraw(event: GuiEvent.Draw) {
+    private fun onGuiDraw(event: GuiEvent.Draw) {
         if (!(isLeapMenu(event.screen) && enabled)) return
 
         val graphics = event.graphics
@@ -88,13 +88,13 @@ object LeapMenu : Module("Leap Menu", "Custom leap menu.") {
     }
 
     @EventHandler
-    fun onGuiBackground(event: GuiEvent.DrawBackground) {
+    private fun onGuiBackground(event: GuiEvent.DrawBackground) {
         if (!isLeapMenu(event.screen)) return
         event.cancel()
     }
 
     @EventHandler
-    fun onGuiKey(event: GuiEvent.KeyPress) {
+    private fun onGuiKey(event: GuiEvent.KeyPress) {
         if (!isLeapMenu(event.screen)) return
         val screen = event.screen as AbstractContainerScreen<*>
 
@@ -113,7 +113,7 @@ object LeapMenu : Module("Leap Menu", "Custom leap menu.") {
     }
 
     @EventHandler
-    fun onGuiClick(event: GuiEvent.MouseClick) {
+    private fun onGuiClick(event: GuiEvent.MouseClick) {
         if (!isLeapMenu(event.screen)) return
         val screen = event.screen as AbstractContainerScreen<*>
 
@@ -142,7 +142,7 @@ object LeapMenu : Module("Leap Menu", "Custom leap menu.") {
     }
 
     @EventHandler
-    fun onChat(event: ChatReceiveEvent) {
+    private fun onChat(event: ChatReceiveEvent) {
         if (!(leapAnnounce && LocationUtils.inDungeons)) return
         leapedRegex.find(event.message)?.groupValues?.get(1)?.let { sendCommand("pc Leaped to ${it}.") }
     }

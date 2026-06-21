@@ -17,16 +17,16 @@ import meteordevelopment.orbit.EventHandler
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.Vec3
 
-@ModuleInfo("nametag", Category.RENDER, false)
+@ModuleInfo("nametag", Category.RENDER)
 object Nametags : Module("Nametags", "Render a nametag above players.") {
-    private val dropdown by DropdownSetting("Show Settings", "")
-    private val renderDistance by BooleanSetting("Distance", "Render distance string.", true).depends { dropdown }
-    private val teammateESP by BooleanSetting("Teammate ESP", "Show ESP box for dungeon teammates.", false).depends { dropdown }
-    private val removeGlowing by BooleanSetting("Disable Glowing effect", "Removes glowing effect by Hypixel.", true).depends { teammateESP }
-    private val forceSkyBlock by BooleanSetting("Force SkyBlock", "Force render other players.", false)
+    private val dropdown by DropdownSetting("Show Settings")
+    private val removeGlowing by BooleanSetting("Remove Glowing Effect", "Removes glowing effect on dungeon teammates.", true).depends { dropdown && teammateESP }
+    private val forceSkyBlock by BooleanSetting("Force SkyBlock", "Force render other players.", false).depends { dropdown }
+    private val renderDistance by BooleanSetting("Distance", "Render distance string.", true)
+    private val teammateESP by BooleanSetting("Teammate ESP", "Draw ESP box for dungeon teammates.", false)
 
     @EventHandler
-    fun onRender(event: RenderEvent.Extract) {
+    private fun onRender(event: RenderEvent.Extract) {
         if (!canDisplayNametags()) return
         val level = mc.level ?: return
         val player = mc.player ?: return

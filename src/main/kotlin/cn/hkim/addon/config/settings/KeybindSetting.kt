@@ -12,8 +12,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
 import org.lwjgl.glfw.GLFW
 
-class KeybindSetting(name: String, desc: String, defaultKey: Int = GLFW.GLFW_KEY_UNKNOWN) : Setting<Int>(name, desc) {
-    override val default: Int = defaultKey
+class KeybindSetting(name: String, desc: String, defaultKey: Int = GLFW.GLFW_KEY_UNKNOWN) : Setting<Int>(name, desc, defaultKey) {
     override var value: Int = defaultKey
 
     internal var isBinding = false
@@ -137,8 +136,6 @@ class KeybindSetting(name: String, desc: String, defaultKey: Int = GLFW.GLFW_KEY
 
     companion object {
         private val keyCodeToName: Map<Int, String> by lazy {
-            val map = mutableMapOf<Int, String>()
-
             GLFW::class.java.declaredFields
                 .filter { f -> f.type == Int::class.javaPrimitiveType && f.name.startsWithOneOf("GLFW_KEY_", "GLFW_MOUSE_BUTTON_") }
                 .mapNotNull { f ->
@@ -150,9 +147,7 @@ class KeybindSetting(name: String, desc: String, defaultKey: Int = GLFW.GLFW_KEY
                     } catch (_: Exception) { null }
                 }
                 .distinctBy { (code, _) -> code }
-                .forEach { (code, name) -> map[code] = name }
-
-            map
+                .toMap()
         }
 
         private val nameToKeyCode: Map<String, Int> by lazy {

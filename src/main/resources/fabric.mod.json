@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "hkim",
-  "version": "${version}",
+  "version": "${mod_version}",
   "name": "Hkim",
   "description": "Orbit test mod.",
   "authors": [],
@@ -29,7 +29,7 @@
   "depends": {
     "fabricloader": ">=${loader_version}",
     "fabric-api": ">=${fabric_api_version}",
-    "minecraft": ">=26.1",
+    "minecraft": "~26.2",
     "fabric-language-kotlin": ">=${fabric_kotlin_version}",
     "modmenu": ">=${modmenu_version}"
   }

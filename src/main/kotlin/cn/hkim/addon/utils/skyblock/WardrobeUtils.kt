@@ -25,7 +25,7 @@ object WardrobeUtils {
     private var isProcessing = false
 
     @EventHandler
-    fun onGuiOpen(event: GuiEvent.Open) {
+    private fun onGuiOpen(event: GuiEvent.Open) {
         containerId = mc.player?.containerMenu?.containerId ?: return
         if (!calledFromThis || isProcessing) return
         handleGuiOpen(event.screen)

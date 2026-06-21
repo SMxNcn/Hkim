@@ -11,7 +11,7 @@ import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
 
-class ColorSetting(name: String, desc: String, override val default: Int) : Setting<Int>(name, desc) {
+class ColorSetting(name: String, desc: String, default: Int) : Setting<Int>(name, desc, default) {
     init { value = default }
 
     override fun render(

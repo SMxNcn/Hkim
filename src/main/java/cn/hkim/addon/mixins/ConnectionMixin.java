@@ -3,9 +3,11 @@ package cn.hkim.addon.mixins;
 import cn.hkim.addon.Hkim;
 import cn.hkim.addon.events.impl.PacketReceiveEvent;
 import cn.hkim.addon.events.impl.PacketSendEvent;
+import cn.hkim.addon.events.impl.TickEvent;
 import io.netty.channel.ChannelHandlerContext;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.common.ClientboundPingPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -16,6 +18,10 @@ public class ConnectionMixin {
 
     @Inject(method = "channelRead0(Lio/netty/channel/ChannelHandlerContext;Lnet/minecraft/network/protocol/Packet;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Connection;genericsFtw(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;)V"), cancellable = true)
     private void channelRead0(ChannelHandlerContext ctx, Packet<?> packet, CallbackInfo ci) {
+        if (packet instanceof ClientboundPingPacket pingPacket && pingPacket.getId() != 0) {
+            TickEvent.Server event = new TickEvent.Server();
+            Hkim.EVENT_BUS.post(event);
+        }
         Connection connection = (Connection) (Object) this;
         PacketReceiveEvent event = new PacketReceiveEvent(packet, connection);
         Hkim.EVENT_BUS.post(event);

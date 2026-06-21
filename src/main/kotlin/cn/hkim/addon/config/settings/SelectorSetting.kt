@@ -9,8 +9,7 @@ import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
 
-class SelectorSetting(name: String, desc: String, val options: List<String>, default: String) : Setting<Int>(name, desc) {
-    override val default: Int = options.indexOf(default).coerceAtLeast(0)
+class SelectorSetting(name: String, desc: String, val options: List<String>, default: String) : Setting<Int>(name, desc, options.indexOf(default).coerceAtLeast(0)) {
     private var _selected: String = options.firstOrNull() ?: ""
     init { value = this.default }
     fun select(option: String) { if (option in options) { _selected = option; value = options.indexOf(option) } }

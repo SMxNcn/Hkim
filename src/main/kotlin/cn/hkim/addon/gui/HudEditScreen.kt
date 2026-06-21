@@ -7,7 +7,6 @@ import cn.hkim.addon.hud.Bounds
 import cn.hkim.addon.hud.HudAlignment
 import cn.hkim.addon.hud.HudElement
 import cn.hkim.addon.utils.HudUtils.drawHorizontalLine
-import cn.hkim.addon.utils.HudUtils.drawRectWithBorder
 import cn.hkim.addon.utils.HudUtils.drawVerticalLine
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -45,7 +44,7 @@ class HudEditScreen(private val parent: Screen?) : Screen(Component.literal("HUD
             }
         }
 
-        val elements = ModuleManager.getAll().flatMap { it.hudElements }
+        val elements = ModuleManager.getAll().filter { it.enabled }.flatMap { it.hudElements }
         var hovered: HudElement? = null
         for (i in elements.indices.reversed()) {
             val el = elements[i]
@@ -78,20 +77,24 @@ class HudEditScreen(private val parent: Screen?) : Screen(Component.literal("HUD
     private fun renderElementOverlay(graphics: GuiGraphicsExtractor, bounds: Bounds, hovered: Boolean = false) {
         val borderColor = -1
         val off = 1f
-        val bw = if (hovered) 1.0f else 0.5f
+        val bw = if (hovered) 0.9f else 0.5f
 
         graphics.pose().pushMatrix()
         graphics.pose().translate(bounds.x - off, bounds.y - off)
         val w = bounds.w + 2 * off
         val h = bounds.h + 2 * off
-        graphics.drawRectWithBorder(0f, 0f, w, h, 0, borderColor, bw)
+        val ext = bw / 2f
+        graphics.drawHorizontalLine(0f, 0f, w, borderColor, bw)
+        graphics.drawHorizontalLine(0f, h - bw, w, borderColor, bw)
+        graphics.drawVerticalLine(0f, -ext, h + ext * 2, borderColor, bw)
+        graphics.drawVerticalLine(w - bw, -ext, h + ext * 2, borderColor, bw)
         graphics.pose().popMatrix()
     }
 
     override fun mouseClicked(event: MouseButtonEvent, doubleClick: Boolean): Boolean {
         if (event.button() != 0) return super.mouseClicked(event, doubleClick)
         val mx = event.x.toFloat(); val my = event.y.toFloat()
-        val hit = ModuleManager.getAll().flatMap { it.hudElements }.asReversed().firstOrNull { el ->
+        val hit = ModuleManager.getAll().filter { it.enabled }.flatMap { it.hudElements }.asReversed().firstOrNull { el ->
             el.isVisible() && el.getScreenBounds().contains(mx, my)
         } ?: return super.mouseClicked(event, doubleClick)
 
@@ -147,7 +150,7 @@ class HudEditScreen(private val parent: Screen?) : Screen(Component.literal("HUD
 
         val newAlign = when {
             regionV == "MIDDLE" && regionH == "MIDDLE" -> return
-            regionV == "MIDDLE" -> if (regionH == "LEFT") HudAlignment.TOP_LEFT else HudAlignment.TOP_RIGHT
+            regionV == "MIDDLE" -> HudAlignment.valueOf("MIDDLE_${regionH}")
             regionH == "MIDDLE" -> if (regionV == "TOP") HudAlignment.TOP_MIDDLE else HudAlignment.BOTTOM_MIDDLE
             else -> HudAlignment.valueOf("${regionV}_${regionH}")
         }

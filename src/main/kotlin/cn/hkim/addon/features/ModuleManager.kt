@@ -11,6 +11,7 @@ import java.lang.invoke.MethodHandles
 
 object ModuleManager {
     private val modules = mutableListOf<Module>()
+    private var isInitialized = false
     private var hudHookRegistered = false
 
     fun initOrbit() {
@@ -21,6 +22,13 @@ object ModuleManager {
                 throw RuntimeException(e)
             }
         }
+    }
+
+    fun initModules() {
+        if (isInitialized) return
+        val modules = ModuleScanner.discoverModules()
+        registerAll(modules)
+        isInitialized = true
     }
 
     private fun register(module: Module) {
@@ -46,7 +54,7 @@ object ModuleManager {
         Hkim.logger.info("HUD element render hook registered")
     }
 
-    fun registerAll(vararg modules: Module) {
+    private fun registerAll(modules: List<Module>) {
         if (this.modules.isEmpty()) {
             initOrbit()
         }

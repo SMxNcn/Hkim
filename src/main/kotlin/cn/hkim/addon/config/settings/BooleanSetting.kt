@@ -15,7 +15,7 @@ import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
 
-open class BooleanSetting(name: String, desc: String, override val default: Boolean) : Setting<Boolean>(name, desc) {
+open class BooleanSetting(name: String, desc: String, default: Boolean) : Setting<Boolean>(name, desc, default) {
     private val toggleAnim = GuiAnimation.create(if (value) 1f else 0f, if (value) 1f else 0f)
         .duration(100L)
         .easing(Easing.CUBIC_OUT)

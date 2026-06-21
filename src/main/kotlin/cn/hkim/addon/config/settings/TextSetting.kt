@@ -11,7 +11,7 @@ import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
 
-class TextSetting(name: String, desc: String, override val default: String) : Setting<String>(name, desc) {
+class TextSetting(name: String, desc: String, default: String) : Setting<String>(name, desc, default) {
     init { value = default }
 
     override fun render(

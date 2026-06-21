@@ -21,7 +21,7 @@ object EquipmentUtils {
     private var calledFromThis = false
 
     @EventHandler
-    fun onGuiOpen(event: GuiEvent.Open) {
+    private fun onGuiOpen(event: GuiEvent.Open) {
         containerId = mc.player?.containerMenu?.containerId ?: return
         if (!calledFromThis) return
         handleGuiOpen(event.screen)

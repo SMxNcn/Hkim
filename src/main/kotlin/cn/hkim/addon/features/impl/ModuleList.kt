@@ -13,7 +13,7 @@ import cn.hkim.addon.utils.HudUtils.getChromaColor
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import java.awt.Color
 
-@ModuleInfo("module_list", Category.MISC, false)
+@ModuleInfo("module_list", Category.MISC)
 object ModuleList : Module("Module List", "Enabled features list.") {
     private val chromaColor by BooleanSetting("Use Chroma Color", "", false)
     private val staticColor by ColorSetting("Static Color", "", Color(5, 186, 115).rgb).depends { !chromaColor }

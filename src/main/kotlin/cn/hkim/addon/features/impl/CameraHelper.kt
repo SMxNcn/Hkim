@@ -10,7 +10,7 @@ import cn.hkim.addon.features.ModuleInfo
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.client.CameraType
 
-@ModuleInfo("camera", Category.RENDER, false)
+@ModuleInfo("camera", Category.RENDER)
 object CameraHelper : Module("Camera Helper", "Modify your camera") {
     private val frontCamera by BooleanSetting("Front Camera", "Disables front camera.", true)
     private val cameraDist by NumberSetting("Camera Distance", "Third-person camera distance.", 4.0f, 2.0f, 10.0f, 0.1f)
@@ -20,7 +20,7 @@ object CameraHelper : Module("Camera Helper", "Modify your camera") {
     private val transitionDuration by NumberSetting("Transition Time (ms)", "Duration of the perspective switch animation.", 250f, 50f, 500f, 50f).depends { smoothTransition }
 
     @EventHandler
-    fun onTick(event: TickEvent.End) {
+    private fun onTick(event: TickEvent.End) {
         if (!enabled || !frontCamera) return
         if (mc.options.cameraType == CameraType.THIRD_PERSON_FRONT) {
             mc.options.cameraType = CameraType.FIRST_PERSON

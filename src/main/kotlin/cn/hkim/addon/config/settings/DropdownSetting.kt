@@ -7,8 +7,8 @@ import cn.hkim.addon.utils.render.GuiAnimation
 import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
 
-class DropdownSetting(name: String, desc: String, defaultExpanded: Boolean = false) : BooleanSetting(name, desc, defaultExpanded) {
-    private val expandAnim = GuiAnimation.create(/*if (value) 1f else 0f, if (value) 1f else 0f*/)
+class DropdownSetting(name: String, desc: String = "", defaultExpanded: Boolean = false) : BooleanSetting(name, desc, defaultExpanded) {
+    private val expandAnim = GuiAnimation.create(if (value) 1f else 0f, if (value) 1f else 0f)
         .duration(100L)
         .easing(Easing.CUBIC_OUT)
 
