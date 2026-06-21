@@ -16,7 +16,7 @@ object Etherwarp : Module("Etherwarp", "Sneak to instantly Etherwarp with AOTV/A
 
     @EventHandler
     private fun onSneak(event: PlayerEvent.Sneak) {
-        if (!LocationUtils.inSkyBlock || mc.player == null || mc.screen != null) return
+        if (!enabled || !LocationUtils.inSkyBlock || mc.player == null || mc.screen != null) return
         val stack = mc.player?.mainHandItem ?: return
         if (stack.isEtherwarpItem()?.contains("ethermerge") == true) {
             val currentTime = System.currentTimeMillis()

@@ -83,11 +83,11 @@ fun isSkyBlockItem(stack: ItemStack): Boolean {
     return customData.copy().contains("id")
 }
 
-fun findItemByID(itemID: String?): Int {
+fun findItemByID(itemID: String?, hotbar: Boolean = false): Int {
     if (itemID.isNullOrEmpty()) return -1
     val player = mc.player ?: return -1
 
-    return (0 until 36)
+    return (0 until if (hotbar) 9 else 36)
         .firstOrNull { slot ->
             val stack = player.inventory.getItem(slot)
             !stack.isEmpty && stack.itemId.contains(itemID, ignoreCase = true)

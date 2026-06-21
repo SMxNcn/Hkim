@@ -85,13 +85,13 @@ object LeapMenu : Module("Leap Menu", "Custom leap menu.") {
 
     @EventHandler
     private fun onGuiBackground(event: GuiEvent.DrawBackground) {
-        if (!isLeapMenu(event.screen)) return
+        if (!enabled || !isLeapMenu(event.screen)) return
         event.cancel()
     }
 
     @EventHandler
     private fun onGuiKey(event: GuiEvent.KeyPress) {
-        if (!isLeapMenu(event.screen)) return
+        if (!enabled || !isLeapMenu(event.screen)) return
         val screen = event.screen as AbstractContainerScreen<*>
 
         val keybindList = if (keybindType == 0) listOf(topLeftKeybind, topRightKeybind, bottomLeftKeybind, bottomRightKeybind)
@@ -108,7 +108,7 @@ object LeapMenu : Module("Leap Menu", "Custom leap menu.") {
 
     @EventHandler
     private fun onGuiClick(event: GuiEvent.MouseClick) {
-        if (!isLeapMenu(event.screen)) return
+        if (!enabled || !isLeapMenu(event.screen)) return
         val screen = event.screen as AbstractContainerScreen<*>
 
         val centerX = mc.window.guiScaledWidth / 2
@@ -137,7 +137,7 @@ object LeapMenu : Module("Leap Menu", "Custom leap menu.") {
 
     @EventHandler
     private fun onChat(event: ChatReceiveEvent) {
-        if (!(leapAnnounce && LocationUtils.inDungeons)) return
+        if (!enabled || !(leapAnnounce && LocationUtils.inDungeons)) return
         leapedRegex.find(event.message)?.groupValues?.get(1)?.let { sendCommand("pc Leaped to ${it}.") }
     }
 

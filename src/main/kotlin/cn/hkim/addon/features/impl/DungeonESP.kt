@@ -51,7 +51,7 @@ object DungeonESP : Module("Dungeon ESP", "ESP for dungeon entities.") {
 
     @EventHandler
     private fun onTick(event: TickEvent.End) {
-        if ((!highlightStar && !hideNonNames) || !DungeonUtils.inClear) return
+        if (!enabled || (!highlightStar && !hideNonNames) || !DungeonUtils.inClear) return
 
         val entitiesToRemove = mutableListOf<Entity>()
         mc.level?.entitiesForRendering()?.forEach { entity ->
@@ -79,7 +79,7 @@ object DungeonESP : Module("Dungeon ESP", "ESP for dungeon entities.") {
 
     @EventHandler
     private fun onRender(event: RenderEvent.Extract) {
-        if (!LocationUtils.inDungeons) return
+        if (!enabled || !LocationUtils.inDungeons) return
 
         if (DungeonUtils.inClear) {
             renderStarredMobs(event)

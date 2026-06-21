@@ -62,13 +62,13 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
 
     @EventHandler
     private fun onTick(event: TickEvent.End) {
-        if (LocationUtils.currentArea != Island.Garden || mc.screen != null) return
+        if (!enabled || LocationUtils.currentArea != Island.Garden || mc.screen != null) return
         CropNuker.onTick()
     }
 
     @EventHandler
     private fun onFailSafe(event: GardenEvent.FailSafe) {
-        if (!CropNuker.enabled) return
+        if (!enabled || !CropNuker.enabled) return
         CropNuker.stop()
         when (event.reason) {
             "World Change" -> modMessage("§6Crop Nuker §7disabled due to world changed.")
@@ -80,7 +80,7 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
 
     @EventHandler
     private fun onMouseClick(event: MouseButtonEvent) {
-        if (!allowEdits || event.button != 1 || mc.screen != null) return
+        if (!enabled || !allowEdits || event.button != 1 || mc.screen != null) return
         if (LocationUtils.currentArea != Island.Garden) return
 
         val pos = reachPosition ?: return
@@ -97,7 +97,7 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
     @EventHandler
     private fun onRender(event: RenderEvent.Extract) {
         if (!renderWps || LocationUtils.currentArea != Island.Garden) return
-        if (!renderOnFarming && CropNuker.enabled) return
+        if (!enabled || !renderOnFarming && CropNuker.enabled) return
 
         for (wp in FarmingWaypoints.currentWaypoints) {
             event.drawStyledBox(AABB(wp.blockPos), Colors.MINECRAFT_GRAY, 1, false)
@@ -107,7 +107,7 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
 
     @EventHandler
     private fun onPestReady(event: GardenEvent.PestReady) {
-        if (ignorePests) return
+        if (!enabled || ignorePests) return
         val player = mc.player ?: return
         lastHeldSlot = player.inventory.selectedSlot
 
@@ -131,7 +131,7 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
 
     @EventHandler
     private fun onPestSpawned(event: GardenEvent.PestSpawned) {
-        if (!CropNuker.enabled || ignorePests) return
+        if (!enabled || !CropNuker.enabled || ignorePests) return
         val player = mc.player ?: return
 
         Hkim.scope.launch {
@@ -170,7 +170,7 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
 
     @EventHandler
     private fun onPestKilled(event: GardenEvent.PestKilled) {
-        if (CropNuker.enabled || ignorePests) return
+        if (!enabled || CropNuker.enabled || ignorePests) return
         val player = mc.player ?: return
 
         Hkim.scope.launch {
@@ -190,12 +190,12 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
 
     @EventHandler
     private fun onGuestVisit(event: GardenEvent.GuestVisit) {
-        if (autoKick) schedule(2) { sendCommand("sbkick ${event.player}") }
+        if (enabled && autoKick) schedule(2) { sendCommand("sbkick ${event.player}") }
     }
 
     @EventHandler
     private fun onGuiOpen(event: GuiEvent.Open) {
-        if (CropNuker.enabled || ignorePests || !changeTimeOnPest) return
+        if (!enabled || CropNuker.enabled || ignorePests || !changeTimeOnPest) return
         val chest = (event.screen as? AbstractContainerScreen<*>) ?: return
         if (!chest.title.cleanString.containsOneOf("Desk", "Garden Time", "Pesthunter")) return
         containerId = mc.player?.containerMenu?.containerId ?: return
@@ -203,7 +203,7 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
 
     @EventHandler
     private fun onKey(event: InputEvent) {
-        if (event.key.value == nukerKeybind) CropNuker.toggleNuker()
+        if (enabled && event.key.value == nukerKeybind) CropNuker.toggleNuker()
     }
 
     private inline val reachPosition: BlockPos?

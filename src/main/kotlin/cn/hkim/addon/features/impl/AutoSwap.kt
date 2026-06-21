@@ -29,7 +29,7 @@ object AutoSwap : Module("Auto Swap", "Auto swap spirit/bonzo.") {
 
     @EventHandler
     private fun onChat(event: ChatReceiveEvent) {
-        if (!LocationUtils.inDungeons) return
+        if (!enabled || !LocationUtils.inDungeons) return
 
         when {
             event.message.matches(bonzoRegex) -> Hkim.scope.launch { handleBonzo() }

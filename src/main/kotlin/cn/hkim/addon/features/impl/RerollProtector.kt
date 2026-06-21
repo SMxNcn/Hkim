@@ -43,7 +43,7 @@ object RerollProtector : Module("Reroll Protector", "Prevent reroll when rare re
 
     @EventHandler
     private fun onGuiOpen(event: GuiEvent.Open) {
-        if (!(LocationUtils.inDungeons || LocationUtils.inKuudra) || LocationUtils.currentArea == Island.DungeonHub) return
+        if (!(LocationUtils.inDungeons || LocationUtils.inKuudra) || !enabled ||  LocationUtils.currentArea == Island.DungeonHub) return
         val chest = (event.screen as? AbstractContainerScreen<*>) ?: return
         if (lastCheckedChest != chest.title.string) {
             hasShownMessage = false
@@ -65,7 +65,7 @@ object RerollProtector : Module("Reroll Protector", "Prevent reroll when rare re
 
     @EventHandler
     private fun onSlotClock(event: GuiEvent.SlotClick) {
-        if (!hasRareItems || event.slotId != REROLL_BUTTON_ID || !(LocationUtils.inDungeons || LocationUtils.inKuudra)) return
+        if (!enabled || !hasRareItems || event.slotId != REROLL_BUTTON_ID || !(LocationUtils.inDungeons || LocationUtils.inKuudra)) return
         if (event.button == 0 || event.button == 1) {
             event.cancel()
             modMessage("§cReroll button has been §lDISABLED§r§c!")
@@ -74,12 +74,14 @@ object RerollProtector : Module("Reroll Protector", "Prevent reroll when rare re
 
     @EventHandler
     private fun onGuiClose(event: GuiEvent.Close) {
+        if (!enabled) return
         resetState()
         lastCheckedChest = null
     }
 
     @EventHandler
     private fun onWorldChange(event: WorldEvent.Unload) {
+        if (!enabled) return
         resetState()
     }
 

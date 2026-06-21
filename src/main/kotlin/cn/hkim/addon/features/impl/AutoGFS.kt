@@ -35,7 +35,7 @@ object AutoGFS : Module("Auto GFS", "Automatically refills certain items from yo
 
     @EventHandler
     private fun onChat(event: ChatReceiveEvent) {
-        if (!refillOnDungeonStart || !LocationUtils.inDungeons) return
+        if (!enabled || !refillOnDungeonStart || !LocationUtils.inDungeons) return
         when { event.message.clean.matches(startRegex) -> refill() }
     }
 

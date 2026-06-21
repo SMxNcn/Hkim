@@ -22,7 +22,7 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players based on predefined 
 
     @EventHandler
     private fun onMouseClick(event: MouseButtonEvent) {
-        if (event.button != 0 || !LocationUtils.inDungeons) return
+        if (!enabled || event.button != 0 || !LocationUtils.inDungeons) return
 
         if (mc.player?.mainHandItem?.itemId.equalsOneOf("INFINITE_SPIRIT_LEAP", "SPIRIT_LEAP")) {
             targetClass = selectLeapTarget()
@@ -34,6 +34,7 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players based on predefined 
 
     @EventHandler
     private fun onGuiOpen(event: GuiEvent.Open) {
+        if (!enabled) return
         val chest = (event.screen as? AbstractContainerScreen<*>) ?: return
         inLeapGui = chest.title.string.equalsOneOf("Spirit Leap", "Teleport to Player")
         if (!LocationUtils.inDungeons || !inLeapGui || !shouldAutoLeap) return

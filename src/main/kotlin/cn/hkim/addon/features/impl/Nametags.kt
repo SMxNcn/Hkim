@@ -27,7 +27,7 @@ object Nametags : Module("Nametags", "Render a nametag above players.") {
 
     @EventHandler
     private fun onRender(event: RenderEvent.Extract) {
-        if (!canDisplayNametags()) return
+        if (!enabled || !canDisplayNametags()) return
         val level = mc.level ?: return
         val player = mc.player ?: return
 

@@ -68,9 +68,8 @@ object AutoSell : Module("Auto Sell", "Automatically sell items in trades and co
 
     @EventHandler
     private fun onTick(event: TickEvent.Start) {
+        if (!enabled || sellList.isEmpty()) return
         schedule(randomDelay(delay.toInt(), 50).toInt()) {
-            if (!enabled || sellList.isEmpty()) return@schedule
-
             val currentTime = System.currentTimeMillis()
             if (currentTime - lastClickTime < 50) return@schedule
 
