@@ -10,5 +10,11 @@
             "hkim:disable"
         ],
         "subtitle": "Module Disabled"
+    },
+    "zxf2": {
+        "sounds": [
+            "hkim:zxf2"
+        ],
+        "subtitle": "Teacher zxf, I still remember you"
     }
 }

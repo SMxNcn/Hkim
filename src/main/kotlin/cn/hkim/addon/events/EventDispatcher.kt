@@ -43,6 +43,8 @@ class EventDispatcher {
                 SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("hkim", "enable")))
             Registry.register(BuiltInRegistries.SOUND_EVENT, Identifier.fromNamespaceAndPath("hkim", "disable"),
                 SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("hkim", "disable")))
+            Registry.register(BuiltInRegistries.SOUND_EVENT, Identifier.fromNamespaceAndPath("hkim", "zxf2"),
+                SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("hkim", "zxf2")))
         }
 
         fun registerListeners(vararg listeners: Any) {
