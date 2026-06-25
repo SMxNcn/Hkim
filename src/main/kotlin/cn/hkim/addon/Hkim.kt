@@ -40,7 +40,7 @@ object Hkim : ClientModInitializer {
 
     override fun onInitializeClient() {
         ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
-            arrayOf(hkimCommand, autoSellCommand, hwpCommand).forEach { commodore -> commodore.register(dispatcher) }
+            arrayOf(hkimCommand, autoSellCommand, highlightCommand, hwpCommand).forEach { commodore -> commodore.register(dispatcher) }
         }
 
         EventDispatcher.postEvents()
