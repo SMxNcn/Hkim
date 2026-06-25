@@ -1,6 +1,7 @@
 package cn.hkim.addon
 
 import cn.hkim.addon.commands.autoSellCommand
+import cn.hkim.addon.commands.highlightCommand
 import cn.hkim.addon.commands.hkimCommand
 import cn.hkim.addon.commands.hwpCommand
 import cn.hkim.addon.config.ModuleConfig
