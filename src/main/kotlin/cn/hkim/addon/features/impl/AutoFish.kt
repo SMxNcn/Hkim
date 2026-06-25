@@ -137,7 +137,7 @@ object AutoFish : Module("Auto Fish", "Automatically casts and reels the fishing
                 val elapsed = currentTime - waitStartTick
 
                 if (hook == null) {
-                    if (elapsed < 15) return
+                    if (elapsed < 40) return
                     currentState = FishingState.IDLE
                     return
                 }
