@@ -142,7 +142,7 @@ object AutoFish : Module("Auto Fish", "Automatically casts and reels the fishing
                     return
                 }
 
-                if (hook.onGround() && !hook.isInWater) {
+                if (hook.onGround() && !hook.isInWater && !hook.isInLava) {
                     useItemAction()
                     hookUpTick = currentTime + (rethrowDelay / 50).toLong() + (-1..1).random()
                     currentState = FishingState.CAST
