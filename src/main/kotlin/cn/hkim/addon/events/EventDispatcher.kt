@@ -21,7 +21,7 @@ class EventDispatcher {
                 Hkim.EVENT_BUS.post(WorldEvent.Load())
             }
 
-            ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
+            ClientPlayConnectionEvents.DISCONNECT.register { _, _ ->
                 Hkim.EVENT_BUS.post(WorldEvent.Unload())
             }
 

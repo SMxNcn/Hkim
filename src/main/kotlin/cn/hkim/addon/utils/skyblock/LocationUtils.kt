@@ -4,6 +4,7 @@ import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.events.impl.PacketReceiveEvent
 import cn.hkim.addon.events.impl.WorldEvent
 import cn.hkim.addon.utils.equalsOneOf
+import cn.hkim.addon.utils.schedule
 import cn.hkim.addon.utils.startsWithOneOf
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
@@ -35,7 +36,15 @@ object LocationUtils {
 
     @EventHandler
     private fun onWorldLoad(event: WorldEvent.Load) {
-        currentArea = if (mc.isSingleplayer) Island.SinglePlayer else Island.Unknown
+        schedule(2) {
+            currentArea = if (mc.isSingleplayer) Island.SinglePlayer else Island.Unknown
+            inSkyBlock = false
+        }
+    }
+
+    @EventHandler
+    private fun onWorldUnload(event: WorldEvent.Unload) {
+        currentArea = Island.Unknown
         inSkyBlock = false
     }
 
