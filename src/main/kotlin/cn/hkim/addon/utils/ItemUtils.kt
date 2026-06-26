@@ -31,13 +31,10 @@ inline val ItemStack.lore: List<Component>
 inline val ItemStack.loreString: List<String>
     get() = lore.map { it.string }
 
-inline val ItemStack.petInfo: String
-    get() = customData.getString("petInfo").orElse("")!!
-
 inline val ItemStack.isSword: Boolean
     get() = `is` { it.`is`(ItemTags.SWORDS) }
 
-val strengthRegex = Regex("Strength: §.\\+(\\d+)")
+val strengthRegex = Regex("Strength: \\+(\\d+)")
 
 inline val ItemStack.strength: Int
     get() = this.loreString.firstOrNull {
