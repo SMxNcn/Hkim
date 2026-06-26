@@ -536,6 +536,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
             value = initialValue
             isBordered = false
             setTextColor(0xFFFFFFFF.toInt())
+            setMaxLength(64)
             setResponder { newValue ->
                 when (setting) {
                     is TextSetting -> setting.set(newValue)
