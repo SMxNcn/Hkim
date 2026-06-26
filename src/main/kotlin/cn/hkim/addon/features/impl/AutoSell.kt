@@ -23,10 +23,10 @@ import java.nio.file.Files
 
 @ModuleInfo("auto_sell", Category.SKYBLOCK)
 object AutoSell : Module("Auto Sell", "Automatically sell items in trades and cookie menus. (/autosell)") {
-    private val delay by NumberSetting("Delay", "Tick delay between each sell action.", 100f, 75f, 300f, 5f)
+    private val delay by NumberSetting("Delay (ms)", "Delay between each sell action.", 100f, 100f, 300f, 5f)
     private val clickType by SelectorSetting("Click Type", "Click type to use when selling.", listOf("Shift", "Middle", "Left"), "Shift")
 
-    private val addDefaults by ActionSetting("Add defaults", "Add default dungeon items to the auto sell list.") {
+    private val addDefaults by ActionSetting("Add Defaults", "Add default dungeon items to the auto sell list.") {
         sellList.addAll(defaultItems)
         saveSellList()
         modMessage("§aAdded default items to auto sell list")
@@ -69,7 +69,7 @@ object AutoSell : Module("Auto Sell", "Automatically sell items in trades and co
     @EventHandler
     private fun onTick(event: TickEvent.Start) {
         if (!enabled || sellList.isEmpty()) return
-        schedule(randomDelay(delay.toInt(), 50).toInt()) {
+        schedule((delay / 50).toInt() + (0..2).random()) {
             val currentTime = System.currentTimeMillis()
             if (currentTime - lastClickTime < 50) return@schedule
 
