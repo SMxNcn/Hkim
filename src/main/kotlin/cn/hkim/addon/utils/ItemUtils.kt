@@ -1,13 +1,9 @@
 package cn.hkim.addon.utils
 
 import cn.hkim.addon.Hkim.mc
-import cn.hkim.addon.utils.skyblock.ItemRarity
-import cn.hkim.addon.utils.skyblock.rarityRegex
-import com.google.gson.JsonParser
 import net.minecraft.core.component.DataComponents
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.Identifier
 import net.minecraft.tags.ItemTags
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
@@ -35,32 +31,8 @@ inline val ItemStack.lore: List<Component>
 inline val ItemStack.loreString: List<String>
     get() = lore.map { it.string }
 
-inline val ItemStack.petInfo: String
-    get() = customData.getString("petInfo").orElse("")!!
-
 inline val ItemStack.isSword: Boolean
     get() = `is` { it.`is`(ItemTags.SWORDS) }
-
-fun getItemRarity(itemStack: ItemStack): ItemRarity? {
-    if (itemStack.itemId == "PET") {
-        val petInfo = itemStack.petInfo
-        if (petInfo.isNotEmpty()) {
-            try {
-                val json = JsonParser.parseString(petInfo).asJsonObject
-                val tier = json.get("tier")?.asString
-                if (tier != null) return ItemRarity.entries.find { it.name == tier }
-            } catch (_: Exception) {}
-        }
-    }
-
-    for (i in itemStack.loreString.indices.reversed()) {
-        val rarity = rarityRegex.find(itemStack.loreString[i])?.groups?.get(1)?.value ?: continue
-        return ItemRarity.entries.find { it.loreName == rarity }
-    }
-    return null
-}
-
-fun getTooltipStyle(rarity: ItemRarity): Identifier = Identifier.withDefaultNamespace(/*"hkim", */rarity.name.lowercase())
 
 fun ItemStack.isEtherwarpItem(): CompoundTag? =
     customData.takeIf { it.getInt("ethermerge").orElse(0) == 1 || it.itemId == "ETHERWARP_CONDUIT" }
