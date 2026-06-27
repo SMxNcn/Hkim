@@ -17,6 +17,7 @@
     "ClientPacketListenerMixin",
     "ConnectionMixin",
     "ContainerScreenMixin",
+    "DisconnectedScreenMixin",
     "EntityMixin",
     "EntityRendererMixin",
     "FallingBlockRendererMixin",
