@@ -15,6 +15,7 @@ import cn.hkim.addon.utils.render.drawText
 import cn.hkim.addon.utils.skyblock.Island
 import cn.hkim.addon.utils.skyblock.LocationUtils
 import cn.hkim.addon.utils.skyblock.inventory.EquipmentUtils.swapEquipment
+import cn.hkim.addon.utils.skyblock.inventory.LoadoutUtils.swapLoadoutTo
 import cn.hkim.addon.utils.skyblock.inventory.WardrobeUtils.swapArmorTo
 import cn.hkim.addon.utils.waypoints.FarmingWaypoints
 import kotlinx.coroutines.delay
@@ -33,8 +34,9 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
     private val renderOnFarming by BooleanSetting("Render on Farming", "Render waypoints when CropNuker is disabled.", false)
 
     private val armorDropdown by DropdownSetting("Armor")
-    private val mossyArmorSlot by NumberSetting("Mossy Slot", "Mossy armor wardrobe slot.", 1f, 1f, 9f, 1f).depends { armorDropdown }
-    private val mantidArmorSlot by NumberSetting("Mantid Slot", "Mantid armor wardrobe slot.", 2f, 1f, 9f, 1f).depends { armorDropdown }
+    private val usingLoadout by BooleanSetting("Armor in Loadout", "Farming Armor in Loadout.", false)
+    private val mossyArmorSlot by NumberSetting("Mossy Slot", "Mossy armor wardrobe slot.", 1f, 1f, 12f, 1f).depends { armorDropdown }
+    private val mantidArmorSlot by NumberSetting("Mantid Slot", "Mantid armor wardrobe slot.", 2f, 1f, 12f, 1f).depends { armorDropdown }
 
     private val otherDropdown by DropdownSetting("Others")
     private val autoKick by BooleanSetting("Auto Kick", "Auto kick player who visiting your garden.", true).depends { otherDropdown }
@@ -115,17 +117,29 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
 
         Hkim.scope.launch {
             CropNuker.stop()
-            if (swapArmorTo(mantidArmorSlot.toInt())) {
-                delay(randomDelay(400, 100))
-                if (swapEquipment(pestIds)) {
-                    delay(randomDelay(100, 50))
-                    CropNuker.start()
-                } else {
-                    modMessage("§cMissing equipments!")
-                }
+
+            val success = if (usingLoadout) {
+                swapLoadoutTo(mantidArmorSlot.toInt())
             } else {
-                modMessage("§cFailed to equip armor from Wardrobe #$mantidArmorSlot!")
+                val slot = mantidArmorSlot.toInt()
+                if (slot !in 1..9) {
+                    modMessage("Invalid index: $slot!")
+                    false
+                } else if (!swapArmorTo(slot)) {
+                    modMessage("§cFailed to equip armor from Wardrobe #$slot!")
+                    false
+                } else {
+                    delay(randomDelay(400, 100))
+                    if (!swapEquipment(pestIds)) {
+                        modMessage("§cMissing equipments!")
+                        false
+                    } else true
+                }
             }
+            if (!success) return@launch
+
+            delay(randomDelay(100, 50))
+            CropNuker.start()
         }
     }
 
@@ -141,29 +155,40 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
             delay(randomDelay(250, 50))
             if (changeTimeOnPest) changeGardenTime(false)
 
-            if (swapArmorTo(mossyArmorSlot.toInt())) {
-                delay(randomDelay(400, 100))
-                if (swapEquipment(blossomIds)) {
-                    delay(randomDelay(100, 50))
-                    sendCommand("tptoplot ${event.plot}")
-                    if (killAtDisco) {
-                        delay(randomDelay(1200, 400))
-                        val slot = findItemByID(specialItemList[2])
-                        if (slot != -1 && slot in 0..9) {
-                            player.inventory.selectedSlot = slot
-                            delay(randomDelay(100, 100))
-                            holdKey(mc.options.keyUse, true)
-                            delay(randomDelay(maxVacuumTime.toInt(), 100))
-                            holdKey(mc.options.keyUse, false)
-                            delay(randomDelay(500, 50))
-                            Hkim.EVENT_BUS.post(GardenEvent.PestKilled())
-                        }
-                    }
-                } else {
-                    modMessage("§cMissing equipments!")
-                }
+            val success = if (usingLoadout) {
+                swapLoadoutTo(mossyArmorSlot.toInt())
             } else {
-                modMessage("§cFailed to equip armor from Wardrobe #$mossyArmorSlot!")
+                val slot = mossyArmorSlot.toInt()
+                if (slot !in 1..9) {
+                    modMessage("Invalid index: $slot!")
+                    false
+                } else if (!swapArmorTo(slot)) {
+                    modMessage("§cFailed to equip armor from Wardrobe #$slot!")
+                    false
+                } else {
+                    delay(randomDelay(400, 100))
+                    if (!swapEquipment(blossomIds)) {
+                        modMessage("§cMissing equipments!")
+                        false
+                    } else true
+                }
+            }
+            if (!success) return@launch
+
+            delay(randomDelay(100, 50))
+            sendCommand("tptoplot ${event.plot}")
+            if (killAtDisco) {
+                delay(randomDelay(1200, 400))
+                val slot = findItemByID(specialItemList[2])
+                if (slot != -1 && slot in 0..9) {
+                    player.inventory.selectedSlot = slot
+                    delay(randomDelay(100, 100))
+                    holdKey(mc.options.keyUse, true)
+                    delay(randomDelay(maxVacuumTime.toInt(), 100))
+                    holdKey(mc.options.keyUse, false)
+                    delay(randomDelay(500, 50))
+                    Hkim.EVENT_BUS.post(GardenEvent.PestKilled())
+                }
             }
         }
     }
