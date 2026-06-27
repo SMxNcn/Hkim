@@ -533,10 +533,10 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
 
         activeEditBoxSetting = setting
         activeEditBox = EditBox(mc.font, x, y, width, height, Component.literal(setting.name)).apply {
+            setMaxLength(48)
             value = initialValue
             isBordered = false
             setTextColor(0xFFFFFFFF.toInt())
-            setMaxLength(64)
             setResponder { newValue ->
                 when (setting) {
                     is TextSetting -> setting.set(newValue)

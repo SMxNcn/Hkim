@@ -148,7 +148,7 @@ class ModuleCardState(val module: Module) {
             }
         }
 
-        if (expandAnim.getProgress() > 0.5f) {
+        if (expandAnim.getValue() > 0.01f) {
             var sy = y + cardH + 6f
             for (setting in visibleSettings) {
                 if (!setting.isVisible()) continue
