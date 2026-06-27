@@ -12,9 +12,10 @@ import cn.hkim.addon.gui.Background
 import cn.hkim.addon.utils.ServerUtils
 import cn.hkim.addon.utils.TickTasks
 import cn.hkim.addon.utils.skyblock.DungeonUtils
-import cn.hkim.addon.utils.skyblock.EquipmentUtils
 import cn.hkim.addon.utils.skyblock.LocationUtils
-import cn.hkim.addon.utils.skyblock.WardrobeUtils
+import cn.hkim.addon.utils.skyblock.inventory.EquipmentUtils
+import cn.hkim.addon.utils.skyblock.inventory.LoadoutUtils
+import cn.hkim.addon.utils.skyblock.inventory.WardrobeUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import meteordevelopment.orbit.EventBus
@@ -44,7 +45,7 @@ object Hkim : ClientModInitializer {
         }
 
         EventDispatcher.postEvents()
-        EventDispatcher.registerListeners(CustomEventDispatcher, DungeonUtils, EquipmentUtils, LocationUtils, ServerUtils, TickTasks, WardrobeUtils)
+        EventDispatcher.registerListeners(CustomEventDispatcher, DungeonUtils, EquipmentUtils, LoadoutUtils, LocationUtils, ServerUtils, TickTasks, WardrobeUtils)
         ModuleManager.initModules()
         ModuleConfig.loadConfig()
         Background.getDefaultBackground()

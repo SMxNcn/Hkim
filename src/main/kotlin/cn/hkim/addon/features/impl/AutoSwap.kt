@@ -11,8 +11,8 @@ import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.utils.findRodSlot
 import cn.hkim.addon.utils.rightClick
-import cn.hkim.addon.utils.skyblock.EquipmentUtils.swapEquipment
 import cn.hkim.addon.utils.skyblock.LocationUtils
+import cn.hkim.addon.utils.skyblock.inventory.EquipmentUtils.swapEquipment
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import meteordevelopment.orbit.EventHandler

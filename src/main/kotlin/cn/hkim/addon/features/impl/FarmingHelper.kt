@@ -12,10 +12,10 @@ import cn.hkim.addon.utils.*
 import cn.hkim.addon.utils.HudUtils.getScoreboardLines
 import cn.hkim.addon.utils.render.drawStyledBox
 import cn.hkim.addon.utils.render.drawText
-import cn.hkim.addon.utils.skyblock.EquipmentUtils.swapEquipment
 import cn.hkim.addon.utils.skyblock.Island
 import cn.hkim.addon.utils.skyblock.LocationUtils
-import cn.hkim.addon.utils.skyblock.WardrobeUtils.swapArmorTo
+import cn.hkim.addon.utils.skyblock.inventory.EquipmentUtils.swapEquipment
+import cn.hkim.addon.utils.skyblock.inventory.WardrobeUtils.swapArmorTo
 import cn.hkim.addon.utils.waypoints.FarmingWaypoints
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

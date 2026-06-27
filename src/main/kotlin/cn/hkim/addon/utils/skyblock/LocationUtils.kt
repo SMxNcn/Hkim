@@ -19,6 +19,7 @@ object LocationUtils {
 
     inline val inDungeons: Boolean get() = currentArea == Island.Dungeon
     inline val inKuudra: Boolean get() = currentArea == Island.Kuudra
+    inline val inAlphaServer: Boolean get() = inSkyBlock && mc.currentServer?.ip?.contains("alpha.hypixel.net") == true
 
     @EventHandler
     private fun onPacketReceive(event: PacketReceiveEvent) {

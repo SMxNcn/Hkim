@@ -1,10 +1,12 @@
-package cn.hkim.addon.utils.skyblock
+package cn.hkim.addon.utils.skyblock.inventory
 
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.events.impl.GuiEvent
 import cn.hkim.addon.utils.clickInventorySlot
+import cn.hkim.addon.utils.modMessage
 import cn.hkim.addon.utils.schedule
 import cn.hkim.addon.utils.sendCommand
+import cn.hkim.addon.utils.skyblock.LocationUtils
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeout
@@ -14,8 +16,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import kotlin.coroutines.resume
 
 object WardrobeUtils {
-    private const val NEXT_PAGE_SLOT = 53
-    private val titleRegex = Regex("Wardrobe \\((\\d)/(\\d)\\)")
+//    private val titleRegex = Regex("\\((\\d+)/(\\d+)\\) Armor Sets")
 
     private var callback: ((Boolean) -> Unit)? = null
     private var targetSlot = -1
@@ -27,7 +28,8 @@ object WardrobeUtils {
     @EventHandler
     private fun onGuiOpen(event: GuiEvent.Open) {
         containerId = mc.player?.containerMenu?.containerId ?: return
-        if (!calledFromThis || isProcessing) return
+        if (!calledFromThis) return
+        if (isProcessing) return
         handleGuiOpen(event.screen)
     }
 
@@ -39,7 +41,14 @@ object WardrobeUtils {
      */
     suspend fun swapArmorTo(index: Int, page: Int = 1): Boolean {
         if (calledFromThis || isProcessing) return false
-        if (index !in 1..9 || page !in 1..3) return false
+        if (index !in 1..9) {
+            modMessage("§cWardrobe index must be between 1 and 9!")
+            return false
+        }
+        if (page !in 1..3) {
+            modMessage("§cWardrobe page must be between 1 and 3!")
+            return false
+        }
 
         return try {
             withTimeout(10000) {
@@ -53,46 +62,58 @@ object WardrobeUtils {
                 }
             }
         } catch (_: TimeoutCancellationException) {
-            reset()
+            resetWardrobe()
             false
         }
     }
 
     private fun handleGuiOpen(screen: Screen?) {
         val chest = (screen as? AbstractContainerScreen<*>) ?: return
-        val matchResult = titleRegex.find(chest.title.string) ?: return
-        val currentPage = matchResult.groupValues[1].toIntOrNull() ?: return
-        val totalPages = matchResult.groupValues[2].toIntOrNull() ?: return
+        val title = chest.title.string
+        val (currentPage, totalPages) = parsePageInfo(title) ?: return
 
         if (targetPage > totalPages) return
 
         schedule((6..8).random()) {
-            if (currentPage == targetPage) {
-                clickArmor()
-            } else if (currentPage < targetPage) {
-                mc.player?.clickInventorySlot(NEXT_PAGE_SLOT, containerId)
-                isProcessing = false
+            when {
+                currentPage == targetPage -> performClick()
+                currentPage < targetPage -> turnPage()
+                else -> resetWardrobe()
             }
         }
     }
 
-    private fun clickArmor() {
+    private fun performClick() {
         isProcessing = true
         mc.player?.clickInventorySlot(targetSlot, containerId)
-
         schedule((8..10).random()) {
             mc.player?.closeContainer()
             callback?.invoke(true)
-            reset()
+            resetWardrobe()
         }
     }
 
-    private fun reset() {
+    private fun parsePageInfo(title: String): Pair<Int, Int>? {
+        // Replace dynamic Regex with immutable object-level private val after Main server update.
+        val pattern = if (LocationUtils.inAlphaServer) "\\((\\d+)/(\\d+)\\) Armor Sets"
+            else "Wardrobe \\((\\d+)/(\\d+)\\)"
+        return /*titleRegex*/Regex(pattern).find(title)?.destructured?.let { (current, total) ->
+            current.toIntOrNull() to total.toIntOrNull()
+        }?.takeIf { it.first != null && it.second != null }
+            ?.let { it.first!! to it.second!! }
+    }
+
+    private fun turnPage() {
+        mc.player?.clickInventorySlot(53, containerId)
+        isProcessing = false
+    }
+
+    private fun resetWardrobe() {
         callback = null
         targetSlot = -1
         targetPage = 1
-        containerId = -1
         calledFromThis = false
         isProcessing = false
+        containerId = -1
     }
 }
