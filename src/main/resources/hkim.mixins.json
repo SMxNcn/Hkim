@@ -15,6 +15,7 @@
     "CameraMixin",
     "ChatComponentMixin",
     "ClientPacketListenerMixin",
+    "ConnectScreenMixin",
     "ConnectionMixin",
     "ContainerScreenMixin",
     "DisconnectedScreenMixin",

@@ -1,6 +1,6 @@
 package cn.hkim.addon.mixins;
 
-import net.minecraft.client.Minecraft;
+import cn.hkim.addon.utils.ServerUtils;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.client.gui.screens.ConnectScreen;
@@ -27,18 +27,22 @@ public abstract class DisconnectedScreenMixin {
     @Shadow @Final
     private LinearLayout layout;
 
-    @Inject(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/layouts/LinearLayout;arrangeElements()V", shift = At.Shift.BEFORE))
+    @Inject(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/layouts/LinearLayout;arrangeElements()V"))
     private void addReconnectButton(CallbackInfo ci) {
-        ServerData serverData = Minecraft.getInstance().getCurrentServer();
-        if (serverData == null) return;
+        ServerData serverData = mc.getCurrentServer();
+        if (serverData == null) {
+            serverData = ServerUtils.getLastConnectionAttempt();
+        }
+        final ServerData finalServerData = serverData;
+        if (finalServerData == null) return;
 
         final Screen parentScreen = this.parent;
 
         Button reconnectBtn = Button.builder(
             Component.translatable("hkim.reconnect"),
                 _ -> {
-                ServerAddress address = ServerAddress.parseString(serverData.ip);
-                ConnectScreen.startConnecting(parentScreen, mc, address, serverData, false, null);
+                ServerAddress address = ServerAddress.parseString(finalServerData.ip);
+                ConnectScreen.startConnecting(parentScreen, mc, address, finalServerData, false, null);
             }
         ).width(200).build();
 
