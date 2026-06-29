@@ -3,6 +3,8 @@ package cn.hkim.addon.utils.skyblock
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.events.impl.PacketReceiveEvent
 import cn.hkim.addon.events.impl.WorldEvent
+import cn.hkim.addon.utils.HudUtils.getScoreboard
+import cn.hkim.addon.utils.clean
 import cn.hkim.addon.utils.equalsOneOf
 import cn.hkim.addon.utils.schedule
 import cn.hkim.addon.utils.startsWithOneOf
@@ -52,4 +54,15 @@ object LocationUtils {
     fun isCurrentArea(vararg areas: Island): Boolean =
         if (currentArea == Island.SinglePlayer) true
         else areas.any { currentArea == it }
+
+    fun getCurrentZone(): String? {
+        val scoreboard = getScoreboard()
+        if (scoreboard.isEmpty()) return null
+        for (line in scoreboard) {
+            Regex("[⏣ф]\\s*(.+)").find(line.clean)?.let {
+                return it.groupValues[1].trim()
+            }
+        }
+        return null
+    }
 }

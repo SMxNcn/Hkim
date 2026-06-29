@@ -26,6 +26,7 @@
     "GuiMixin",
     "ItemInHandRendererMixin",
     "KeyMappingMixin",
+    "LevelChunkMixin",
     "LightmapRenderStateExtractorMixin",
     "LivingEntityMixin",
     "LivingEntityRendererMixin",
