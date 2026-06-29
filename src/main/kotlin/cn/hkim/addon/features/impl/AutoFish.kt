@@ -4,21 +4,14 @@ import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.settings.KeybindSetting
 import cn.hkim.addon.config.settings.NumberSetting
 import cn.hkim.addon.events.impl.InputEvent
-import cn.hkim.addon.events.impl.PacketReceiveEvent
 import cn.hkim.addon.events.impl.TickEvent
-import cn.hkim.addon.events.impl.WorldEvent
 import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.utils.*
 import cn.hkim.addon.utils.skyblock.LocationUtils
 import meteordevelopment.orbit.EventHandler
-import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
-import net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket
-import net.minecraft.resources.Identifier
-import net.minecraft.sounds.SoundEvent
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.entity.Relative
 import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.item.FishingRodItem
 import net.minecraft.world.item.ItemStack
@@ -37,8 +30,6 @@ object AutoFish : Module("Auto Fish", "Automatically casts and reels the fishing
     private var fishBitten = false
     private var waitStartTick = 0L
     private var hookUpTick = 0L
-
-    private val zxf2Sound = SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("hkim", "zxf2"))
 
     override fun onEnable() {
         val player = mc.player ?: run {
@@ -65,35 +56,10 @@ object AutoFish : Module("Auto Fish", "Automatically casts and reels the fishing
     }
 
     @EventHandler
-    private fun onWorldUnload(event: WorldEvent.Unload) {
-        if (enabled) {
-            playSoundAtPlayer(zxf2Sound)
-            disable()
-        }
-    }
-
-    @EventHandler
     private fun onKey(event: InputEvent) {
         if (!LocationUtils.inSkyBlock) return
         if (mc.screen != null) return
         if (event.key.value == toggleKeybind) toggle()
-    }
-
-    @EventHandler
-    private fun onPacket(event: PacketReceiveEvent) {
-        if (!enabled) return
-        when (event.packet) {
-            is ClientboundPlayerPositionPacket -> {
-                if (event.packet.relatives.any { it in listOf(Relative.X, Relative.Y, Relative.Z) }) {
-                    playSoundAtPlayer(zxf2Sound)
-                    disable()
-                }
-            }
-            is ClientboundSetHeldSlotPacket -> {
-                playSoundAtPlayer(zxf2Sound)
-                disable()
-            }
-        }
     }
 
     @EventHandler

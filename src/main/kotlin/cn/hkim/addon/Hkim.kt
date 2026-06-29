@@ -12,6 +12,7 @@ import cn.hkim.addon.gui.Background
 import cn.hkim.addon.utils.ServerUtils
 import cn.hkim.addon.utils.TickTasks
 import cn.hkim.addon.utils.skyblock.DungeonUtils
+import cn.hkim.addon.utils.skyblock.FailSafeUtils
 import cn.hkim.addon.utils.skyblock.LocationUtils
 import cn.hkim.addon.utils.skyblock.inventory.EquipmentUtils
 import cn.hkim.addon.utils.skyblock.inventory.LoadoutUtils
@@ -45,7 +46,7 @@ object Hkim : ClientModInitializer {
         }
 
         EventDispatcher.postEvents()
-        EventDispatcher.registerListeners(CustomEventDispatcher, DungeonUtils, EquipmentUtils, LoadoutUtils, LocationUtils, ServerUtils, TickTasks, WardrobeUtils)
+        EventDispatcher.registerListeners(CustomEventDispatcher, DungeonUtils, EquipmentUtils, FailSafeUtils, LoadoutUtils, LocationUtils, ServerUtils, TickTasks, WardrobeUtils)
         ModuleManager.initModules()
         ModuleConfig.loadConfig()
         Background.getDefaultBackground()

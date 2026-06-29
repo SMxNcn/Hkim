@@ -1,18 +1,12 @@
 package cn.hkim.addon.events
 
 import cn.hkim.addon.Hkim
-import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.events.impl.*
-import cn.hkim.addon.features.impl.FarmingHelper
 import cn.hkim.addon.utils.*
 import cn.hkim.addon.utils.skyblock.Island
 import cn.hkim.addon.utils.skyblock.LocationUtils
 import cn.hkim.addon.utils.skyblock.MayorData
 import meteordevelopment.orbit.EventHandler
-import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
-import net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket
-import net.minecraft.world.entity.Relative
-import java.util.*
 
 object CustomEventDispatcher {
     private val visitRegex = Regex("\\[SkyBlock] (?:\\[.*?] )?(.*?) is visiting Your Garden!")
@@ -56,31 +50,6 @@ object CustomEventDispatcher {
         }
 
         if (event.message.contains("Everybody unlocks exclusive perks!")) MayorData.fetchData()
-    }
-
-    @EventHandler
-    private fun onPacket(event: PacketReceiveEvent) {
-        if (LocationUtils.currentArea != Island.Garden) return
-
-        when (event.packet) {
-            is ClientboundPlayerPositionPacket -> {
-                if (mc.player?.mainHandItem?.itemId?.containsOneOf(FarmingHelper.specialItemList) == true) return
-                val pkt = event.packet
-                val isTeleport = pkt.relatives.any { it in EnumSet.of(Relative.X, Relative.Y, Relative.Z) }
-                val isRotation = pkt.relatives.any { it == Relative.Y_ROT || it == Relative.X_ROT }
-                if (isTeleport) Hkim.EVENT_BUS.post(GardenEvent.FailSafe("Teleport"))
-                else if (isRotation) Hkim.EVENT_BUS.post(GardenEvent.FailSafe("Rotation"))
-            }
-            is ClientboundSetHeldSlotPacket -> {
-                Hkim.EVENT_BUS.post(GardenEvent.FailSafe("Held Item Change"))
-            }
-        }
-    }
-
-    @EventHandler
-    private fun onWorldUnload(event: WorldEvent.Unload) {
-        if (LocationUtils.currentArea != Island.Garden) return
-        Hkim.EVENT_BUS.post(GardenEvent.FailSafe("World Change"))
     }
 
     private fun getCurrentPlot(): Int? {

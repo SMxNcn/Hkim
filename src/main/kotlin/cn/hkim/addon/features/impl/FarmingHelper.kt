@@ -69,18 +69,6 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
     }
 
     @EventHandler
-    private fun onFailSafe(event: GardenEvent.FailSafe) {
-        if (!enabled || !CropNuker.enabled) return
-        CropNuker.stop()
-        when (event.reason) {
-            "World Change" -> modMessage("§6Crop Nuker §7disabled due to world changed.")
-            "Teleport" -> modMessage("§6Crop Nuker §7disabled due to position changed.")
-            "Rotation" -> modMessage("§6Crop Nuker §7disabled due to rotation changed.")
-            "Held Item Change" -> modMessage("§6Crop Nuker §7disabled due to held item changed.")
-        }
-    }
-
-    @EventHandler
     private fun onMouseClick(event: MouseButtonEvent) {
         if (!enabled || !allowEdits || event.button != 1 || mc.screen != null) return
         if (LocationUtils.currentArea != Island.Garden) return
