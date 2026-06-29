@@ -1,6 +1,7 @@
 package cn.hkim.addon.mixins;
 
 import cn.hkim.addon.features.impl.CameraHelper;
+import cn.hkim.addon.features.impl.FreeCam;
 import cn.hkim.addon.mixins.accessors.CameraAccessor;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
@@ -21,6 +22,15 @@ public abstract class CameraMixin {
 
     @Shadow
     protected abstract float getMaxZoom(float cameraDist);
+
+    @Shadow
+    private boolean detached;
+
+    @Shadow
+    protected abstract void setRotation(float yRot, float xRot);
+
+    @Shadow
+    protected abstract void setPosition(double x, double y, double z);
 
     @Unique
     private float hkim$transitionProgress = 0.0f;
@@ -114,5 +124,15 @@ public abstract class CameraMixin {
     @Unique
     private static float easeOutCubic(float x) {
         return 1.0f - (float) Math.pow(1.0f - x, 3);
+    }
+
+    @Inject(method = "alignWithEntity", at = @At("HEAD"), cancellable = true)
+    private void freecam$onAlignWithEntity(float partialTicks, CallbackInfo ci) {
+        if (FreeCam.isFreecamActive()) {
+            this.detached = true;
+            setRotation(FreeCam.getCamYRot(), FreeCam.getCamXRot());
+            setPosition(FreeCam.getCamX(), FreeCam.getCamY(), FreeCam.getCamZ());
+            ci.cancel();
+        }
     }
 }

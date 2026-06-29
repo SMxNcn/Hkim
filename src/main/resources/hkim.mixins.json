@@ -22,6 +22,8 @@
     "EntityMixin",
     "EntityRendererMixin",
     "FallingBlockRendererMixin",
+    "GameRendererMixin",
+    "OptionsMixin",
     "GuiGraphicsExtractorMixin",
     "GuiMixin",
     "ItemInHandRendererMixin",
