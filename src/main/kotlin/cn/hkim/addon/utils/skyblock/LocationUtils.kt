@@ -21,6 +21,7 @@ object LocationUtils {
 
     inline val inDungeons: Boolean get() = currentArea == Island.Dungeon
     inline val inKuudra: Boolean get() = currentArea == Island.Kuudra
+    @Suppress("unused")
     inline val inAlphaServer: Boolean get() = inSkyBlock && mc.currentServer?.ip?.contains("alpha.hypixel.net") == true
 
     @EventHandler
@@ -59,7 +60,7 @@ object LocationUtils {
         val scoreboard = getScoreboard()
         if (scoreboard.isEmpty()) return null
         for (line in scoreboard) {
-            Regex("[⏣ф]\\s*(.+)").find(line.clean)?.let {
+            Regex("[⏣ф\uE067\uE020]\\s*(.+)").find(line.clean)?.let {
                 return it.groupValues[1].trim()
             }
         }
