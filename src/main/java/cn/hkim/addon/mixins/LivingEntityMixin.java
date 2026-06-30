@@ -34,13 +34,13 @@ public class LivingEntityMixin {
     }
 
     @Unique
-    private boolean shouldOverride() {
+    private boolean hkim$shouldOverrideRotation() {
         return RotationUtils.isSilentAiming() || RotationUtils.isStoppingAiming();
     }
 
     @Inject(method = "travel(Lnet/minecraft/world/phys/Vec3;)V", at = @At("HEAD"))
     private void onTravelHead(Vec3 input, CallbackInfo ci) {
-        if (!shouldOverride()) return;
+        if (!hkim$shouldOverrideRotation()) return;
         LivingEntity self = (LivingEntity) (Object) this;
         if (!self.isEffectiveAi()) return;
         this.hkim$savedYRot = self.getYRot();
@@ -49,13 +49,13 @@ public class LivingEntityMixin {
 
     @Inject(method = "travel(Lnet/minecraft/world/phys/Vec3;)V", at = @At("RETURN"))
     private void onTravelReturn(Vec3 input, CallbackInfo ci) {
-        if (!shouldOverride()) return;
+        if (!hkim$shouldOverrideRotation()) return;
         ((LivingEntity) (Object) this).setYRot(this.hkim$savedYRot);
     }
 
     @Inject(method = "jumpFromGround", at = @At("HEAD"))
     private void onJumpFromGroundHead(CallbackInfo ci) {
-        if (!shouldOverride()) return;
+        if (!hkim$shouldOverrideRotation()) return;
         LivingEntity self = (LivingEntity) (Object) this;
         this.hkim$savedYRot = self.getYRot();
         self.setYRot(RotationUtils.getServerYaw());
@@ -63,7 +63,7 @@ public class LivingEntityMixin {
 
     @Inject(method = "jumpFromGround", at = @At("RETURN"))
     private void onJumpFromGroundReturn(CallbackInfo ci) {
-        if (!shouldOverride()) return;
+        if (!hkim$shouldOverrideRotation()) return;
         ((LivingEntity) (Object) this).setYRot(this.hkim$savedYRot);
     }
 }

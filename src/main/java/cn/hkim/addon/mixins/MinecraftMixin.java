@@ -19,10 +19,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MinecraftMixin {
 
     @Unique
-    private float raySavedYaw;
+    private float hkim$raySavedYaw;
 
     @Unique
-    private float raySavedPitch;
+    private float hkim$raySavedPitch;
 
     @Inject(method = "tick", at = @At("HEAD"))
     private void onStartTick(CallbackInfo ci) {
@@ -50,28 +50,27 @@ public abstract class MinecraftMixin {
         return TitleManager.INSTANCE.buildTitle();
     }
 
-    /**
-     * 拦截射线检测，检测前将玩家旋转临时替换为 server 角度，使点击/交互命中瞄准目标。
-     * 检测后恢复 client 真实视角，不影响玩家看到的画面。
-     */
     @Inject(method = "pick(F)V", at = @At("HEAD"))
     private void beforePick(CallbackInfo ci) {
         LocalPlayer player = Hkim.mc.player;
-        if (player != null) {
-            this.raySavedYaw = player.getYRot();
-            this.raySavedPitch = player.getXRot();
+        if (player == null) return;
+        if (!RotationUtils.isSilentAiming() && !RotationUtils.isStoppingAiming()) return;
 
-            player.setYRot(RotationUtils.getServerYaw());
-            player.setXRot(RotationUtils.getServerPitch());
-        }
+        this.hkim$raySavedYaw = player.getYRot();
+        this.hkim$raySavedPitch = player.getXRot();
+
+        player.setYRot(RotationUtils.getServerYaw());
+        player.setXRot(RotationUtils.getServerPitch());
+
     }
 
     @Inject(method = "pick(F)V", at = @At("RETURN"))
     private void afterPick(CallbackInfo ci) {
         LocalPlayer player = Hkim.mc.player;
-        if (player != null) {
-            player.setYRot(this.raySavedYaw);
-            player.setXRot(this.raySavedPitch);
-        }
+        if (player == null) return;
+        if (!RotationUtils.isSilentAiming() && !RotationUtils.isStoppingAiming()) return;
+
+        player.setYRot(this.hkim$raySavedYaw);
+        player.setXRot(this.hkim$raySavedPitch);
     }
 }

@@ -3,6 +3,7 @@ package cn.hkim.addon.mixins;
 import cn.hkim.addon.Hkim;
 import cn.hkim.addon.events.impl.MouseButtonEvent;
 import cn.hkim.addon.utils.KeyAction;
+import cn.hkim.addon.utils.RotationUtils;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.input.MouseButtonInfo;
 import org.spongepowered.asm.mixin.Mixin;
@@ -22,5 +23,15 @@ public class MouseHandlerMixin {
         Hkim.EVENT_BUS.post(event);
 
         if (event.isCancelled()) ci.cancel();
+    }
+
+    @Inject(method = "turnPlayer", at = @At("TAIL"))
+    private void onTurnPlayer(CallbackInfo ci) {
+        if (Hkim.mc.player != null) {
+            RotationUtils.syncClientRotation(
+                Hkim.mc.player.getYRot(),
+                Hkim.mc.player.getXRot()
+            );
+        }
     }
 }

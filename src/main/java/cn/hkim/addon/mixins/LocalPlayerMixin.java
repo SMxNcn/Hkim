@@ -19,10 +19,16 @@ public class LocalPlayerMixin {
     private boolean lastSneaking = false;
 
     @Unique
-    private float savedYaw;
+    private float hkim$savedYaw;
 
     @Unique
-    private float savedPitch;
+    private float hkim$savedPitch;
+
+    @Unique
+    private float hkim$lastSentYaw;
+
+    @Unique
+    private boolean hkim$hasLastSentYaw;
 
     @Inject(method = "tick", at = @At("HEAD"))
     private void onTick(CallbackInfo ci) {
@@ -43,11 +49,23 @@ public class LocalPlayerMixin {
     @Inject(method = "sendPosition", at = @At("HEAD"))
     private void beforeSendPosition(CallbackInfo ci) {
         LocalPlayer self = (LocalPlayer) (Object) this;
-        if (!RotationUtils.isSilentAiming() && !RotationUtils.isStoppingAiming()) return;
+        if (!RotationUtils.isSilentAiming() && !RotationUtils.isStoppingAiming()) {
+            this.hkim$hasLastSentYaw = false;
+            return;
+        }
 
-        this.savedYaw = self.getYRot();
-        this.savedPitch = self.getXRot();
-        self.setYRot(RotationUtils.getServerYaw());
+        this.hkim$savedYaw = self.getYRot();
+        this.hkim$savedPitch = self.getXRot();
+
+        float yaw = RotationUtils.getServerYaw();
+        if (this.hkim$hasLastSentYaw) {
+            float diff = yaw - this.hkim$lastSentYaw;
+            yaw -= (float) Math.round(diff / 360.0) * 360.0f;
+        }
+        this.hkim$lastSentYaw = yaw;
+        this.hkim$hasLastSentYaw = true;
+
+        self.setYRot(yaw);
         self.setXRot(RotationUtils.getServerPitch());
     }
 
@@ -56,8 +74,8 @@ public class LocalPlayerMixin {
         LocalPlayer self = (LocalPlayer) (Object) this;
         if (!RotationUtils.isSilentAiming() && !RotationUtils.isStoppingAiming()) return;
 
-        self.setYRot(this.savedYaw);
-        self.setXRot(this.savedPitch);
+        self.setYRot(this.hkim$savedYaw);
+        self.setXRot(this.hkim$savedPitch);
     }
 
     @ModifyExpressionValue(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Input;sprint()Z"))

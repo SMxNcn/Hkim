@@ -10,6 +10,7 @@ import kotlin.math.sqrt
 object RotationUtils {
     class Rotation(var yaw: Float, var pitch: Float) {
         override fun toString(): String = "Rotation{yaw=$yaw, pitch=$pitch}"
+
         fun equals(other: Rotation, epsilon: Float = 0.01f): Boolean =
             abs(this.yaw - other.yaw) < epsilon && abs(this.pitch - other.pitch) < epsilon
     }
@@ -99,11 +100,6 @@ object RotationUtils {
         }
     }
 
-    /**
-     * @param target 目标位置
-     * @param aimSpeed 正常瞄准速度
-     * @param startSpeedMultiplier 启动过渡速度倍率（默认 1.5x）。首次进入瞄准或重新瞄准时使用。
-     */
     @JvmStatic
     fun aimSilent(target: Vec3, aimSpeed: Float, startSpeedMultiplier: Float = 1.5f) {
         if (!initialized) return
@@ -123,20 +119,16 @@ object RotationUtils {
         applyModelRotation(serverYaw)
     }
 
-    /**
-     * server 角度以 [stopSpeed] 逐步回归 client 当前视角。
-     *
-     * @param stopSpeed 停止过渡速度（推荐 0.3 ~ 0.5，快于正常瞄准速度）
-     * @return true = 仍在回归中，需继续调用；false = 已完全回归
-     */
     @JvmStatic
     fun tickStopAiming(stopSpeed: Float): Boolean {
-        val diffYaw = abs(wrapAngleTo180(serverYaw - clientYaw))
-        val diffPitch = abs(wrapAngleTo180(serverPitch - clientPitch))
+        val angularDiffYaw = abs(wrapAngleTo180(serverYaw - clientYaw))
+        val angularDiffPitch = abs(wrapAngleTo180(serverPitch - clientPitch))
 
-        if (diffYaw < 0.1f && diffPitch < 0.1f) {
-            resetServerToClient()
+        if (angularDiffYaw < 0.1f && angularDiffPitch < 0.1f) {
+            serverYaw = clientYaw
+            serverPitch = clientPitch
             isStoppingAiming = false
+            isSilentAiming = false
             return false
         }
 
@@ -158,22 +150,15 @@ object RotationUtils {
         applyModelRotation(player.yRot)
         isSilentAiming = false
     }
+
     @JvmStatic
     fun applyModelRotation(yaw: Float) {
         val player = mc.player ?: return
-        player.yBodyRot = yaw
-        player.yBodyRotO = yaw
-        player.yHeadRot = yaw
-        player.yHeadRotO = yaw
-    }
-
-    @JvmStatic
-    fun resetServerToClient() {
-        serverYaw = clientYaw
-        serverPitch = clientPitch
-        isSilentAiming = false
-        isStoppingAiming = false
-        applyModelRotation(clientYaw)
+        val wrapped = Mth.wrapDegrees(yaw)
+        player.yBodyRot = wrapped
+        player.yBodyRotO = wrapped
+        player.yHeadRot = wrapped
+        player.yHeadRotO = wrapped
     }
 
     @JvmStatic
