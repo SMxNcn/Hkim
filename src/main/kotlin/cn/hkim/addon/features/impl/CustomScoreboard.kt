@@ -78,6 +78,18 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard background & l
         if (!initialPositionSet) {
             initialPositionSet = true
             prevContentWidth = newW
+
+            val currentLeft = hud.actualX()
+            val currentRight = currentLeft + newW * scale
+
+            if (currentRight > screenW - 2f) {
+                val newLeft = (screenW - newW * scale - 4f).coerceAtLeast(4f)
+                hud.anchorX = newLeft - hud.hudAlignment.baseX(screenW)
+            } else if (currentLeft < 2f) {
+                val maxLeft = (screenW - newW * scale - 4f).coerceAtLeast(4f)
+                val newLeft = 4f.coerceAtMost(maxLeft)
+                hud.anchorX = newLeft - hud.hudAlignment.baseX(screenW)
+            }
             return
         }
 

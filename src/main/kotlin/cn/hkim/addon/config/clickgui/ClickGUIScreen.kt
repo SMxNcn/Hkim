@@ -55,7 +55,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
     private var searchQuery = ""
     private var contentScrollY = 0f
 
-    private val themeColor = ClickGUI.getGuiColor()
+    private val themeColor get() = ClickGUI.getGuiColor()
     private val cardStates = mutableMapOf<String, ModuleCardState>()
 
     private val highlightAlphaAnim = GuiAnimation.create(0f, 0f)
@@ -518,6 +518,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
 
         activeEditBoxSetting = setting
         activeEditBox = EditBox(mc.font, x, y, width, height, Component.literal(setting.name)).apply {
+            setMaxLength(64)
             value = initialValue
             isBordered = false
             setTextColor(0xFFFFFFFF.toInt())
