@@ -3,6 +3,7 @@ package cn.hkim.addon
 import cn.hkim.addon.commands.hkimCommand
 import cn.hkim.addon.commands.hwpCommand
 import cn.hkim.addon.config.ModuleConfig
+import cn.hkim.addon.events.CustomEventDispatcher
 import cn.hkim.addon.events.EventDispatcher
 import cn.hkim.addon.features.ModuleManager
 import cn.hkim.addon.gui.Background
@@ -45,7 +46,7 @@ object Hkim : ClientModInitializer {
 
         EventDispatcher.postEvents()
         RenderBatchManager.init()
-        EventDispatcher.registerListeners(DungeonUtils, EquipmentUtils, FailSafeUtils, LoadoutUtils, LocationUtils, ServerUtils, TickTasks, WardrobeUtils)
+        EventDispatcher.registerListeners(CustomEventDispatcher, DungeonUtils, EquipmentUtils, FailSafeUtils, LoadoutUtils, LocationUtils, ServerUtils, TickTasks, WardrobeUtils)
         ModuleManager.initModules()
         ModuleConfig.loadConfig()
         Background.getDefaultBackground()
