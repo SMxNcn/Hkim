@@ -24,8 +24,8 @@ import meteordevelopment.orbit.EventHandler
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.AABB
-import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.Vec3
 import org.lwjgl.glfw.GLFW
 
 @ModuleInfo("farming_helper", Category.SKYBLOCK)
@@ -35,7 +35,7 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
     private val renderOnFarming by BooleanSetting("Render on Farming", "Render waypoints when CropNuker is disabled.", false)
 
     private val armorDropdown by DropdownSetting("Armor")
-    private val usingLoadout by BooleanSetting("Armor in Loadout", "Farming Armor in Loadout.", false)
+    private val usingLoadout by BooleanSetting("Armor in Loadout", "Farming Armor in Loadout.", false).depends { armorDropdown }
     private val mossyArmorSlot by NumberSetting("Mossy Slot", "Mossy armor wardrobe slot.", 1f, 1f, 12f, 1f).depends { armorDropdown }
     private val mantidArmorSlot by NumberSetting("Mantid Slot", "Mantid armor wardrobe slot.", 2f, 1f, 12f, 1f).depends { armorDropdown }
 

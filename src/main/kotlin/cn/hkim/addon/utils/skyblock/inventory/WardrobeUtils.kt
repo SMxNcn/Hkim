@@ -6,7 +6,6 @@ import cn.hkim.addon.utils.clickInventorySlot
 import cn.hkim.addon.utils.modMessage
 import cn.hkim.addon.utils.schedule
 import cn.hkim.addon.utils.sendCommand
-import cn.hkim.addon.utils.skyblock.LocationUtils
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeout
@@ -16,7 +15,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import kotlin.coroutines.resume
 
 object WardrobeUtils {
-//    private val titleRegex = Regex("\\((\\d+)/(\\d+)\\) Armor Sets")
+    private val titleRegex = Regex("\\((\\d+)/(\\d+)\\) Armor Sets")
 
     private var callback: ((Boolean) -> Unit)? = null
     private var targetSlot = -1
@@ -94,10 +93,7 @@ object WardrobeUtils {
     }
 
     private fun parsePageInfo(title: String): Pair<Int, Int>? {
-        // Replace dynamic Regex with immutable object-level private val after Main server update.
-        val pattern = if (LocationUtils.inAlphaServer) "\\((\\d+)/(\\d+)\\) Armor Sets"
-            else "Wardrobe \\((\\d+)/(\\d+)\\)"
-        return /*titleRegex*/Regex(pattern).find(title)?.destructured?.let { (current, total) ->
+        return titleRegex.find(title)?.destructured?.let { (current, total) ->
             current.toIntOrNull() to total.toIntOrNull()
         }?.takeIf { it.first != null && it.second != null }
             ?.let { it.first!! to it.second!! }

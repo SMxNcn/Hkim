@@ -6,7 +6,6 @@ import cn.hkim.addon.utils.clickPlayerInventorySlot
 import cn.hkim.addon.utils.findItemByID
 import cn.hkim.addon.utils.schedule
 import cn.hkim.addon.utils.sendCommand
-import cn.hkim.addon.utils.skyblock.LocationUtils
 import kotlinx.coroutines.suspendCancellableCoroutine
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.client.gui.screens.Screen
@@ -44,9 +43,7 @@ object EquipmentUtils {
             currentIndex = 0
             isProcessing = false
             calledFromThis = true
-            // Replace conditional command with sendCommand("stats") after Main server update.
-            if (LocationUtils.inAlphaServer) sendCommand("stats")
-            else sendCommand("equipment")
+            sendCommand("stats")
 
             schedule(200) {
                 if (callback != null) {
