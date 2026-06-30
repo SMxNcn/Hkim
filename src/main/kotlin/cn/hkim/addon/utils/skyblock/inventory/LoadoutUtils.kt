@@ -1,0 +1,123 @@
+package cn.hkim.addon.utils.skyblock.inventory
+
+import cn.hkim.addon.Hkim.mc
+import cn.hkim.addon.events.impl.GuiEvent
+import cn.hkim.addon.utils.clickInventorySlot
+import cn.hkim.addon.utils.modMessage
+import cn.hkim.addon.utils.schedule
+import cn.hkim.addon.utils.sendCommand
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeout
+import meteordevelopment.orbit.EventHandler
+import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import kotlin.coroutines.resume
+
+object LoadoutUtils {
+    private val titleRegex = Regex("\\((\\d+)/(\\d+)\\) Loadouts")
+
+    private var callback: ((Boolean) -> Unit)? = null
+    private var targetIndex = -1
+    private var targetPage = 1
+    private var containerId = -1
+    private var calledFromThis = false
+    private var isProcessing = false
+
+    @EventHandler
+    private fun onGuiOpen(event: GuiEvent.Open) {
+        containerId = mc.player?.containerMenu?.containerId ?: return
+        if (!calledFromThis) return
+        if (isProcessing) return
+        handleGuiOpen(event.screen)
+    }
+
+    /**
+     * Swaps to a loadout by index (1-27).
+     * @param index Loadout index (1-27). Page is auto-calculated: (index - 1) / 12 + 1.
+     *              Slot position within page: (index - 1) % 12, mapped to the 4x3 grid.
+     * @return `true` if the loadout was successfully equipped, `false` otherwise.
+     */
+    suspend fun swapLoadoutTo(index: Int): Boolean {
+        if (calledFromThis || isProcessing) return false
+        if (index !in 1..27) {
+            modMessage("§cLoadout index must be between 1 and 27!")
+            return false
+        }
+
+        return try {
+            withTimeout(10000) {
+                suspendCancellableCoroutine { cont ->
+                    callback = { result -> cont.resume(result) }
+                    targetIndex = index
+                    targetPage = LoadoutLayout.getPage(index)
+                    calledFromThis = true
+                    isProcessing = false
+                    sendCommand("loadout")
+                }
+            }
+        } catch (_: TimeoutCancellationException) {
+            resetLoadout()
+            false
+        }
+    }
+
+    private fun handleGuiOpen(screen: Screen?) {
+        val chest = (screen as? AbstractContainerScreen<*>) ?: return
+        val title = chest.title.string
+        val (currentPage, totalPages) = parsePageInfo(title) ?: return
+
+        if (targetPage > totalPages) return
+
+        schedule((6..8).random()) {
+            when {
+                currentPage == targetPage -> performClick()
+                currentPage < targetPage -> turnPage()
+                else -> resetLoadout()
+            }
+        }
+    }
+
+    private fun performClick() {
+        isProcessing = true
+        val slot = LoadoutLayout.getSlotId(targetIndex)
+        mc.player?.clickInventorySlot(slot, containerId)
+        schedule((8..10).random()) {
+            mc.player?.closeContainer()
+            callback?.invoke(true)
+            resetLoadout()
+        }
+    }
+
+    private fun parsePageInfo(title: String): Pair<Int, Int>? {
+        return titleRegex.find(title)?.destructured?.let { (current, total) ->
+            current.toIntOrNull() to total.toIntOrNull()
+        }?.takeIf { it.first != null && it.second != null }
+            ?.let { it.first!! to it.second!! }
+    }
+
+    private fun turnPage() {
+        mc.player?.clickInventorySlot(44, containerId)
+        isProcessing = false
+    }
+
+    private fun resetLoadout() {
+        callback = null
+        targetIndex = -1
+        targetPage = 1
+        calledFromThis = false
+        isProcessing = false
+        containerId = -1
+    }
+
+    private object LoadoutLayout {
+        fun getSlotId(index: Int): Int {
+            val offset = (index - 1) % 12
+            val row = offset / 3
+            val col = offset % 3
+            return 14 + row * 9 + col
+        }
+
+        fun getPage(index: Int): Int = (index - 1) / 12 + 1
+    }
+}

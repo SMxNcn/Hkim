@@ -1,6 +1,7 @@
 package cn.hkim.addon
 
 import cn.hkim.addon.commands.hkimCommand
+import cn.hkim.addon.commands.hwpCommand
 import cn.hkim.addon.config.ModuleConfig
 import cn.hkim.addon.events.EventDispatcher
 import cn.hkim.addon.features.ModuleManager
@@ -9,9 +10,11 @@ import cn.hkim.addon.utils.ServerUtils
 import cn.hkim.addon.utils.TickTasks
 import cn.hkim.addon.utils.render.RenderBatchManager
 import cn.hkim.addon.utils.skyblock.DungeonUtils
-import cn.hkim.addon.utils.skyblock.EquipmentUtils
+import cn.hkim.addon.utils.skyblock.FailSafeUtils
 import cn.hkim.addon.utils.skyblock.LocationUtils
-import cn.hkim.addon.utils.skyblock.WardrobeUtils
+import cn.hkim.addon.utils.skyblock.inventory.EquipmentUtils
+import cn.hkim.addon.utils.skyblock.inventory.LoadoutUtils
+import cn.hkim.addon.utils.skyblock.inventory.WardrobeUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import meteordevelopment.orbit.EventBus
@@ -37,12 +40,12 @@ object Hkim : ClientModInitializer {
 
     override fun onInitializeClient() {
         ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
-            arrayOf(hkimCommand).forEach { commodore -> commodore.register(dispatcher) }
+            arrayOf(hkimCommand, hwpCommand).forEach { commodore -> commodore.register(dispatcher) }
         }
 
         EventDispatcher.postEvents()
         RenderBatchManager.init()
-        EventDispatcher.registerListeners(DungeonUtils, EquipmentUtils, LocationUtils, ServerUtils, TickTasks, WardrobeUtils)
+        EventDispatcher.registerListeners(DungeonUtils, EquipmentUtils, FailSafeUtils, LoadoutUtils, LocationUtils, ServerUtils, TickTasks, WardrobeUtils)
         ModuleManager.initModules()
         ModuleConfig.loadConfig()
         Background.getDefaultBackground()

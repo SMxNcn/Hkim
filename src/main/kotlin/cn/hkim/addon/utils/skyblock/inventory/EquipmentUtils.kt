@@ -1,4 +1,4 @@
-package cn.hkim.addon.utils.skyblock
+package cn.hkim.addon.utils.skyblock.inventory
 
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.events.impl.GuiEvent
@@ -6,6 +6,7 @@ import cn.hkim.addon.utils.clickPlayerInventorySlot
 import cn.hkim.addon.utils.findItemByID
 import cn.hkim.addon.utils.schedule
 import cn.hkim.addon.utils.sendCommand
+import cn.hkim.addon.utils.skyblock.LocationUtils
 import kotlinx.coroutines.suspendCancellableCoroutine
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.client.gui.screens.Screen
@@ -15,10 +16,10 @@ import kotlin.coroutines.resume
 object EquipmentUtils {
     private var callback: ((Boolean) -> Unit)? = null
     private var pendingSlots = listOf<Int>()
-    private var isProcessing = false
     private var currentIndex = 0
     private var containerId = -1
     private var calledFromThis = false
+    private var isProcessing = false
 
     @EventHandler
     private fun onGuiOpen(event: GuiEvent.Open) {
@@ -43,7 +44,9 @@ object EquipmentUtils {
             currentIndex = 0
             isProcessing = false
             calledFromThis = true
-            sendCommand("equipment")
+            // Replace conditional command with sendCommand("stats") after Main server update.
+            if (LocationUtils.inAlphaServer) sendCommand("stats")
+            else sendCommand("equipment")
 
             schedule(200) {
                 if (callback != null) {
