@@ -1,6 +1,5 @@
 package cn.hkim.addon.utils.skyblock
 
-import cn.hkim.addon.Hkim
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.events.impl.PacketReceiveEvent
 import cn.hkim.addon.events.impl.TickEvent
@@ -27,10 +26,6 @@ object FailSafeUtils {
     private var lastSelectedSlot: Int = -1
     private var lastMacroEnabledTime = 0L
     private var wasMacroEnabled = false
-
-    fun init() {
-        Hkim.EVENT_BUS.subscribe(this)
-    }
 
     @EventHandler
     private fun onPacket(event: PacketReceiveEvent) {
@@ -108,32 +103,18 @@ object FailSafeUtils {
         if (now - lastTriggerTime < TRIGGER_COOLDOWN_MS) return
         lastTriggerTime = now
 
-        var disabledName: String? = null
-
         for (item in macroModules) {
             when (item) {
-                is CropNuker -> {
-                    if (item.enabled) {
-                        item.stop()
-                        disabledName = "Crop Nuker"
-                    }
-                }
-                is Module -> {
-                    if (item.enabled) {
-                        item.disable()
-                        disabledName = item.name
-                    }
-                }
+                is CropNuker -> if (item.enabled) item.stop()
+                is Module -> if (item.enabled) item.disable()
             }
         }
 
-        val name = disabledName ?: return
-
         lastSelectedSlot = mc.player?.inventory?.selectedSlot ?: -1
 
-        playSoundAtPlayer(zxf2Sound)
         modMessage("§cAlert! Macro check!")
-        modMessage("§c§l⚠ FailSafe ⚠§r §6$name §cdisabled§7. §8- §7$reason")
+        modMessage("§c§l⚠ FailSafe§r §8-> §c$reason")
+        playSoundAtPlayer(zxf2Sound)
     }
 
     private fun hasAnyMacroEnabled(): Boolean {

@@ -1,6 +1,7 @@
 package cn.hkim.addon.features.impl
 
 import cn.hkim.addon.Hkim.mc
+import cn.hkim.addon.utils.HudUtils.alert
 import cn.hkim.addon.utils.holdKey
 import cn.hkim.addon.utils.modMessage
 import cn.hkim.addon.utils.schedule
@@ -64,7 +65,7 @@ object CropNuker {
 
         if (!hasNext) {
             stop()
-            modMessage("§7Route completed.")
+            alert("§aRoute completed.")
             lastActionId = -1
             return FarmingWaypoints.Action()
         }
