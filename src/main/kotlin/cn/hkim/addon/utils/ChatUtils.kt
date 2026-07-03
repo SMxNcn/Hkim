@@ -71,10 +71,10 @@ fun sendCommand(command: String) {
 }
 
 val String.clean: String
-    get() = this.replace(Regex("§[0-9a-fk-or]"), "")
+    get() = this.replace(Regex("§."), "")
 
 val Component.cleanString: String
-    get() = this.string.replace(Regex("§[0-9a-fk-or]"), "").removeSurrounding("[", "]")
+    get() = this.string.replace(Regex("§."), "").removeSurrounding("[", "]")
 
 val Component.legacy: String
     get() {
