@@ -34,6 +34,7 @@ object CustomHighlight : Module("Custom Highlight", "Highlight custom entities i
 
     private val entries = mutableListOf<HighlightEntry>()
     private val trackedEntities = mutableSetOf<Entity>()
+    private val PLAYER_REGEX = Regex("^\\[\\d{1,3}]\\s[a-zA-Z0-9_]{1,16}.*")
 
     private val configDir = File(FabricLoader.getInstance().configDir.toFile(), "hkim")
     private val dataFile = File(configDir, "custom_highlight.json")
@@ -47,7 +48,6 @@ object CustomHighlight : Module("Custom Highlight", "Highlight custom entities i
         val entityName: String,
         val islandId: String? = null
     ) {
-        /** Resolve the stored islandId to an [Island] enum value. Accepts both enum name and display name. */
         val island: Island?
             get() = islandId?.let { id ->
                 Island.entries.firstOrNull { it.name.equals(id, true) || it.displayName.equals(id, true) }
@@ -149,7 +149,7 @@ object CustomHighlight : Module("Custom Highlight", "Highlight custom entities i
         is Player -> {
             if (entity == mc.player) return false
             val name = entity.displayName.string.clean
-            !name.matches(Regex("^\\[\\d{1,3}]\\s[a-zA-Z0-9_]{1,16}.*"))
+            !name.matches(PLAYER_REGEX)
         }
         else -> true
     }
