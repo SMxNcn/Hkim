@@ -14,6 +14,7 @@ import kotlin.random.Random
 
 object HitPosHelper {
     private const val FACE_OFFSET = 0.15
+    private const val STEP_SIZE = 0.25
     private val rng = Random
 
     fun pickHitPos(level: Level, pos: BlockPos, state: BlockState, eyePos: Vec3): Vec3? {
@@ -56,12 +57,10 @@ object HitPosHelper {
                 else -> pos.y + 0.5 + dir.stepY * 0.5
             }
 
-            val faceCenter = Vec3(
-                pos.x + 0.5 + dir.stepX * 0.5,
-                faceCenterY,
-                pos.z + 0.5 + dir.stepZ * 0.5
-            )
-            val distSq = faceCenter.distanceToSqr(eyePos)
+            val fcX = pos.x + 0.5 + dir.stepX * 0.5
+            val fcZ = pos.z + 0.5 + dir.stepZ * 0.5
+            val dx = fcX - eyePos.x; val dy = faceCenterY - eyePos.y; val dz = fcZ - eyePos.z
+            val distSq = dx * dx + dy * dy + dz * dz
             if (distSq < bestFaceDistSq) {
                 bestFaceDistSq = distSq
                 bestFace = dir
@@ -69,6 +68,18 @@ object HitPosHelper {
         }
 
         val face = bestFace ?: return null
+
+        val faceCenter = Vec3(
+            pos.x + 0.5 + face.stepX * 0.5,
+            when {
+                isSlab && face.stepY > 0 -> pos.y + slabMaxY
+                isSlab && face.stepY < 0 -> pos.y + slabMinY
+                isSlab -> pos.y + (slabMinY + slabMaxY) / 2
+                else -> pos.y + 0.5 + face.stepY * 0.5
+            },
+            pos.z + 0.5 + face.stepZ * 0.5
+        )
+        if (!hasLineOfSight(level, eyePos, faceCenter, pos)) return null
 
         val margin = 0.2
         fun boundedOffset(min: Double, max: Double): Double {
@@ -107,18 +118,21 @@ object HitPosHelper {
     }
 
     fun hasLineOfSight(level: Level, from: Vec3, to: Vec3, targetPos: BlockPos): Boolean {
-        val diff = to.subtract(from)
-        val length = diff.length()
+        val dx = to.x - from.x; val dy = to.y - from.y; val dz = to.z - from.z
+        val length = Math.sqrt(dx * dx + dy * dy + dz * dz)
         if (length < 0.1) return true
 
-        val dir = diff.normalize()
-        val stepSize = 0.25
-        val steps = (length / stepSize).toInt().coerceAtLeast(1)
+        val invLen = 1.0 / length
+        val ndx = dx * invLen; val ndy = dy * invLen; val ndz = dz * invLen
+        val steps = (length / STEP_SIZE).toInt().coerceAtLeast(1)
 
         for (i in 0..steps) {
-            val t = (i.toDouble() / steps) * length
-            val point = from.add(dir.scale(t))
-            val checkPos = BlockPos(point.x.toInt(), point.y.toInt(), point.z.toInt())
+            val t = i.toDouble() / steps * length
+            val checkPos = BlockPos(
+                (from.x + ndx * t).toInt(),
+                (from.y + ndy * t).toInt(),
+                (from.z + ndz * t).toInt()
+            )
             if (checkPos != targetPos && !level.getBlockState(checkPos).isAir) {
                 return false
             }

@@ -16,9 +16,7 @@ import meteordevelopment.orbit.EventHandler
 import net.minecraft.core.BlockPos
 import net.minecraft.tags.ItemTags
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.item.Items
 import net.minecraft.world.level.Level
-import net.minecraft.world.level.block.Block
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import org.lwjgl.glfw.GLFW
@@ -28,8 +26,7 @@ import java.awt.Color
 object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
     private val aimSpeed by NumberSetting("Aim Speed", "Aim transition speed.", 0.25f, 0.05f, 1.0f, 0.05f)
     private val aimMode by SelectorSetting("Aim Mode", "Aim mode.", listOf("Normal", "Silent"), "Normal")
-    private val toolType by SelectorSetting("Tool Type", "Tool used for mining.", listOf("Pickaxe", "Drill"), "Drill")
-    private val targetType by SelectorSetting("Nuker Target", "", listOf("Gold", "Mithril", "Gemstones", "Glacite"), "Mithril")
+    private val targetType by SelectorSetting("Nuker Target", "Choose which mineral type to mine.", listOf("Gold", "Mithril", "Gemstones", "Glacite"), "Mithril")
     // Gold
     private val ignoreOthers by BooleanSetting("Gold Block Only", "Only mine gold blocks.", true).depends { targetType == 0 }
     private val royalDivan by BooleanSetting("Royal & Mines of Divan", "Only mine in Royal Mines and Mines of Divan.", false).depends { targetType == 0 && ignoreOthers }
@@ -64,6 +61,7 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
 
     private var wasScreenOpen = false
     private var screenJustClosed = false
+    private var cachedAllowedTypes: Set<MineralType>? = null
 
     @EventHandler
     private fun onKey(event: InputEvent) {
@@ -74,6 +72,7 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
     private fun onTick(event: TickEvent.Start) {
         if (!enabled) return
 
+        cachedAllowedTypes = null
         val player = mc.player ?: return
         val level = mc.level ?: return
         val screenOpen = mc.screen != null
@@ -100,9 +99,14 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
             val state = level.getBlockState(currentTarget!!)
             val mineralType = MineralType.fromBlock(state.block)
             val eyePos = player.eyePosition
-            val blockCenter = Vec3(currentTarget!!.x + 0.5, currentTarget!!.y + 0.5, currentTarget!!.z + 0.5)
-            val outOfRange = blockCenter.distanceToSqr(eyePos) > SCAN_RADIUS * SCAN_RADIUS
-            if (outOfRange || mineralType == null || !MineralFilter.isMineralAllowed(mineralType, targetType, ignoreOthers, royalDivan, inDwarvenOnly, allowedTypes = getAllowedMineralTypes())) {
+            val dx = currentTarget!!.x + 0.5 - eyePos.x
+            val dy = currentTarget!!.y + 0.5 - eyePos.y
+            val dz = currentTarget!!.z + 0.5 - eyePos.z
+            val outOfRange = dx * dx + dy * dy + dz * dz > SCAN_RADIUS * SCAN_RADIUS
+            val hitPosBlocked = currentHitPos?.let {
+                !HitPosHelper.hasLineOfSight(level, eyePos, it, currentTarget!!)
+            } ?: true
+            if (outOfRange || mineralType == null || !MineralFilter.isMineralAllowed(mineralType, targetType, ignoreOthers, royalDivan, inDwarvenOnly, allowedTypes = resolveAllowedMineralTypes()) || hitPosBlocked) {
                 currentTarget = null
                 currentHitPos = null
                 currentMineral = null
@@ -168,7 +172,7 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
     override fun onEnable() {
         val player = mc.player ?: return
         val held = player.mainHandItem
-        if (held.isEmpty || (!held.`is`(ItemTags.PICKAXES) && held.item != Items.PRISMARINE_SHARD)) {
+        if (held.isEmpty || (!held.`is`(ItemTags.PICKAXES) && !held.itemId.containsOneOf("DRILL" , "GEMSTONE_GAUNTLET"))) {
             modMessage("${held.displayName.legacy} §cis not a valid mining tool!")
             enabled = false
             return
@@ -182,6 +186,7 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
         currentHitPos = null
         currentMineral = null
         hasMineralsInRange = false
+        cachedAllowedTypes = null
         modMessage("§6Nuker§c disabled.")
     }
 
@@ -190,62 +195,55 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
     private inline fun forEachSphereBlock(eyePos: Vec3, action: (BlockPos) -> Unit) {
         val r = SCAN_RADIUS
         val radiusSq = r * r
-        val minPos = BlockPos((eyePos.x - r).toInt(), (eyePos.y - r).toInt(), (eyePos.z - r).toInt())
-        val maxPos = BlockPos((eyePos.x + r).toInt(), (eyePos.y + r).toInt(), (eyePos.z + r).toInt())
+        val ex = eyePos.x; val ey = eyePos.y; val ez = eyePos.z
+        val minPos = BlockPos((ex - r).toInt(), (ey - r).toInt(), (ez - r).toInt())
+        val maxPos = BlockPos((ex + r).toInt(), (ey + r).toInt(), (ez + r).toInt())
 
         val iter = BlockPos.betweenClosedStream(minPos, maxPos).iterator()
         while (iter.hasNext()) {
             val pos = iter.next()
-            val center = Vec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
-            if (center.distanceToSqr(eyePos) <= radiusSq) action(pos)
+            val dx = pos.x + 0.5 - ex
+            val dy = pos.y + 0.5 - ey
+            val dz = pos.z + 0.5 - ez
+            if (dx * dx + dy * dy + dz * dz <= radiusSq) action(pos)
         }
     }
 
     private fun scanBestTarget(player: Player, level: Level): Target? {
         val eyePos = player.eyePosition
+        val allowedTypes = resolveAllowedMineralTypes()
 
-        val highPri = scanClosest(eyePos, level) { mineralType, block ->
-            mineralType.isHighPriorityBlock(block)
-        }
-        if (highPri != null) return highPri
-
-        return scanClosest(eyePos, level) { _, _ -> true }
-    }
-
-    /** Scans the sphere for the closest block matching both standard and [extraFilter] criteria. */
-    private fun scanClosest(
-        eyePos: Vec3, level: Level,
-        extraFilter: (MineralType, Block) -> Boolean
-    ): Target? {
-        val allowedTypes = getAllowedMineralTypes()
-        var bestPos: BlockPos? = null
-        var bestHitPos: Vec3? = null
-        var bestMineralType: MineralType? = null
-        var bestDistSq = Double.MAX_VALUE
+        var bestHighPri: Target? = null
+        var bestHighPriDistSq = Double.MAX_VALUE
+        var bestNormal: Target? = null
+        var bestNormalDistSq = Double.MAX_VALUE
 
         forEachSphereBlock(eyePos) { pos ->
             val state = level.getBlockState(pos)
             val mineralType = MineralType.fromBlock(state.block) ?: return@forEachSphereBlock
             if (!MineralFilter.isMineralAllowed(mineralType, targetType, ignoreOthers, royalDivan, inDwarvenOnly, allowedTypes = allowedTypes)) return@forEachSphereBlock
-            if (!extraFilter(mineralType, state.block)) return@forEachSphereBlock
+
+            val isHighPri = mineralType.isHighPriorityBlock(state.block)
+            if (!isHighPri && bestHighPri != null) return@forEachSphereBlock
 
             val hitPos = HitPosHelper.pickHitPos(level, pos, state, eyePos) ?: return@forEachSphereBlock
             val distSq = hitPos.distanceToSqr(eyePos)
-            if (distSq < bestDistSq) {
-                bestDistSq = distSq
-                bestPos = pos.immutable()
-                bestHitPos = hitPos
-                bestMineralType = mineralType
+
+            if (isHighPri && distSq < bestHighPriDistSq) {
+                bestHighPriDistSq = distSq
+                bestHighPri = Target(pos.immutable(), hitPos, mineralType)
+            } else if (!isHighPri && distSq < bestNormalDistSq) {
+                bestNormalDistSq = distSq
+                bestNormal = Target(pos.immutable(), hitPos, mineralType)
             }
         }
 
-        val foundPos = bestPos ?: return null
-        return Target(foundPos, bestHitPos!!, bestMineralType!!)
+        return bestHighPri ?: bestNormal
     }
 
     private fun hasAnyMineralInRange(player: Player, level: Level): Boolean {
         val eyePos = player.eyePosition
-        val allowedTypes = getAllowedMineralTypes()
+        val allowedTypes = resolveAllowedMineralTypes()
         forEachSphereBlock(eyePos) { pos ->
             val mineralType = MineralType.fromBlock(level.getBlockState(pos).block) ?: return@forEachSphereBlock
             if (MineralFilter.isMineralAllowed(mineralType, targetType, ignoreOthers, royalDivan, inDwarvenOnly, allowedTypes = allowedTypes)) return true
@@ -253,7 +251,11 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
         return false
     }
 
-    private fun getAllowedMineralTypes(): Set<MineralType> = MineralFilter.buildAllowedTypes(
+    private fun resolveAllowedMineralTypes(): Set<MineralType> {
+        return cachedAllowedTypes ?: computeAllowedMineralTypes().also { cachedAllowedTypes = it }
+    }
+
+    private fun computeAllowedMineralTypes(): Set<MineralType> = MineralFilter.buildAllowedTypes(
         when (targetType) {
             2 -> mapOf(
                 MineralType.RUBY to gemRuby,
