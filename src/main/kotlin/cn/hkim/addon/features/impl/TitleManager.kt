@@ -19,14 +19,18 @@ object TitleManager : Module("Title Manager", "Manage game title.") {
     @JvmStatic val customIcon by BooleanSetting("Custom Icon", "Restart the game to apply icon changes.", false)
 
     fun buildTitle(): String {
-        val sb = StringBuilder(titleText.ifEmpty { "Minecraft $mcVersion" })
-        val playerName = mc.player?.name?.string
-        val locationText = LocationUtils.currentArea.let { area ->
-            area.displayName + if (area == Island.Dungeon) { " ${DungeonUtils.floor?.name.orEmpty()}" } else ""
-        }
+        val sb = StringBuilder(titleText.ifBlank { "Minecraft $mcVersion" })
 
-        if (showPlayer && playerName != null) sb.append(" | ").append(playerName)
-        if (showLocation && !locationText.contains("Unknown")) sb.append(" | ").append(locationText)
+        if (showPlayer) mc.player?.name?.string?.let { sb.append(" | ").append(it) }
+        if (showLocation) {
+            val locationText = when (val area = LocationUtils.currentArea) {
+                Island.Unknown -> ""
+                Island.Dungeon -> "Catacombs ${DungeonUtils.floor?.name.orEmpty()}"
+                Island.Kuudra -> "Kuudra's Hollow ${LocationUtils.kuudraTier}"
+                else -> area.displayName
+            }
+            if (locationText.isNotEmpty()) sb.append(" | ").append(locationText)
+        }
 
         return sb.toString()
     }
