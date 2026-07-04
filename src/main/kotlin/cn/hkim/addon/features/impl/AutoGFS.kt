@@ -1,7 +1,7 @@
 package cn.hkim.addon.features.impl
 
-import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.settings.BooleanSetting
+import cn.hkim.addon.config.settings.DropdownSetting
 import cn.hkim.addon.config.settings.NumberSetting
 import cn.hkim.addon.events.impl.ChatReceiveEvent
 import cn.hkim.addon.features.Category
@@ -9,7 +9,6 @@ import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.utils.clean
 import cn.hkim.addon.utils.fillItemFromSack
-import cn.hkim.addon.utils.itemId
 import cn.hkim.addon.utils.schedule
 import cn.hkim.addon.utils.skyblock.LocationUtils
 import meteordevelopment.orbit.EventHandler
@@ -18,14 +17,18 @@ import meteordevelopment.orbit.EventHandler
 object AutoGFS : Module("Auto GFS", "Automatically refills certain items from your sacks.") {
     private val inKuudra by BooleanSetting("In Kuudra", "Only gfs in Kuudra.", true)
     private val inDungeon by BooleanSetting("In Dungeon", "Only gfs in Dungeons.", true)
-    private val refillOnDungeonStart by BooleanSetting("Refill on Dungeon Start", "Refill when a dungeon starts.", true)
-    private val refillPearl by BooleanSetting("Refill Pearl", "Refill ender pearls.", true)
-    private val refillJerry by BooleanSetting("Refill Jerry", "Refill inflatable jerrys.", true)
-    private val refillTNT by BooleanSetting("Refill TNT", "Refill superboom tnt.", true)
+    private val refillOnInstanceStart by BooleanSetting("Refill on Instance Start", "Refill when a dungeon starts.", true)
+    private val refillOnKuudraStunned by BooleanSetting("Refill on Kuudra Stunned", "Refill when kuudra is stunned.", false)
+    private val item by DropdownSetting("Items", "Items to refill from sacks.")
+    private val refillPearl by BooleanSetting("Refill Pearl", "Refill ender pearls.", false).depends { item }
+    private val refillJerry by BooleanSetting("Refill Jerry", "Refill inflatable jerrys.", false).depends { item }
+    private val refillTNT by BooleanSetting("Refill TNT", "Refill superboom tnt.", false).depends { item }
+    private val refillToxicArrow by BooleanSetting("Refill Toxic Arrow", "Refill toxic arrow poison.", false).depends { item }
     private val refillOnTimer by BooleanSetting("Refill on Timer", "Refill on a 5s intervals.", true)
     private val timerIncrements by NumberSetting("Timer Increments (s)", "The interval in which to refill.", 5f, 1f, 60f, 1f)
 
-    private val startRegex = Regex("\\[NPC] Mort: Here, I found this map when I first entered the dungeon\\.|\\[NPC] Mort: Right-click the Orb for spells, and Left-click \\(or Drop\\) to use your Ultimate!")
+    private val startRegex = Regex("\\[NPC] Mort: Here, I found this map when I first entered the dungeon\\.|\\[NPC] Mort: Right-click the Orb for spells, and Left-click \\(or Drop\\) to use your Ultimate!|\\[NPC] Elle: Okay adventurers, I will go and fish up Kuudra!")
+    private val stunnedRegex = Regex("\\[NPC] Elle: That looks like it hurt! Quickly, while Kuudra is distracted shoot him with the Ballista!")
     private val refillQueue = mutableListOf<RefillItem>()
     private var isProcessingQueue = false
 
@@ -33,10 +36,27 @@ object AutoGFS : Module("Auto GFS", "Automatically refills certain items from yo
         scheduleRefill()
     }
 
+    override fun onEnable() {
+        scheduleRefill()
+    }
+
     @EventHandler
     private fun onChat(event: ChatReceiveEvent) {
-        if (!enabled || !refillOnDungeonStart || !LocationUtils.inDungeons) return
-        when { event.message.clean.matches(startRegex) -> refill() }
+        if (!enabled) return
+        val message = event.message.clean
+
+        if (refillOnInstanceStart && (LocationUtils.inDungeons || LocationUtils.inKuudra)) {
+            if (message.matches(startRegex)) {
+                refill()
+                return
+            }
+        }
+
+        if (refillOnKuudraStunned && LocationUtils.inKuudra) {
+            if (message.matches(stunnedRegex)) {
+                refillKuudraStunned()
+            }
+        }
     }
 
     private data class RefillItem(
@@ -46,7 +66,6 @@ object AutoGFS : Module("Auto GFS", "Automatically refills certain items from yo
     )
 
     private fun scheduleRefill() {
-        if (!((inKuudra && LocationUtils.inKuudra) || (inDungeon && LocationUtils.inDungeons))) return
         val delayTicks = timerIncrements * 20
         schedule(delayTicks.toInt()) {
             if (enabled && refillOnTimer) refill()
@@ -54,15 +73,23 @@ object AutoGFS : Module("Auto GFS", "Automatically refills certain items from yo
         }
     }
 
+    private fun isInValidLocation(): Boolean {
+        if (!inKuudra && !inDungeon) return true
+        return (inKuudra && LocationUtils.inKuudra) || (inDungeon && LocationUtils.inDungeons)
+    }
+
     private fun refill() {
-        val inventory = mc.player?.inventory ?: return
+        if (!isInValidLocation()) return
 
-        inventory.find { it.itemId == "ENDER_PEARL" }?.takeIf { refillPearl }?.also { refillQueue.add(RefillItem(16, "ENDER_PEARL", "ender_pearl")) }
+        if (refillPearl) refillQueue.add(RefillItem(16, "ENDER_PEARL", "ender_pearl"))
+        if (refillJerry) refillQueue.add(RefillItem(64, "INFLATABLE_JERRY", "inflatable_jerry"))
+        if (refillTNT) refillQueue.add(RefillItem(64, "SUPERBOOM_TNT", "superboom_tnt"))
 
-        inventory.find { it.itemId == "INFLATABLE_JERRY" }?.takeIf { refillJerry }?.also { refillQueue.add(RefillItem(64, "INFLATABLE_JERRY", "inflatable_jerry")) }
+        if (refillQueue.isNotEmpty() && !isProcessingQueue) processNextItem()
+    }
 
-        inventory.find { it.itemId == "SUPERBOOM_TNT" }.takeIf { refillTNT }?.also { refillQueue.add(RefillItem(64, "SUPERBOOM_TNT", "superboom_tnt")) }
-
+    private fun refillKuudraStunned() {
+        if (refillToxicArrow) refillQueue.add(RefillItem(64, "TOXIC_ARROW_POISON", "toxic_arrow_poison"))
         if (refillQueue.isNotEmpty() && !isProcessingQueue) processNextItem()
     }
 

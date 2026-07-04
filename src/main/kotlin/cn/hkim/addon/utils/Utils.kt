@@ -111,8 +111,10 @@ fun Player.clickPlayerInventorySlot(slot: Int, containerId: Int, clickType: Cont
 }
 
 fun fillItemFromSack(amount: Int, itemId: String, sackName: String) {
-    val needed = mc.player?.inventory?.find { it.itemId == itemId }?.count ?: 0
-    if (needed != amount) sendCommand("gfs $sackName ${amount - needed}") else modMessage("§cAlready at max stack size.")
+    val totalCount = mc.player?.inventory?.sumOf { stack ->
+        if (stack.itemId == itemId) stack.count else 0
+    } ?: 0
+    if (totalCount < amount) sendCommand("gfs $sackName ${amount - totalCount}")
 }
 
 fun rightClick() {
