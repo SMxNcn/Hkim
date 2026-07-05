@@ -3,8 +3,8 @@ package cn.hkim.addon.gui
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.render.Easing
-import cn.hkim.addon.utils.render.pip.ShapeRenderer.drawRoundedRectWithBorder
 import cn.hkim.addon.utils.render.GuiAnimation
+import cn.hkim.addon.utils.render.pip.ShapeRenderer.drawRoundedRectWithBorder
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.Button
 import net.minecraft.network.chat.Component
@@ -30,8 +30,8 @@ class ClientButton(
         }
 
         val progress = hoverAnim.getValue()
-        val bgColor = HudUtils.lerpColor(0x432A2A2A, 0x43AAAAAA, progress)
-        val borderColor = HudUtils.lerpColor(0x33969696, 0x43AAAAAA, progress)
+        val bgColor = HudUtils.lerpColor(0x332A2A2A, 0x33AAAAAA, progress)
+        val borderColor = HudUtils.lerpColor(0x53969696, 0x63AAAAAA, progress)
         val textColor = HudUtils.lerpColor(0xFFE0E0E0.toInt(), 0xFFFFFFFF.toInt(), progress)
 
         graphics.drawRoundedRectWithBorder(x.toFloat(), y.toFloat(), width.toFloat(), height.toFloat(), bgColor, borderColor, 1f, 4f)
