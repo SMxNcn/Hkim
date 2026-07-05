@@ -12,6 +12,7 @@
   },
   "client": [
     "AbstractContainerScreenMixin",
+    "BlockItemMixin",
     "CameraMixin",
     "ChatComponentMixin",
     "ClientPacketListenerMixin",

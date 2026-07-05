@@ -126,6 +126,7 @@ private fun isBlockCarrier(block: Block, state: BlockState): Boolean {
             block is ChorusFlowerBlock ||
             block is ChorusPlantBlock ||
             block is CocoaBlock ||
+            block is WebBlock ||
             block is SporeBlossomBlock ||
             block is AzaleaBlock ||
             block is FrogspawnBlock
