@@ -26,6 +26,7 @@
     "HudMixin",
     "ItemInHandRendererMixin",
     "KeyMappingMixin",
+    "LavaFogEnvironmentMixin",
     "LevelChunkMixin",
     "LightmapRenderStateExtractorMixin",
     "LivingEntityMixin",

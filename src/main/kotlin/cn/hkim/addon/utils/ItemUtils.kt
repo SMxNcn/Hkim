@@ -4,11 +4,15 @@ import cn.hkim.addon.Hkim.mc
 import net.minecraft.core.component.DataComponents
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.chat.Component
+import net.minecraft.tags.BlockTags
 import net.minecraft.tags.ItemTags
+import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.CustomData
 import net.minecraft.world.item.component.ItemLore
+import net.minecraft.world.level.block.*
+import net.minecraft.world.level.block.state.BlockState
 
 inline val ItemStack.customData: CompoundTag
     get() = getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag()
@@ -69,3 +73,49 @@ fun isLeapItem(slot: Int): Boolean =
 fun findRodSlot(): Int = (0..8).firstOrNull { isNormalRod(it) } ?: -1
 
 fun findLeapSlot(): Int = (0..8).firstOrNull { isLeapItem(it) } ?: -1
+
+private fun isPlant(state: BlockState): Boolean {
+    return state.`is`(BlockTags.REPLACEABLE_BY_TREES) ||
+            state.`is`(BlockTags.MAINTAINS_FARMLAND) ||
+            state.`is`(BlockTags.CORAL_PLANTS) ||
+            state.`is`(BlockTags.FLOWERS)
+}
+
+fun isBuildingBlock(stack: ItemStack?): Boolean {
+    if (stack == null || stack.isEmpty) return false
+    val item = stack.item
+    if (item !is BlockItem) return false
+    val block = item.block
+    val state = block.defaultBlockState()
+
+    if (state.isSolidRender) return true
+
+    return !isBlockCarrier(block, state)
+}
+
+fun isBlockCarrier(stack: ItemStack?): Boolean {
+    if (stack == null || stack.isEmpty) return false
+    val item = stack.item
+    if (item !is BlockItem) return false
+    return isBlockCarrier(item.block, item.block.defaultBlockState())
+}
+
+private fun isBlockCarrier(block: Block, state: BlockState): Boolean {
+    if (state.isSolidRender) return false
+    return block is AbstractSkullBlock ||
+            block is FlowerPotBlock ||
+            isPlant(state) ||
+            block is MushroomBlock ||
+            block is CactusBlock ||
+            block is SugarCaneBlock ||
+            block is KelpBlock ||
+            block is SeagrassBlock ||
+            block is LilyPadBlock ||
+            block is ChorusFlowerBlock ||
+            block is ChorusPlantBlock ||
+            block is CocoaBlock ||
+            block is WebBlock ||
+            block is SporeBlossomBlock ||
+            block is AzaleaBlock ||
+            block is FrogspawnBlock
+}

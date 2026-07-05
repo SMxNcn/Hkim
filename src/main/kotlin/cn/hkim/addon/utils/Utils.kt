@@ -130,6 +130,16 @@ fun playSoundAtPlayer(event: SoundEvent, volume: Float = 1f, pitch: Float = 1f) 
     mc.soundManager.playDelayed(SimpleSoundInstance.forUI(event, pitch, volume), 0)
 }
 
+fun fillItemFromSack(amount: Int, itemId: String, sackName: String) {
+    val needed = mc.player?.inventory?.find { it.itemId == itemId }?.count ?: 0
+    if (needed != amount) sendCommand("gfs $sackName ${amount - needed}")
+}
+
+fun clickKey(key: KeyMapping) {
+    val actualKey = (key as KeyMappingAccessor).boundKey
+    KeyMapping.click(actualKey)
+}
+
 fun holdKey(key: KeyMapping, holding: Boolean) {
     val actualKey = (key as KeyMappingAccessor).boundKey
     KeyMapping.set(actualKey, holding)
