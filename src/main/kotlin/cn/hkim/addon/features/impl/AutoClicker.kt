@@ -9,9 +9,9 @@ import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.utils.clickKey
+import cn.hkim.addon.utils.isBuildingBlock
 import cn.hkim.addon.utils.itemId
 import meteordevelopment.orbit.EventHandler
-import net.minecraft.world.item.BlockItem
 
 @ModuleInfo("auto_clicker", Category.SKYBLOCK)
 object AutoClicker : Module("Auto Clicker", "Auto clicker with options for left-click, right-click, or both.") {
@@ -42,7 +42,7 @@ object AutoClicker : Module("Auto Clicker", "Auto clicker with options for left-
 
     private fun nextDelay(cps: Float): Double {
         val base = 1000.0 / cps
-        return base + (Math.random() - 0.5) * base * 0.1  // ±10%
+        return base + (Math.random() - 0.5) * base * 0.1
     }
 
     private fun handleTerminatorClicks(nowMillis: Double) {
@@ -54,7 +54,7 @@ object AutoClicker : Module("Auto Clicker", "Auto clicker with options for left-
             }
         }
 
-        if (rightClickBlock && mc.player?.mainHandItem?.item is BlockItem && mc.options.keyUse.isDown) {
+        if (rightClickBlock && isBuildingBlock(mc.player?.mainHandItem) && mc.options.keyUse.isDown) {
             if (nowMillis >= nextBlockClick) {
                 nextBlockClick = nowMillis + nextDelay(blockCps)
                 clickKey(mc.options.keyUse)
