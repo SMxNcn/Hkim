@@ -95,16 +95,14 @@ class NumberSetting(name: String, desc: String, default: Float, val min: Float, 
                 NVGRenderer.rect(sliderX * 2, sliderY * 2, filledW * 2, sliderH * 2, Color(themeColor), 4f)
             }
 
-            NVGRenderer.rect(knobX * 2, (sliderY - 2) * 2, 16f, (sliderH + 4) * 2, Color(themeColor), 8f)
-            NVGRenderer.hollowRect(knobX * 2, (sliderY - 2) * 2, 16f, (sliderH + 4) * 2, 1f, Color(0xA0181818.toInt(), true), 8f)
+            NVGRenderer.circle(knobX * 2 + 8f, sliderY * 2 + 4f, 8f, Color(themeColor))
+            NVGRenderer.hollowCircle(knobX * 2 + 8f, sliderY * 2 + 4f, 8f, 1f, Color(0xA0181818.toInt(), true))
         }
 
         if (isHovered) {
             val isOverSlider = HudUtils.isPointInRect(mouseX, mouseY, sliderX, sliderY - 2f, sliderW, 12f)
             if (isOverSlider) {
-                val knobSize = 8f
-                val isOverKnob = HudUtils.isPointInRect(mouseX, mouseY, knobX, sliderY - 2f, knobSize, knobSize)
-                graphics.requestCursor(if (isOverKnob) CursorTypes.RESIZE_EW else CursorTypes.POINTING_HAND)
+                graphics.requestCursor(if (isDragging) CursorTypes.RESIZE_EW else CursorTypes.POINTING_HAND)
             } else {
                 graphics.requestCursor(CursorTypes.POINTING_HAND)
             }
