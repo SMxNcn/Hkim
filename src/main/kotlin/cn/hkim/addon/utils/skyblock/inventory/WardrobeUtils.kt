@@ -58,11 +58,11 @@ object WardrobeUtils {
                     targetPage = page
                     calledFromThis = true
                     isProcessing = false
-                    sendCommand("wardrobe")
+                    sendCommand("wardrobe $page")
                 }
             }
         } catch (_: TimeoutCancellationException) {
-            resetWardrobe()
+            reset()
             false
         }
     }
@@ -74,22 +74,19 @@ object WardrobeUtils {
 
         if (targetPage > totalPages) return
 
-        schedule((6..8).random()) {
-            when {
-                currentPage == targetPage -> performClick()
-                currentPage < targetPage -> turnPage()
-                else -> resetWardrobe()
-            }
+        schedule((2..4).random()) {
+            if (currentPage == targetPage) performClick()
+            else reset()
         }
     }
 
     private fun performClick() {
         isProcessing = true
         mc.player?.clickInventorySlot(targetSlot, containerId)
-        schedule((8..10).random()) {
+        schedule((4..6).random()) {
             mc.player?.closeContainer()
             callback?.invoke(true)
-            resetWardrobe()
+            reset()
         }
     }
 
@@ -103,12 +100,7 @@ object WardrobeUtils {
             ?.let { it.first!! to it.second!! }
     }
 
-    private fun turnPage() {
-        mc.player?.clickInventorySlot(53, containerId)
-        isProcessing = false
-    }
-
-    private fun resetWardrobe() {
+    private fun reset() {
         callback = null
         targetSlot = -1
         targetPage = 1

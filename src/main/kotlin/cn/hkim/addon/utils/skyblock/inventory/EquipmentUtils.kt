@@ -6,7 +6,6 @@ import cn.hkim.addon.utils.clickPlayerInventorySlot
 import cn.hkim.addon.utils.findItemByID
 import cn.hkim.addon.utils.schedule
 import cn.hkim.addon.utils.sendCommand
-import cn.hkim.addon.utils.skyblock.LocationUtils
 import kotlinx.coroutines.suspendCancellableCoroutine
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.client.gui.screens.Screen
@@ -44,9 +43,7 @@ object EquipmentUtils {
             currentIndex = 0
             isProcessing = false
             calledFromThis = true
-            // Replace conditional command with sendCommand("stats") after Main server update.
-            if (LocationUtils.inAlphaServer) sendCommand("stats")
-            else sendCommand("equipment")
+            sendCommand("stats")
 
             schedule(200) {
                 if (callback != null) {
@@ -61,14 +58,14 @@ object EquipmentUtils {
         val chest = (screen as? AbstractContainerScreen<*>) ?: run { callback?.invoke(false); return }
         if (!chest.title.string.contains("Your Equipment")) run { callback?.invoke(false); return }
 
-        schedule((8..10).random()) {
+        schedule((6..8).random()) {
             if (!isProcessing) { processNextItem() }
         }
     }
 
     private fun processNextItem() {
         if (currentIndex >= pendingSlots.size) {
-            schedule((6..8).random()) {
+            schedule((4..6).random()) {
                 mc.player?.closeContainer()
                 callback?.invoke(true)
                 reset()
