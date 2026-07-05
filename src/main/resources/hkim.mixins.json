@@ -22,6 +22,7 @@
     "EntityMixin",
     "EntityRendererMixin",
     "FallingBlockRendererMixin",
+    "LavaFogEnvironmentMixin",
     "GameRendererMixin",
     "OptionsMixin",
     "GuiGraphicsExtractorMixin",
