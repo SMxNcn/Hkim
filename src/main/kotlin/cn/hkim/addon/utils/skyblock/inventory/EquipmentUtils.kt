@@ -58,14 +58,14 @@ object EquipmentUtils {
         val chest = (screen as? AbstractContainerScreen<*>) ?: run { callback?.invoke(false); return }
         if (!chest.title.string.contains("Your Equipment")) run { callback?.invoke(false); return }
 
-        schedule((8..10).random()) {
+        schedule((6..8).random()) {
             if (!isProcessing) { processNextItem() }
         }
     }
 
     private fun processNextItem() {
         if (currentIndex >= pendingSlots.size) {
-            schedule((6..8).random()) {
+            schedule((4..6).random()) {
                 mc.player?.closeContainer()
                 callback?.invoke(true)
                 reset()

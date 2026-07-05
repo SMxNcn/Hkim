@@ -57,7 +57,7 @@ object LoadoutUtils {
                 }
             }
         } catch (_: TimeoutCancellationException) {
-            resetLoadout()
+            reset()
             false
         }
     }
@@ -69,11 +69,11 @@ object LoadoutUtils {
 
         if (targetPage > totalPages) return
 
-        schedule((6..8).random()) {
+        schedule((4..6).random()) {
             when {
                 currentPage == targetPage -> performClick()
                 currentPage < targetPage -> turnPage()
-                else -> resetLoadout()
+                else -> reset()
             }
         }
     }
@@ -82,10 +82,10 @@ object LoadoutUtils {
         isProcessing = true
         val slot = LoadoutLayout.getSlotId(targetIndex)
         mc.player?.clickInventorySlot(slot, containerId)
-        schedule((8..10).random()) {
+        schedule((4..6).random()) {
             mc.player?.closeContainer()
             callback?.invoke(true)
-            resetLoadout()
+            reset()
         }
     }
 
@@ -101,7 +101,7 @@ object LoadoutUtils {
         isProcessing = false
     }
 
-    private fun resetLoadout() {
+    private fun reset() {
         callback = null
         targetIndex = -1
         targetPage = 1

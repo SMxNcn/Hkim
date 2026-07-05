@@ -6,6 +6,7 @@ import cn.hkim.addon.utils.clickInventorySlot
 import cn.hkim.addon.utils.modMessage
 import cn.hkim.addon.utils.schedule
 import cn.hkim.addon.utils.sendCommand
+import cn.hkim.addon.utils.skyblock.LocationUtils
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeout
@@ -15,7 +16,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import kotlin.coroutines.resume
 
 object WardrobeUtils {
-    private val titleRegex = Regex("\\((\\d+)/(\\d+)\\) Armor Sets")
+//    private val titleRegex = Regex("\\((\\d+)/(\\d+)\\) Armor Sets")
 
     private var callback: ((Boolean) -> Unit)? = null
     private var targetSlot = -1
@@ -57,11 +58,11 @@ object WardrobeUtils {
                     targetPage = page
                     calledFromThis = true
                     isProcessing = false
-                    sendCommand("wardrobe")
+                    sendCommand("wardrobe $page")
                 }
             }
         } catch (_: TimeoutCancellationException) {
-            resetWardrobe()
+            reset()
             false
         }
     }
@@ -73,38 +74,33 @@ object WardrobeUtils {
 
         if (targetPage > totalPages) return
 
-        schedule((6..8).random()) {
-            when {
-                currentPage == targetPage -> performClick()
-                currentPage < targetPage -> turnPage()
-                else -> resetWardrobe()
-            }
+        schedule((2..4).random()) {
+            if (currentPage == targetPage) performClick()
+            else reset()
         }
     }
 
     private fun performClick() {
         isProcessing = true
         mc.player?.clickInventorySlot(targetSlot, containerId)
-        schedule((8..10).random()) {
+        schedule((4..6).random()) {
             mc.player?.closeContainer()
             callback?.invoke(true)
-            resetWardrobe()
+            reset()
         }
     }
 
     private fun parsePageInfo(title: String): Pair<Int, Int>? {
-        return titleRegex.find(title)?.destructured?.let { (current, total) ->
+        // Replace dynamic Regex with immutable object-level private val after Main server update.
+        val pattern = if (LocationUtils.inAlphaServer) "\\((\\d+)/(\\d+)\\) Armor Sets"
+        else "Wardrobe \\((\\d+)/(\\d+)\\)"
+        return /*titleRegex*/Regex(pattern).find(title)?.destructured?.let { (current, total) ->
             current.toIntOrNull() to total.toIntOrNull()
         }?.takeIf { it.first != null && it.second != null }
             ?.let { it.first!! to it.second!! }
     }
 
-    private fun turnPage() {
-        mc.player?.clickInventorySlot(53, containerId)
-        isProcessing = false
-    }
-
-    private fun resetWardrobe() {
+    private fun reset() {
         callback = null
         targetSlot = -1
         targetPage = 1
