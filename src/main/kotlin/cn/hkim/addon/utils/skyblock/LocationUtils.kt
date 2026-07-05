@@ -10,6 +10,8 @@ import cn.hkim.addon.utils.startsWithOneOf
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundSetObjectivePacket
+import net.minecraft.network.protocol.game.ClientboundSetPlayerTeamPacket
+import kotlin.jvm.optionals.getOrNull
 
 object LocationUtils {
     var inSkyBlock: Boolean = false
@@ -17,6 +19,11 @@ object LocationUtils {
 
     var currentArea: Island = Island.Unknown
         private set
+
+    var kuudraTier: String = ""
+        private set
+
+    private val kuudraTierRegex = Regex("Kuudra's Hollow \\(T(\\d)\\)")
 
     inline val inDungeons: Boolean get() = currentArea == Island.Dungeon
     inline val inKuudra: Boolean get() = currentArea == Island.Kuudra
@@ -34,6 +41,11 @@ object LocationUtils {
                 val area = event.packet.entries().find { it.displayName?.string?.startsWithOneOf("Area: ", "Dungeon: ") == true }?.displayName?.string ?: return
                 currentArea = Island.entries.firstOrNull { area.contains(it.displayName, true) } ?: Island.Unknown
             }
+
+            is ClientboundSetPlayerTeamPacket -> {
+                val text = event.packet.parameters.getOrNull()?.let { it.playerPrefix.string + it.playerSuffix.string }?.clean ?: return
+                kuudraTierRegex.find(text)?.groupValues?.get(1)?.let { kuudraTier = "T$it" }
+            }
         }
     }
 
@@ -41,6 +53,13 @@ object LocationUtils {
     private fun onWorldLoad(event: WorldEvent.Load) {
         currentArea = if (!mc.isMultiplayerServer) Island.SinglePlayer else Island.Unknown
         inSkyBlock = false
+    }
+
+    @EventHandler
+    private fun onWorldUnload(event: WorldEvent.Unload) {
+        currentArea = Island.Unknown
+        inSkyBlock = false
+        kuudraTier = ""
     }
 
     fun isCurrentArea(vararg areas: Island): Boolean =
@@ -51,7 +70,7 @@ object LocationUtils {
         val scoreboard = getScoreboard()
         if (scoreboard.isEmpty()) return null
         for (line in scoreboard) {
-            Regex("[⏣ф]\\s*(.+)").find(line.clean)?.let {
+            Regex("[⏣ф\uE067\uE020]\\s*(.+)").find(line.clean)?.let {
                 return it.groupValues[1].trim()
             }
         }
