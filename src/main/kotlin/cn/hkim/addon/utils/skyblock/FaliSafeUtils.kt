@@ -99,6 +99,7 @@ object FailSafeUtils {
     }
 
     fun trigger(reason: String) {
+        if (!hasAnyMacroEnabled()) return
         val now = System.currentTimeMillis()
         if (now - lastTriggerTime < TRIGGER_COOLDOWN_MS) return
         lastTriggerTime = now

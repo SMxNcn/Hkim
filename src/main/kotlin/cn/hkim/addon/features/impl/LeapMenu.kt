@@ -149,7 +149,7 @@ object LeapMenu : Module("Leap Menu", "Custom leap menu.") {
         val avatarX = x + 14
         val avatarY = (y + (CARD_HEIGHT - AVATAR_SIZE) / 2)
 
-        val skinLoc = player.locationSkin ?: mc.player?.skin?.body?.id() ?: return
+        val skinLoc = player.locationSkin ?: EMPTY.locationSkin ?: return
         graphics.blit(RenderPipelines.GUI_TEXTURED, skinLoc, avatarX, avatarY, 8f, 8f, AVATAR_SIZE, AVATAR_SIZE, 8, 8, 64, 64)
         graphics.blit(RenderPipelines.GUI_TEXTURED, skinLoc, avatarX - 2, avatarY - 2, 40f, 8f, AVATAR_SIZE + 4, AVATAR_SIZE + 4, 8, 8, 64, 64)
 

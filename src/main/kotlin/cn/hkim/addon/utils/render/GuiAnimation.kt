@@ -2,7 +2,6 @@ package cn.hkim.addon.utils.render
 
 import kotlin.math.PI
 import kotlin.math.cos
-import kotlin.math.exp
 import kotlin.math.sin
 
 class GuiAnimation internal constructor(
@@ -187,8 +186,4 @@ class GuiAnimationManager {
             updateThread = createUpdateThread().apply { start() }
         }
     }
-}
-
-fun Float.smoothDamp(target: Float, speed: Float, deltaTime: Float): Float {
-    return this + (target - this) * (1f - exp(-speed * deltaTime))
 }
