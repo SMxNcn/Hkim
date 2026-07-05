@@ -18,8 +18,7 @@ val prefix = Component.literal("[").withStyle(ChatFormatting.DARK_GRAY)
 
 fun modMessage(message: Any?) {
     val text = prefix.copy().append(Component.literal("§r §7$message"))
-    if (mc.isSameThread) mc.gui.hud.chat.addClientSystemMessage(text)
-    else mc.execute { mc.gui.hud.chat.addClientSystemMessage(text) }
+    mc.execute { mc.gui.hud.chat.addClientSystemMessage(text) }
 }
 
 fun sendChatMessage(message: Any) {
@@ -72,10 +71,13 @@ fun buildGradientComponent(text: String, startArgb: Int, endArgb: Int, speed: In
 }
 
 val String.clean: String
-    get() = this.replace(Regex("§[0-9a-fk-or]"), "")
+    get() = this.replace(Regex("§."), "")
+
+val String.cleanInvisible: String
+    get() = this.replace(Regex("§[^0-9a-fk-orz]"), "")
 
 val Component.cleanString: String
-    get() = this.string.replace(Regex("§[0-9a-fk-or]"), "").replace(Regex("\\[(.*?)]"), "$1")
+    get() = this.string.replace(Regex("§."), "").removeSurrounding("[", "]")
 
 val Component.legacy: String
     get() {
@@ -105,21 +107,13 @@ val Component.legacy: String
     }
 
 private fun getLegacyColorCode(rgb: Int): String? = when (rgb) {
-    0x000000 -> "§0"
-    0x0000AA -> "§1"
-    0x00AA00 -> "§2"
-    0x00AAAA -> "§3"
-    0xAA0000 -> "§4"
-    0xAA00AA -> "§5"
-    0xFFAA00 -> "§6"
-    0xAAAAAA -> "§7"
-    0x555555 -> "§8"
-    0x5555FF -> "§9"
-    0x55FF55 -> "§a"
-    0x55FFFF -> "§b"
-    0xFF5555 -> "§c"
-    0xFF55FF -> "§d"
-    0xFFFF55 -> "§e"
-    0xFFFFFF -> "§f"
+    0x000000 -> "§0"; 0x0000AA -> "§1"
+    0x00AA00 -> "§2"; 0x00AAAA -> "§3"
+    0xAA0000 -> "§4"; 0xAA00AA -> "§5"
+    0xFFAA00 -> "§6"; 0xAAAAAA -> "§7"
+    0x555555 -> "§8"; 0x5555FF -> "§9"
+    0x55FF55 -> "§a"; 0x55FFFF -> "§b"
+    0xFF5555 -> "§c"; 0xFF55FF -> "§d"
+    0xFFFF55 -> "§e"; 0xFFFFFF -> "§f"
     else -> null
 }

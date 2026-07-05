@@ -25,6 +25,8 @@ object Nametags : Module("Nametags", "Render a nametag above players.") {
     private val renderDistance by BooleanSetting("Distance", "Render distance string.", true)
     private val teammateESP by BooleanSetting("Teammate ESP", "Draw ESP box for dungeon teammates.", false)
 
+    private val PLAYER_REGEX = Regex("^\\[\\d{1,3}]\\s[a-zA-Z0-9_]{1,16}.*")
+
     @EventHandler
     private fun onRender(event: RenderEvent.Extract) {
         if (!canDisplayNametags()) return
@@ -83,7 +85,7 @@ object Nametags : Module("Nametags", "Render a nametag above players.") {
     private fun isValidSkyBlockPlayer(entity: Player): Boolean {
         val name = entity.displayName.string.clean
         return if (forceSkyBlock) !name.contains("[NPC]") && !name.contains("CIT-")
-        else name.matches(Regex("^\\[\\d{1,3}]\\s[a-zA-Z0-9_]{1,16}.*"))
+        else name.matches(PLAYER_REGEX)
     }
 
     @JvmStatic

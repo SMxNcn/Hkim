@@ -11,6 +11,8 @@ import meteordevelopment.orbit.EventHandler
 object CustomEventDispatcher {
     private val visitRegex = Regex("\\[SkyBlock] (?:\\[.*?] )?(.*?) is visiting Your Garden!")
     private val pestSpawnRegex = Regex("(?:A ൠ Pest has appeared|\\d+ ൠ Pest have spawned) in Plot - (\\d{1,2})!")
+    private val cleanRegex = Regex("§[0-9a-fk-or]")
+    private val plotRegex = Regex("Plot - (\\d+)")
     private var activePestPlot = -1
     private var lastPestCount = -1
 
@@ -52,17 +54,18 @@ object CustomEventDispatcher {
         if (event.message.contains("Everybody unlocks exclusive perks!")) MayorData.fetchData()
     }
 
+    private val pestRegexCache = HashMap<Int, Regex>(32)
+
     private fun getCurrentPlot(): Int? {
-        val cleanRegex = Regex("§[0-9a-fk-or]")
-        val plotRegex = Regex("Plot - (\\d+)")
         return HudUtils.getScoreboard().firstNotNullOfOrNull { line ->
             plotRegex.find(line.replace(cleanRegex, ""))?.groupValues[1]?.toIntOrNull()
         }
     }
 
     private fun getCurrentPestCount(plot: Int): Int {
-        val cleanRegex = Regex("§[0-9a-fk-or]")
-        val pestRegex = Regex("Plot - $plot(?: ൠ x(\\d+))?")
+        val pestRegex = pestRegexCache.getOrPut(plot) {
+            Regex("Plot - $plot(?: ൠ x(\\d+))?")
+        }
         return HudUtils.getScoreboard().firstNotNullOfOrNull { line ->
             pestRegex.find(line.replace(cleanRegex, ""))?.groupValues?.getOrNull(1)?.toIntOrNull()
         } ?: 0

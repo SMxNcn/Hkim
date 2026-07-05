@@ -1,5 +1,6 @@
 package cn.hkim.addon.utils.skyblock.mining
 
+import cn.hkim.addon.utils.clean
 import cn.hkim.addon.utils.skyblock.Island
 import cn.hkim.addon.utils.skyblock.LocationUtils
 
@@ -9,18 +10,18 @@ object MineralFilter {
 
     private fun isDwarvenZoneValid(): Boolean {
         if (!LocationUtils.isCurrentArea(Island.DwarvenMines)) return false
-        val zone = LocationUtils.getCurrentZone() ?: return true
+        val zone = LocationUtils.getCurrentZone()?.clean ?: return true
         return zone !in GLACITE_ZONES
     }
 
     private fun isGoldZoneValid(): Boolean {
-        val zone = LocationUtils.getCurrentZone() ?: return false
+        val zone = LocationUtils.getCurrentZone()?.clean ?: return false
         return zone in GOLD_ZONES
     }
 
     private fun isGlaciteZoneValid(): Boolean {
         if (!LocationUtils.isCurrentArea(Island.DwarvenMines)) return false
-        val zone = LocationUtils.getCurrentZone() ?: return false
+        val zone = LocationUtils.getCurrentZone()?.clean ?: return false
         return zone in GLACITE_ZONES
     }
 
