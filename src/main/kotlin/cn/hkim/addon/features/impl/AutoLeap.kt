@@ -14,6 +14,8 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 
 @ModuleInfo("auto_leap", Category.SKYBLOCK)
 object AutoLeap : Module("Auto Leap", "Auto leap to players based on predefined rules.") {
+    private val m7py by BooleanSetting("Always PY", "Always doing PY in F/M7.", true)
+    private val ee2Mage by BooleanSetting("Archer EE2", "Set EE2 leap target to Mage.", false)
     private val forceMageCore by BooleanSetting("Force Mage Core", "Always treat mage as core in P3 S3.", true)
 
     private var inLeapGui = false
@@ -113,13 +115,18 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players based on predefined 
         return teammateToLeap?.clazz
     }
 
+    // Dynamic leap rules in the future.
     private fun queryRule(sourceClass: DungeonClass, phase: M7Phases, p3Stage: P3Stages, isCore: Boolean = false): DungeonClass? {
+        if (phase == M7Phases.P2) return queryP2Rule(sourceClass)
+
         return when (sourceClass) {
             DungeonClass.Archer -> when (phase) {
                 M7Phases.P1 -> DungeonClass.Berserk
-                M7Phases.P2 -> DungeonClass.Healer
                 M7Phases.P3 -> when (p3Stage) {
-                    P3Stages.S1 -> null
+                    P3Stages.S1 -> {
+                        if (ee2Mage) DungeonClass.Mage
+                        else null
+                    }
                     P3Stages.S2 -> DungeonClass.Healer
                     P3Stages.S3 -> {
                         if (isCore) DungeonClass.Mage
@@ -136,9 +143,11 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players based on predefined 
 
             DungeonClass.Berserk -> when (phase) {
                 M7Phases.P1 -> null
-                M7Phases.P2 -> DungeonClass.Healer
                 M7Phases.P3 -> when (p3Stage) {
-                    P3Stages.S1 -> DungeonClass.Archer
+                    P3Stages.S1 -> {
+                        if (ee2Mage) DungeonClass.Mage
+                        else DungeonClass.Archer
+                    }
                     P3Stages.S2 -> DungeonClass.Healer
                     P3Stages.S3 -> {
                         if (isCore) DungeonClass.Mage
@@ -155,9 +164,11 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players based on predefined 
 
             DungeonClass.Healer -> when (phase) {
                 M7Phases.P1 -> null
-                M7Phases.P2 -> DungeonClass.Archer
                 M7Phases.P3 -> when (p3Stage) {
-                    P3Stages.S1 -> DungeonClass.Archer
+                    P3Stages.S1 -> {
+                        if (ee2Mage) DungeonClass.Mage
+                        else DungeonClass.Archer
+                    }
                     P3Stages.S2 -> null
                     P3Stages.S3 -> {
                         if (isCore) DungeonClass.Mage
@@ -174,9 +185,11 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players based on predefined 
 
             DungeonClass.Mage -> when (phase) {
                 M7Phases.P1 -> DungeonClass.Berserk
-                M7Phases.P2 -> DungeonClass.Healer
                 M7Phases.P3 -> when (p3Stage) {
-                    P3Stages.S1 -> DungeonClass.Archer
+                    P3Stages.S1 -> {
+                        if (ee2Mage) null
+                        else DungeonClass.Archer
+                    }
                     P3Stages.S2 -> DungeonClass.Healer
                     P3Stages.S3 -> null
                     P3Stages.S4 -> null
@@ -190,9 +203,11 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players based on predefined 
 
             DungeonClass.Tank -> when (phase) {
                 M7Phases.P1 -> DungeonClass.Berserk
-                M7Phases.P2 -> DungeonClass.Healer
                 M7Phases.P3 -> when (p3Stage) {
-                    P3Stages.S1 -> DungeonClass.Archer
+                    P3Stages.S1 -> {
+                        if (ee2Mage) DungeonClass.Mage
+                        else DungeonClass.Archer
+                    }
                     P3Stages.S2 -> DungeonClass.Healer
                     P3Stages.S3 -> {
                         if (isCore) DungeonClass.Mage
@@ -204,6 +219,41 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players based on predefined 
                 }
                 M7Phases.P4 -> DungeonClass.Healer
                 M7Phases.P5 -> DungeonClass.Archer
+                else -> null
+            }
+
+            DungeonClass.Unknown -> null
+        }
+    }
+
+    // Dynamic leap rules in the future.
+    private fun queryP2Rule(sourceClass: DungeonClass): DungeonClass? {
+        val p2Area = P2LeapAreas.getP2Area() ?: return null
+
+        return when (sourceClass) {
+            DungeonClass.Archer -> when {
+                p2Area == P2LeapAreas.YellowPillar -> DungeonClass.Healer
+                m7py && p2Area == P2LeapAreas.PurplePillar -> DungeonClass.Healer
+                else -> null
+            }
+
+            DungeonClass.Berserk -> null
+
+            DungeonClass.Mage -> when {
+                m7py && p2Area == P2LeapAreas.PurplePillar && ee2Mage -> DungeonClass.Tank
+                m7py && p2Area == P2LeapAreas.PurpleStorm -> DungeonClass.Healer
+                m7py && p2Area == P2LeapAreas.YellowPillar -> DungeonClass.Healer
+                !m7py && p2Area == P2LeapAreas.YellowPillar -> DungeonClass.Healer
+                else -> null
+            }
+
+            DungeonClass.Tank -> when {
+                p2Area == P2LeapAreas.YellowPad -> DungeonClass.Healer
+                else -> null
+            }
+
+            DungeonClass.Healer -> when {
+                p2Area == P2LeapAreas.YellowPillar -> DungeonClass.Berserk
                 else -> null
             }
 
