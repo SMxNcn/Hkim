@@ -3,6 +3,7 @@ package cn.hkim.addon.features.impl
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.settings.BooleanSetting
 import cn.hkim.addon.config.settings.ColorSetting
+import cn.hkim.addon.config.settings.SelectorSetting
 import cn.hkim.addon.events.impl.PacketReceiveEvent
 import cn.hkim.addon.events.impl.RenderEvent
 import cn.hkim.addon.events.impl.TickEvent
@@ -13,6 +14,7 @@ import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.utils.Colors
 import cn.hkim.addon.utils.HudUtils.alert
 import cn.hkim.addon.utils.HudUtils.multiplyAlpha
+import cn.hkim.addon.utils.render.drawStyledBox
 import cn.hkim.addon.utils.render.drawWireFrameBox
 import cn.hkim.addon.utils.renderBoundingBox
 import cn.hkim.addon.utils.skyblock.DungeonUtils
@@ -39,9 +41,11 @@ object DungeonESP : Module("Dungeon ESP", "ESP for dungeon entities.") {
 
     private val batESP by BooleanSetting("Bat ESP", "Highlight Bat entities.", true)
     private val witherESP by BooleanSetting("Wither ESP", "Highlight Wither entities.", true)
+    private val mobStyle by SelectorSetting("Mob Box Style", "Style of mob esp.", listOf("Filled", "Outline", "Filled Outline"), "Outline")
 
     private val bloodColor by ColorSetting("Blood Color", "The color of the box.", Colors.BLACK.multiplyAlpha(0.8f).rgb)
     private val witherColor by ColorSetting("Wither Color", "The color of the box.", Colors.MINECRAFT_RED.multiplyAlpha(0.8f).rgb)
+    private val keyStyle by SelectorSetting("Mob Box Style", "Style of key esp.", listOf("Filled", "Outline", "Filled Outline"), "Filled Outline")
 
     private val dungeonMobSpawns = hashSetOf("Lurker", "Dreadlord", "Souleater", "Zombie", "Skeleton", "Skeletor", "Sniper", "Super Archer", "Spider", "Fels", "Withermancer", "Lost Adventurer", "Angry Archaeologist", "Frozen Adventurer", "Shadow Assassin")
     private val starredRegex = Regex("^.*✯ .*\\d{1,3}(?:,\\d{3})*(?:\\.\\d+)?[kM]?❤$")
@@ -94,7 +98,7 @@ object DungeonESP : Module("Dungeon ESP", "ESP for dungeon entities.") {
         val color = Color(highlightColor)
 
         entities.forEach { entity ->
-            if (entity.isAlive) event.drawWireFrameBox(entity.renderBoundingBox, color, 2f, false)
+            if (entity.isAlive) event.drawStyledBox(entity.renderBoundingBox, color, mobStyle, false)
         }
     }
 
@@ -107,7 +111,7 @@ object DungeonESP : Module("Dungeon ESP", "ESP for dungeon entities.") {
             return
         }
         val pos = keyEntity.position()
-        event.drawWireFrameBox(AABB.unitCubeFromLowerCorner(pos.add(-0.5, 1.0, -0.5)), Color(key.color()), 2f, false)
+        event.drawStyledBox(AABB.unitCubeFromLowerCorner(pos.add(-0.5, 1.0, -0.5)), Color(key.color()), keyStyle, false)
     }
 
     private fun renderBossMobs(event: RenderEvent.Extract) {
