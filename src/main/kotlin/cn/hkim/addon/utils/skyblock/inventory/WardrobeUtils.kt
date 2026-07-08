@@ -58,7 +58,7 @@ object WardrobeUtils {
                     targetPage = page
                     calledFromThis = true
                     isProcessing = false
-                    sendCommand("wardrobe $page")
+                    sendCommand("wardrobe") // dube update removes page param
                 }
             }
         } catch (_: TimeoutCancellationException) {
@@ -75,8 +75,11 @@ object WardrobeUtils {
         if (targetPage > totalPages) return
 
         schedule((2..4).random()) {
-            if (currentPage == targetPage) performClick()
-            else reset()
+            when {
+                currentPage == totalPages -> performClick()
+                currentPage < totalPages -> turnPage()
+                else -> reset()
+            }
         }
     }
 
@@ -98,6 +101,11 @@ object WardrobeUtils {
             current.toIntOrNull() to total.toIntOrNull()
         }?.takeIf { it.first != null && it.second != null }
             ?.let { it.first!! to it.second!! }
+    }
+
+    private fun turnPage() {
+        mc.player?.clickInventorySlot(53, containerId)
+        isProcessing = false
     }
 
     private fun reset() {
