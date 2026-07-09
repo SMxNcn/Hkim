@@ -193,6 +193,25 @@ class ModuleCardState(val module: Module) {
         return false
     }
 
+    fun handleScroll(mouseX: Float, mouseY: Float, scrollX: Double, scrollY: Double, x: Float, y: Float, width: Float, visibleTop: Float, visibleBottom: Float): Boolean {
+        if (expandAnim.getValue() <= 0.01f) return false
+
+        var sy = y + 44f + 6f
+        for (setting in visibleSettings) {
+            if (!setting.isVisible()) continue
+            if (sy + settingHeight < visibleTop || sy > visibleBottom) {
+                sy += settingHeight + settingGap
+                continue
+            }
+            val indent = 24f
+            if (setting.mouseScrolled(mouseX, mouseY, scrollX, scrollY, x + indent, sy, width - indent * 2)) {
+                return true
+            }
+            sy += settingHeight + settingGap
+        }
+        return false
+    }
+
     private fun calculateCurrentVisibleHeight(): Float {
         return visibleSettings.sumOf { (settingHeight + settingGap).toDouble() }.toFloat()
     }
