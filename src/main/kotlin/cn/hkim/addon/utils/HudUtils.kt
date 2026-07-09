@@ -7,6 +7,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
 import net.minecraft.sounds.SoundEvent
+import net.minecraft.sounds.SoundEvents
 import net.minecraft.util.Util
 import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.PlayerTeam
@@ -230,6 +231,16 @@ object HudUtils {
         } catch (e: Exception) {
             Hkim.logger.error("Failed to open URL: $url", e)
         }
+    }
+
+    fun setTitle(title: String) {
+        mc.gui.hud.setTimes(0, 20, 5)
+        mc.gui.hud.setTitle(Component.literal(title))
+    }
+
+    fun alert(title: String, playSound: Boolean = true) {
+        setTitle(title)
+        if (playSound) playSoundAtPlayer(SoundEvents.NOTE_BLOCK_PLING.value())
     }
 
     fun playModuleSound(state: Boolean) {
