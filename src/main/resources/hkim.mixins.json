@@ -27,6 +27,7 @@
     "LavaFogEnvironmentMixin",
     "GameRendererMixin",
     "OptionsMixin",
+    "PauseScreenMixin",
     "GuiGraphicsExtractorMixin",
     "GuiMixin",
     "ItemInHandRendererMixin",
@@ -45,6 +46,7 @@
     "TitleScreenMixin",
     "WindowMixin",
     "accessors.CameraAccessor",
+    "accessors.JoinMultiplayerScreenAccessor",
     "accessors.KeyMappingAccessor",
     "accessors.ScreenAccessor"
   ]
