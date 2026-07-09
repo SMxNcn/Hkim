@@ -3,6 +3,7 @@ package cn.hkim.addon.utils
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.events.impl.PacketReceiveEvent
 import meteordevelopment.orbit.EventHandler
+import net.minecraft.client.multiplayer.ServerData
 import net.minecraft.network.protocol.game.ClientboundSetTimePacket
 import net.minecraft.network.protocol.ping.ClientboundPongResponsePacket
 import kotlin.math.min
@@ -17,6 +18,9 @@ object ServerUtils {
 
     var averagePing: Int = 0
         private set
+
+    @JvmStatic
+    var lastConnectionAttempt: ServerData? = null
 
     @EventHandler
     private fun onPacket(event: PacketReceiveEvent) {
