@@ -1,13 +1,11 @@
 package cn.hkim.addon.utils.skyblock.inventory
 
 import cn.hkim.addon.Hkim.mc
-import cn.hkim.addon.events.impl.GuiEvent
 import cn.hkim.addon.utils.clickPlayerInventorySlot
 import cn.hkim.addon.utils.findItemByID
 import cn.hkim.addon.utils.schedule
 import cn.hkim.addon.utils.sendCommand
 import kotlinx.coroutines.suspendCancellableCoroutine
-import meteordevelopment.orbit.EventHandler
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import kotlin.coroutines.resume
@@ -17,14 +15,15 @@ object EquipmentUtils {
     private var pendingSlots = listOf<Int>()
     private var currentIndex = 0
     private var containerId = -1
-    private var calledFromThis = false
+    var isActive = false
+        private set
     private var isProcessing = false
 
-    @EventHandler
-    private fun onGuiOpen(event: GuiEvent.Open) {
-        containerId = mc.player?.containerMenu?.containerId ?: return
-        if (!calledFromThis) return
-        handleGuiOpen(event.screen)
+    fun consumeGuiOpen(screen: Screen): Boolean {
+        if (!isActive) return false
+        containerId = mc.player?.containerMenu?.containerId ?: return false
+        handleGuiOpen(screen)
+        return true
     }
 
     /**
@@ -33,7 +32,7 @@ object EquipmentUtils {
      * @return True if all swaps are successful, false otherwise.
      */
     suspend fun swapEquipment(itemIds: List<String>): Boolean {
-        if (calledFromThis || isProcessing) return false
+        if (isActive || isProcessing) return false
         val slots = itemIds.mapNotNull { findItemByID(it).takeIf { slot -> slot != -1 } }
         if (slots.isEmpty()) return false
 
@@ -42,7 +41,8 @@ object EquipmentUtils {
             pendingSlots = slots
             currentIndex = 0
             isProcessing = false
-            calledFromThis = true
+            isActive = true
+            SwapHandler.startSwap()
             sendCommand("stats")
 
             schedule(200) {
@@ -88,6 +88,7 @@ object EquipmentUtils {
         isProcessing = false
         currentIndex = 0
         containerId = -1
-        calledFromThis = false
+        isActive = false
+        SwapHandler.endSwap()
     }
 }
