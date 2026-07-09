@@ -1,7 +1,7 @@
 package cn.hkim.addon.utils.skyblock.inventory
 
 import cn.hkim.addon.Hkim.mc
-import cn.hkim.addon.events.impl.GuiEvent
+import cn.hkim.addon.features.impl.SwapOptions
 import cn.hkim.addon.utils.clickInventorySlot
 import cn.hkim.addon.utils.modMessage
 import cn.hkim.addon.utils.schedule
@@ -10,27 +10,32 @@ import cn.hkim.addon.utils.skyblock.LocationUtils
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeout
-import meteordevelopment.orbit.EventHandler
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import kotlin.coroutines.resume
 
 object WardrobeUtils {
-//    private val titleRegex = Regex("\\((\\d+)/(\\d+)\\) Armor Sets")
-
     private var callback: ((Boolean) -> Unit)? = null
     private var targetSlot = -1
     private var targetPage = 1
     private var containerId = -1
-    private var calledFromThis = false
+    var isActive = false
+        private set
     private var isProcessing = false
 
-    @EventHandler
-    private fun onGuiOpen(event: GuiEvent.Open) {
-        containerId = mc.player?.containerMenu?.containerId ?: return
-        if (!calledFromThis) return
-        if (isProcessing) return
-        handleGuiOpen(event.screen)
+    fun consumeGuiOpen(screen: Screen): Boolean {
+        if (!isActive) return false
+        if (isProcessing) {
+            schedule(0) {
+                mc.player?.closeContainer()
+                callback?.invoke(true)
+                reset()
+            }
+            return true
+        }
+        containerId = mc.player?.containerMenu?.containerId ?: return true
+        handleGuiOpen(screen)
+        return true
     }
 
     /**
@@ -40,7 +45,7 @@ object WardrobeUtils {
      * @return `true` if the armor was successfully equipped, `false` otherwise.
      */
     suspend fun swapArmorTo(index: Int, page: Int = 1): Boolean {
-        if (calledFromThis || isProcessing) return false
+        if (isActive || isProcessing) return false
         if (index !in 1..9) {
             modMessage("§cWardrobe index must be between 1 and 9!")
             return false
@@ -56,9 +61,10 @@ object WardrobeUtils {
                     callback = { result -> cont.resume(result) }
                     targetSlot = index + 35
                     targetPage = page
-                    calledFromThis = true
+                    isActive = true
                     isProcessing = false
-                    sendCommand("wardrobe $page")
+                    SwapHandler.startSwap()
+                    sendCommand("wardrobe")
                 }
             }
         } catch (_: TimeoutCancellationException) {
@@ -75,15 +81,18 @@ object WardrobeUtils {
         if (targetPage > totalPages) return
 
         schedule((2..4).random()) {
-            if (currentPage == targetPage) performClick()
-            else reset()
+            when {
+                currentPage == targetPage -> performClick()
+                currentPage < targetPage -> turnPage()
+                else -> reset()
+            }
         }
     }
 
     private fun performClick() {
         isProcessing = true
         mc.player?.clickInventorySlot(targetSlot, containerId)
-        schedule((4..6).random()) {
+        schedule((6..8).random()) {
             mc.player?.closeContainer()
             callback?.invoke(true)
             reset()
@@ -92,20 +101,26 @@ object WardrobeUtils {
 
     private fun parsePageInfo(title: String): Pair<Int, Int>? {
         // Replace dynamic Regex with immutable object-level private val after Main server update.
-        val pattern = if (LocationUtils.inAlphaServer) "\\((\\d+)/(\\d+)\\) Armor Sets"
-        else "Wardrobe \\((\\d+)/(\\d+)\\)"
-        return /*titleRegex*/Regex(pattern).find(title)?.destructured?.let { (current, total) ->
+        val pattern = if (LocationUtils.inAlphaServer) SwapOptions.wdTitleRegex
+        else Regex("Wardrobe \\((\\d+)/(\\d+)\\)")
+        return pattern.find(title)?.destructured?.let { (current, total) ->
             current.toIntOrNull() to total.toIntOrNull()
         }?.takeIf { it.first != null && it.second != null }
             ?.let { it.first!! to it.second!! }
+    }
+
+    private fun turnPage() {
+        mc.player?.clickInventorySlot(44, containerId)
+        isProcessing = false
     }
 
     private fun reset() {
         callback = null
         targetSlot = -1
         targetPage = 1
-        calledFromThis = false
+        isActive = false
         isProcessing = false
         containerId = -1
+        SwapHandler.endSwap()
     }
 }
