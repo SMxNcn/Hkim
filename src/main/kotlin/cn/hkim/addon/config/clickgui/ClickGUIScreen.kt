@@ -6,6 +6,7 @@ import cn.hkim.addon.config.ModuleConfig
 import cn.hkim.addon.config.Setting
 import cn.hkim.addon.config.settings.ColorSetting
 import cn.hkim.addon.config.settings.KeybindSetting
+import cn.hkim.addon.config.settings.SelectorSetting
 import cn.hkim.addon.config.settings.TextSetting
 import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
@@ -33,6 +34,7 @@ import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
 import net.minecraft.sounds.SoundEvents
+import org.lwjgl.glfw.GLFW
 import java.awt.Color
 import kotlin.math.max
 
@@ -165,21 +167,36 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
             activeEditBoxSetting = null
         }
 
-        if (handleSidebarClick(mouseX, mouseY, button)) return true
-        if (handleHeaderClick(mouseX, mouseY, button)) return true
+        if (handleSidebarClick(mouseX, mouseY, button)) {
+            SelectorSetting.scrollFocused = null
+            return true
+        }
+        if (handleHeaderClick(mouseX, mouseY, button)) {
+            SelectorSetting.scrollFocused = null
+            return true
+        }
         if (handleContentClick(mouseX, mouseY, button)) return true
 
+        // Click wasn't handled by any interactive element → clear scroll focus
+        SelectorSetting.scrollFocused = null
         return super.mouseClicked(event, doubleClick)
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
+        val mX = mouseX.toFloat()
+        val mY = mouseY.toFloat()
         val contentX = guiX + sidebarW
         val contentY = guiY + headerH
         val contentW = guiW - sidebarW
         val contentH = guiH - headerH
 
-        if (HudUtils.isPointInRect(mouseX.toFloat(), mouseY.toFloat(), contentX, contentY, contentW, contentH)) {
-            contentScrollY = (contentScrollY + scrollY * 14f).coerceAtMost(0.0).toFloat()
+        if (HudUtils.isPointInRect(mX, mY, contentX, contentY, contentW, contentH)) {
+            if (handleSelectorScroll(mX, mY, scrollX, scrollY)) return true
+
+            val shiftHeld = GLFW.glfwGetKey(mc.window.handle(), GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS ||
+                            GLFW.glfwGetKey(mc.window.handle(), GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS
+            val multiplier = if (shiftHeld) 3.0 else 1.0
+            contentScrollY = (contentScrollY + scrollY * 14f * multiplier).coerceAtMost(0.0).toFloat()
             return true
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY)
@@ -521,6 +538,21 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         for (module in getFilteredModules()) {
             val state = cardStates[module.id] ?: continue
             if (state.handleClick(mouseX, mouseY, button, x, y, w, visibleTop, visibleBottom)) return true
+            y += state.totalHeight + 4f
+        }
+        return false
+    }
+
+    private fun handleSelectorScroll(mouseX: Float, mouseY: Float, scrollX: Double, scrollY: Double): Boolean {
+        var y = guiY + headerH + contentPadding + contentScrollY
+        val x = guiX + sidebarW + contentPadding
+        val w = guiW - sidebarW - contentPadding * 2
+        val visibleTop = guiY + headerH
+        val visibleBottom = guiY + guiH
+
+        for (module in getFilteredModules()) {
+            val state = cardStates[module.id] ?: continue
+            if (state.handleScroll(mouseX, mouseY, scrollX, scrollY, x, y, w, visibleTop, visibleBottom)) return true
             y += state.totalHeight + 4f
         }
         return false

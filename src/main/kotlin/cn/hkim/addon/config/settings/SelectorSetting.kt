@@ -12,9 +12,15 @@ import net.minecraft.sounds.SoundEvents
 import java.awt.Color
 
 class SelectorSetting(name: String, desc: String, val options: List<String>, default: String) : Setting<Int>(name, desc, options.indexOf(default).coerceAtLeast(0)) {
+    companion object {
+        @JvmStatic var scrollFocused: SelectorSetting? = null
+    }
+
     private var _selected: String = options.firstOrNull() ?: ""
     fun select(option: String) { if (option in options) { _selected = option; value = options.indexOf(option) } }
     fun getSelected(): String = _selected
+
+    val isScrollFocused: Boolean get() = scrollFocused == this
 
     override fun render(
         graphics: GuiGraphicsExtractor,
@@ -39,9 +45,11 @@ class SelectorSetting(name: String, desc: String, val options: List<String>, def
         val selectorY = y + 2f
         val selectorH = 16f
 
+        val scrollFocused = isScrollFocused
         NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
             NVGRenderer.rect(selectorX * 2, selectorY * 2, selectorW * 2, selectorH * 2, Color(0x222222), 6f)
-            NVGRenderer.hollowRect(selectorX * 2, selectorY * 2, selectorW * 2, selectorH * 2, 2f, Color(0x444444), 6f)
+            val borderColor = if (scrollFocused) Color(themeColor, true) else Color(0x444444)
+            NVGRenderer.hollowRect(selectorX * 2, selectorY * 2, selectorW * 2, selectorH * 2, if (scrollFocused) 2.5f else 2f, borderColor, 6f)
         }
 
         val leftArrowHovered = HudUtils.isPointInRect(mouseX, mouseY, selectorX, selectorY, 14f, selectorH)
@@ -72,11 +80,19 @@ class SelectorSetting(name: String, desc: String, val options: List<String>, def
         val selectorH = 16f
 
         if (HudUtils.isPointInRect(mouseX, mouseY, selectorX, selectorY, 14f, selectorH)) {
+            scrollFocused = null
             return previous()
         }
 
         if (HudUtils.isPointInRect(mouseX, mouseY, selectorX + selectorW - 16f, selectorY, 14f, selectorH)) {
+            scrollFocused = null
             return next()
+        }
+
+        if (HudUtils.isPointInRect(mouseX, mouseY, selectorX + 14f, selectorY, selectorW - 30f, selectorH)) {
+            scrollFocused = if (scrollFocused == this) null else this
+            playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value(), 0.3f)
+            return true
         }
         return false
     }
@@ -95,5 +111,15 @@ class SelectorSetting(name: String, desc: String, val options: List<String>, def
         playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value(), 0.3f)
         settingsChanged()
         return true
+    }
+
+    override fun mouseScrolled(mouseX: Float, mouseY: Float, scrollX: Double, scrollY: Double, x: Float, y: Float, width: Float): Boolean {
+        if (scrollFocused != this) return false
+
+        return if (scrollY < 0) {
+            next()
+        } else {
+            previous()
+        }
     }
 }

@@ -88,4 +88,9 @@ abstract class Setting<T>(
         deltaX: Float, deltaY: Float,
         x: Float, y: Float, width: Float
     ): Boolean = false
+
+    open fun mouseScrolled(
+        mouseX: Float, mouseY: Float, scrollX: Double, scrollY: Double,
+        x: Float, y: Float, width: Float
+    ): Boolean = false
 }
