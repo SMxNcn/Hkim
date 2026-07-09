@@ -15,6 +15,7 @@ import cn.hkim.addon.utils.skyblock.mining.MineralType.Companion.isHighPriorityB
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.core.BlockPos
 import net.minecraft.tags.ItemTags
+import net.minecraft.util.Mth
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.Level
 import net.minecraft.world.phys.AABB
@@ -196,8 +197,8 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
         val r = SCAN_RADIUS
         val radiusSq = r * r
         val ex = eyePos.x; val ey = eyePos.y; val ez = eyePos.z
-        val minPos = BlockPos((ex - r).toInt(), (ey - r).toInt(), (ez - r).toInt())
-        val maxPos = BlockPos((ex + r).toInt(), (ey + r).toInt(), (ez + r).toInt())
+        val minPos = BlockPos(Mth.floor(ex - r), Mth.floor(ey - r), Mth.floor(ez - r))
+        val maxPos = BlockPos(Mth.floor(ex + r), Mth.floor(ey + r), Mth.floor(ez + r))
 
         val iter = BlockPos.betweenClosedStream(minPos, maxPos).iterator()
         while (iter.hasNext()) {

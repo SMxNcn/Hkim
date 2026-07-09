@@ -22,14 +22,10 @@ enum class MineralType(
             Blocks.PRISMARINE_BRICKS,
             Blocks.DARK_PRISMARINE,
             Blocks.GRAY_WOOL,
-            Blocks.CYAN_TERRACOTTA
-        ),
-        priorityBlocks = setOf(Blocks.LIGHT_BLUE_WOOL, Blocks.PRISMARINE, Blocks.PRISMARINE_BRICKS, Blocks.DARK_PRISMARINE)
-    ),
-    TITANIUM(
-        "Titanium", MineralCategory.DWARVEN_METALS, listOf(
+            Blocks.CYAN_TERRACOTTA,
             Blocks.POLISHED_DIORITE
-        )
+        ),
+        priorityBlocks = setOf(Blocks.POLISHED_DIORITE, Blocks.LIGHT_BLUE_WOOL, Blocks.PRISMARINE, Blocks.PRISMARINE_BRICKS, Blocks.DARK_PRISMARINE)
     ),
     UMBER(
         "Umber", MineralCategory.DWARVEN_METALS, listOf(

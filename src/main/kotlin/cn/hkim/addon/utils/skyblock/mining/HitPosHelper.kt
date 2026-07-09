@@ -2,6 +2,7 @@ package cn.hkim.addon.utils.skyblock.mining
 
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import net.minecraft.util.Mth
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.CrossCollisionBlock
 import net.minecraft.world.level.block.SlabBlock
@@ -10,6 +11,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.state.properties.SlabType
 import net.minecraft.world.phys.Vec3
 import kotlin.math.min
+import kotlin.math.sqrt
 import kotlin.random.Random
 
 object HitPosHelper {
@@ -119,7 +121,7 @@ object HitPosHelper {
 
     fun hasLineOfSight(level: Level, from: Vec3, to: Vec3, targetPos: BlockPos): Boolean {
         val dx = to.x - from.x; val dy = to.y - from.y; val dz = to.z - from.z
-        val length = Math.sqrt(dx * dx + dy * dy + dz * dz)
+        val length = sqrt(dx * dx + dy * dy + dz * dz)
         if (length < 0.1) return true
 
         val invLen = 1.0 / length
@@ -129,9 +131,9 @@ object HitPosHelper {
         for (i in 0..steps) {
             val t = i.toDouble() / steps * length
             val checkPos = BlockPos(
-                (from.x + ndx * t).toInt(),
-                (from.y + ndy * t).toInt(),
-                (from.z + ndz * t).toInt()
+                Mth.floor(from.x + ndx * t),
+                Mth.floor(from.y + ndy * t),
+                Mth.floor(from.z + ndz * t)
             )
             if (checkPos != targetPos && !level.getBlockState(checkPos).isAir) {
                 return false

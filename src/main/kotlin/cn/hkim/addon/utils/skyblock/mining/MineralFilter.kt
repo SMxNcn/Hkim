@@ -41,7 +41,7 @@ object MineralFilter {
                 if (royalDivan && !isGoldZoneValid()) return false
             }
             1 -> {
-                if (mineralType != MineralType.MITHRIL && mineralType != MineralType.TITANIUM) return false
+                if (mineralType != MineralType.MITHRIL) return false
                 if (inDwarvenOnly && !isDwarvenZoneValid()) return false
             }
             2 -> {
