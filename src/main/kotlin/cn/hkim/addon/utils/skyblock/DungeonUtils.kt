@@ -12,10 +12,12 @@ import cn.hkim.addon.utils.isPlayerInArea
 import cn.hkim.addon.utils.romanToInt
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.core.BlockPos
+import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
 import net.minecraft.network.protocol.game.ClientboundSetPlayerTeamPacket
 import net.minecraft.resources.Identifier
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.player.Player
 import java.awt.Color
 import kotlin.jvm.optionals.getOrNull
@@ -122,6 +124,25 @@ enum class P3Stages(val corner1: BlockPos, val corner2: BlockPos) {
     }
 }
 
+enum class P2LeapAreas(val displayName: String, val corner1: BlockPos, val corner2: BlockPos) {
+    PurplePillar("Purple Pillar", BlockPos(87, 169, 54), BlockPos(112, 174, 74)),
+    PurplePad("Purple Pad", BlockPos(122, 170, 86), BlockPos(160, 180, 102)),
+    YellowPillar("Yellow Pillar", BlockPos(59, 169, 54), BlockPos(34, 174, 74)),
+    YellowPad("Yellow Pad", BlockPos(40, 170, 102), BlockPos(24, 180, 86)),
+    PurpleStorm("Purple Storm", BlockPos(102, 166, 90), BlockPos(98, 170, 94));
+
+    companion object {
+        fun getP2Area(): P2LeapAreas? {
+            if (getF7Phase() != M7Phases.P2 || mc.player == null) return null
+
+            val player = mc.player!!
+            val playerPos = BlockPos(player.x.toInt(), player.y.toInt(), player.z.toInt())
+
+            return entries.firstOrNull { isPlayerInArea(it.corner1, it.corner2, playerPos) }
+        }
+    }
+}
+
 object DungeonUtils {
     var dungeonTeammates: ArrayList<DungeonPlayer> = ArrayList(5)
     var dungeonTeammatesNoSelf: List<DungeonPlayer> = ArrayList(4)
@@ -187,6 +208,13 @@ object DungeonUtils {
             is ClientboundSetPlayerTeamPacket -> {
                 val text = event.packet.parameters.getOrNull()?.let { it.playerPrefix.string.plus(it.playerSuffix.string).clean }.toString()
                 floorRegex.find(text)?.groupValues?.get(1)?.let { floor = Floor.valueOf(it) }
+            }
+
+            is ClientboundAddEntityPacket -> {
+                if (event.packet.type == EntityTypes.PLAYER) {
+                    dungeonTeammates.find { it.entity == null && it.name == mc.level?.getEntity(event.packet.id)?.name?.string }?.entity =
+                        mc.level?.getEntity(event.packet.id) as? Player
+                }
             }
 
             is ClientboundRemoveEntitiesPacket -> {
