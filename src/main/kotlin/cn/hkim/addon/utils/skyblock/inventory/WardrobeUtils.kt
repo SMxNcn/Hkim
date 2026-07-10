@@ -91,7 +91,7 @@ object WardrobeUtils {
     private fun performClick() {
         isProcessing = true
         mc.player?.clickInventorySlot(targetSlot, containerId)
-        schedule(8) {
+        schedule(SwapOptions.closeTicks.toInt()) {
             if (isProcessing) {
                 mc.player?.closeContainer()
                 callback?.invoke(true)

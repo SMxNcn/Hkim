@@ -81,7 +81,7 @@ object LoadoutUtils {
         isProcessing = true
         val slot = LoadoutLayout.getSlotId(targetIndex)
         mc.player?.clickInventorySlot(slot, containerId)
-        schedule((4..6).random()) {
+        schedule((SwapOptions.closeTicks.toInt())) {
             mc.player?.closeContainer()
             callback?.invoke(true)
             reset()
