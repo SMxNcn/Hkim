@@ -17,8 +17,7 @@ object Test : Module("Test", "A Test Module.") {
     private val color1 by ColorSetting("Color 1", "这是一个Color", 0xFF008B8B.toInt()).depends { dropdown1 }
     private val text1 by TextSetting("Text 1", "这是一段Text", "哎嘿").depends { dropdown1 }
     private val dropdown2 by DropdownSetting("Dropdown 2", "D2", false)
-    private val selector1 by SelectorSetting("Selector 1", "这是一个Selector", listOf("Filled", "Outline", "Filled outline"), "Outline").depends { dropdown2 }
-    private val cleanGui by BooleanSetting("Clean Gui View", "Stop clicking on blank name items in SkyBlock menus.", true).depends { dropdown2 }
+    private val selector1 by SelectorSetting("Selector 1", "这是一个Selector", listOf("1", "2", "3", "4", "5", "6"), "1").depends { dropdown2 }
     private val action1 by ActionSetting("Action 1", "这是一个Action") {
         val zxf = SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("hkim", "zxf2"))
         playSoundAtPlayer(zxf)

@@ -58,8 +58,7 @@ fun coloredChar(char: String, color: Int) =
 
 fun modMessage(message: Any?) {
     val text = prefix.copy().append(Component.literal("§r §7$message"))
-    if (mc.isSameThread) mc.gui.chat.addClientSystemMessage(text)
-    else mc.execute { mc.gui.chat.addClientSystemMessage(text) }
+    mc.execute { mc.gui.chat.addClientSystemMessage(text) }
 }
 
 fun sendChatMessage(message: Any) {

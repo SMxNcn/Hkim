@@ -17,7 +17,7 @@ import net.minecraft.world.level.block.WebBlock
 object AntiPlace : Module("Anti Place", "Prevent placing block-based weapons and items on the ground.") {
     private val ABILITY_REGEX = Regex("(?:⦾\\s*)?Ability:\\s+.+\\s+RIGHT CLICK")
     private val EXTRA_ITEM_IDS = setOf(
-        "ASCENSION_ROPE", "ATOMINIZER", "CHARMINIZER", "CHUM_BUCKET", "FISHING_NET", "GIFT", "IN_A_BOTTLE_EMPTY", "KUUDRA_CHUNK", "SACK", "SHINY_ORB",
+        "ASCENSION_ROPE", "ATOMINIZER", "CHARMINIZER", "CHUMCUP_BUCKET", "FISHING_NET", "GIFT", "IN_A_BOTTLE_EMPTY", "KUUDRA_CHUNK", "SACK", "SHINY_ORB",
         "SLICE_OF", "SUMMONING_EYE", "SUPER_SCRUBBER", "TUBA"
     )
 

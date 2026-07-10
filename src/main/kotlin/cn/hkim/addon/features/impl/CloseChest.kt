@@ -23,9 +23,8 @@ object CloseChest : Module("Close Chest", "Allows you to instantly close chests 
         if (!enabled || !inDungeons) return
         val packet = event.packet as? ClientboundOpenScreenPacket ?: return
         val title = packet.title.cleanString
-        val isSecretChest = title.equalsOneOf("Chest", "Large Chest")
 
-        if (mode == 0 && isSecretChest) {
+        if (mode == 0 && isSecretChest(title)) {
             mc.connection?.send(ServerboundContainerClosePacket(packet.containerId))
             event.cancel()
         }
@@ -35,17 +34,15 @@ object CloseChest : Module("Close Chest", "Allows you to instantly close chests 
     private fun onGuiClick(event: GuiEvent.MouseClick) {
         if (!enabled || mode != 1 || !inDungeons) return
         val title = event.screen.title.string
-        val isSecretChest = title.equalsOneOf("Chest", "Large Chest")
-
-        if (isSecretChest) mc.player?.closeContainer()
+        if (isSecretChest(title)) mc.player?.closeContainer()
     }
 
     @EventHandler
     private fun onGuiKey(event: GuiEvent.KeyPress) {
         if (!enabled || mode != 1 || !inDungeons) return
         val title = event.screen.title.string
-        val isSecretChest = title.equalsOneOf("Chest", "Large Chest")
-
-        if (isSecretChest) mc.player?.closeContainer()
+        if (isSecretChest(title)) mc.player?.closeContainer()
     }
+
+    private fun isSecretChest(title: String): Boolean = title.equalsOneOf("Chest", "Large Chest")
 }
