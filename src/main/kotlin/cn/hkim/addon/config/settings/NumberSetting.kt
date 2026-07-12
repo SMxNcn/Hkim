@@ -93,14 +93,12 @@ class NumberSetting(name: String, desc: String, default: Float, val min: Float, 
         val knobRadius = 4f
         val knobCx = sliderX + filledW
         val knobCy = sliderY + sliderH / 2f
-        graphics.drawCircleWithBorder(knobCx, knobCy, themeColor, 0xFFFFFFFF.toInt(), 0.5f, knobRadius)
+        graphics.drawCircleWithBorder(knobCx, knobCy, themeColor, 0xA0181818.toInt(), 0.5f, knobRadius)
 
         if (isHovered) {
             val isOverSlider = HudUtils.isPointInRect(mouseX, mouseY, sliderX, sliderY - 2f, sliderW, 12f)
             if (isOverSlider) {
-                val knobSize = knobRadius * 2f
-                val isOverKnob = HudUtils.isPointInRect(mouseX, mouseY, knobCx - knobRadius, knobCy - knobRadius, knobSize, knobSize)
-                graphics.requestCursor(if (isOverKnob) CursorTypes.RESIZE_EW else CursorTypes.POINTING_HAND)
+                graphics.requestCursor(if (isDragging) CursorTypes.RESIZE_EW else CursorTypes.POINTING_HAND)
             } else {
                 graphics.requestCursor(CursorTypes.POINTING_HAND)
             }
