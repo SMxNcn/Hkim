@@ -2,6 +2,7 @@ package cn.hkim.addon.utils
 
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.mixins.accessors.KeyMappingAccessor
+import cn.hkim.addon.utils.skyblock.inventory.SwapHandler
 import net.minecraft.SharedConstants
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
@@ -86,12 +87,12 @@ fun romanToInt(s: String): Int {
 fun toRadians(degrees: Float): Float = degrees * (PI / 180f).toFloat()
 
 fun Player.clickInventorySlot(slot: Int, containerId: Int, rightClick: Boolean = false) {
-    if (mc.screen == null) return
+    if (mc.screen == null && !SwapHandler.isInSwap) return
     mc.gameMode?.handleContainerInput(containerId, slot, if (rightClick) 1 else 0, ContainerInput.PICKUP, this)
 }
 
 fun Player.clickPlayerInventorySlot(slot: Int, containerId: Int, clickType: ContainerInput = ContainerInput.PICKUP) {
-    if (mc.screen == null) return
+    if (mc.screen == null && !SwapHandler.isInSwap) return
     val containerSlots = containerMenu.slots.size
     val actualSlot: Int
 

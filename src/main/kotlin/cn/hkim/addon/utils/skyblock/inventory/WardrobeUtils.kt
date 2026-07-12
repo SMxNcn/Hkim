@@ -9,33 +9,11 @@ import cn.hkim.addon.utils.sendCommand
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeout
-import net.minecraft.client.gui.screens.Screen
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import kotlin.coroutines.resume
 
-object WardrobeUtils {
-    private var callback: ((Boolean) -> Unit)? = null
+object WardrobeUtils : SwapHandler() {
     private var targetSlot = -1
     private var targetPage = 1
-    private var containerId = -1
-    var isActive = false
-        private set
-    private var isProcessing = false
-
-    fun consumeGuiOpen(screen: Screen): Boolean {
-        if (!isActive) return false
-        if (isProcessing) {
-            schedule(0) {
-                mc.player?.closeContainer()
-                callback?.invoke(true)
-                reset()
-            }
-            return true
-        }
-        containerId = mc.player?.containerMenu?.containerId ?: return true
-        handleGuiOpen(screen)
-        return true
-    }
 
     /**
      * Equips armor from the wardrobe.
@@ -62,7 +40,7 @@ object WardrobeUtils {
                     targetPage = page
                     isActive = true
                     isProcessing = false
-                    SwapHandler.startSwap()
+                    startSwap("Swapping to Armor #$index")
                     sendCommand("wardrobe") // dube update removes page param
                 }
             }
@@ -72,9 +50,7 @@ object WardrobeUtils {
         }
     }
 
-    private fun handleGuiOpen(screen: Screen?) {
-        val chest = (screen as? AbstractContainerScreen<*>) ?: return
-        val title = chest.title.string
+    override fun handleGuiOpen(title: String) {
         val (currentPage, totalPages) = parsePageInfo(title) ?: return
 
         if (targetPage > totalPages) return
@@ -112,13 +88,9 @@ object WardrobeUtils {
         isProcessing = false
     }
 
-    private fun reset() {
-        callback = null
+    override fun reset() {
         targetSlot = -1
         targetPage = 1
-        isActive = false
-        isProcessing = false
-        containerId = -1
-        SwapHandler.endSwap()
+        super.reset()
     }
 }

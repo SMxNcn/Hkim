@@ -6,25 +6,11 @@ import cn.hkim.addon.utils.findItemByID
 import cn.hkim.addon.utils.schedule
 import cn.hkim.addon.utils.sendCommand
 import kotlinx.coroutines.suspendCancellableCoroutine
-import net.minecraft.client.gui.screens.Screen
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import kotlin.coroutines.resume
 
-object EquipmentUtils {
-    private var callback: ((Boolean) -> Unit)? = null
+object EquipmentUtils : SwapHandler() {
     private var pendingSlots = listOf<Int>()
     private var currentIndex = 0
-    private var containerId = -1
-    var isActive = false
-        private set
-    private var isProcessing = false
-
-    fun consumeGuiOpen(screen: Screen): Boolean {
-        if (!isActive) return false
-        containerId = mc.player?.containerMenu?.containerId ?: return false
-        handleGuiOpen(screen)
-        return true
-    }
 
     /**
      * Swaps multiple equipment items in sequence.
@@ -42,7 +28,7 @@ object EquipmentUtils {
             currentIndex = 0
             isProcessing = false
             isActive = true
-            SwapHandler.startSwap()
+            startSwap("Swapping ${slots.size} equipment(s)")
             sendCommand("stats")
 
             schedule(200) {
@@ -54,9 +40,11 @@ object EquipmentUtils {
         }
     }
 
-    private fun handleGuiOpen(screen: Screen?) {
-        val chest = (screen as? AbstractContainerScreen<*>) ?: run { callback?.invoke(false); return }
-        if (!chest.title.string.contains("Your Equipment")) run { callback?.invoke(false); return }
+    override fun handleGuiOpen(title: String) {
+        if (!title.contains("Your Equipment")) {
+            callback?.invoke(false)
+            return
+        }
 
         schedule((6..8).random()) {
             if (!isProcessing) { processNextItem() }
@@ -82,13 +70,9 @@ object EquipmentUtils {
         schedule((8..10).random()) { processNextItem() }
     }
 
-    private fun reset() {
-        callback = null
+    override fun reset() {
         pendingSlots = emptyList()
-        isProcessing = false
         currentIndex = 0
-        containerId = -1
-        isActive = false
-        SwapHandler.endSwap()
+        super.reset()
     }
 }

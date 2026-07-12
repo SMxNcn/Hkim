@@ -14,7 +14,6 @@ import cn.hkim.addon.utils.TickTasks
 import cn.hkim.addon.utils.skyblock.DungeonUtils
 import cn.hkim.addon.utils.skyblock.FailSafeUtils
 import cn.hkim.addon.utils.skyblock.LocationUtils
-import cn.hkim.addon.utils.skyblock.inventory.SwapHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import meteordevelopment.orbit.EventBus
@@ -45,7 +44,7 @@ object Hkim : ClientModInitializer {
 
         EventDispatcher.postEvents()
         EventDispatcher.registerListeners(
-            CustomEventDispatcher, DungeonUtils, FailSafeUtils, LocationUtils, ServerUtils, SwapHandler, TickTasks
+            CustomEventDispatcher, DungeonUtils, FailSafeUtils, LocationUtils, ServerUtils, TickTasks
         )
         ModuleManager.initModules()
         ModuleConfig.loadConfig()
