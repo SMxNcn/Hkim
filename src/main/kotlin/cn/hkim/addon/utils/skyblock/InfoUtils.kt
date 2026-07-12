@@ -62,7 +62,7 @@ object InfoUtils {
     fun randomTip(): String? {
         if (tips == null) {
             try {
-                val id = Identifier.fromNamespaceAndPath("hkim", "tips.txt")
+                val id = Identifier.fromNamespaceAndPath("hkim", "lore.txt")
                 tips = Hkim.mc.resourceManager.getResource(id).get().open().bufferedReader().readLines()
             } catch (_: Exception) {
                 tips = emptyList()
