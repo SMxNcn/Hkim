@@ -5,10 +5,13 @@ import cn.hkim.addon.events.impl.MouseButtonEvent;
 import cn.hkim.addon.features.impl.FreeCam;
 import cn.hkim.addon.utils.KeyAction;
 import cn.hkim.addon.utils.RotationUtils;
+import cn.hkim.addon.utils.ViewLock;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.input.MouseButtonInfo;
 import net.minecraft.client.player.LocalPlayer;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -16,6 +19,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = MouseHandler.class, priority = 100)
 public class MouseHandlerMixin {
+
+    @Shadow private double accumulatedDX;
+    @Shadow private double accumulatedDY;
 
     @Inject(method = "onButton", at = @At("HEAD"), cancellable = true)
     private void onButton(long handle, MouseButtonInfo rawButtonInfo, int action, CallbackInfo ci) {
@@ -30,18 +36,31 @@ public class MouseHandlerMixin {
 
     @Redirect(method = "turnPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;turn(DD)V"))
     private void freecam$onTurnPlayer(LocalPlayer player, double yRot, double xRot) {
-        if (FreeCam.onPlayerTurn(yRot, xRot)) {
+        if (FreeCam.onPlayerTurn(yRot, xRot) && !isMouseLocked()) {
             player.turn(yRot, xRot);
         }
     }
 
+    @Inject(method = "turnPlayer", at = @At("HEAD"))
+    private void onTurnPlayerHead(CallbackInfo ci) {
+        if (isMouseLocked() && !FreeCam.isFreecamActive()) {
+            accumulatedDX = 0.0;
+            accumulatedDY = 0.0;
+        }
+    }
+
     @Inject(method = "turnPlayer", at = @At("TAIL"))
-    private void onTurnPlayer(CallbackInfo ci) {
+    private void onTurnPlayerTail(CallbackInfo ci) {
         if (Hkim.mc.player != null) {
             RotationUtils.syncClientRotation(
                 Hkim.mc.player.getYRot(),
                 Hkim.mc.player.getXRot()
             );
         }
+    }
+
+    @Unique
+    private static boolean isMouseLocked() {
+        return ViewLock.isLocked();
     }
 }

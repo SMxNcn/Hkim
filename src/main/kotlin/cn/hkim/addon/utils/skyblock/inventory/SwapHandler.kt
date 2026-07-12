@@ -4,6 +4,7 @@ import cn.hkim.addon.Hkim
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.events.impl.PacketReceiveEvent
 import cn.hkim.addon.features.impl.SwapOptions
+import cn.hkim.addon.utils.ViewLock
 import cn.hkim.addon.utils.cleanString
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.client.player.ClientInput
@@ -21,10 +22,12 @@ abstract class SwapHandler {
         fun startSwap(info: String? = null) {
             isInSwap = true
             swapInfo = info
+            if (SwapOptions.shouldHideGui()) ViewLock.lock(SwapOptions)
             saveAndStopInput()
         }
 
         fun endSwap() {
+            ViewLock.unlock(SwapOptions)
             isInSwap = false
             swapInfo = null
             restoreInput()

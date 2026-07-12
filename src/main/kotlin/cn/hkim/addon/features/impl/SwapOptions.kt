@@ -3,10 +3,12 @@ package cn.hkim.addon.features.impl
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.settings.BooleanSetting
 import cn.hkim.addon.config.settings.NumberSetting
+import cn.hkim.addon.events.impl.MouseButtonEvent
 import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.utils.skyblock.inventory.SwapHandler
+import meteordevelopment.orbit.EventHandler
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements
 import net.minecraft.client.DeltaTracker
@@ -26,6 +28,13 @@ object SwapOptions : Module("Swap Options", "Extra options for swapping.") {
 
     init {
         HudElementRegistry.attachElementBefore(VanillaHudElements.SLEEP, swapInfo, this::render)
+    }
+
+    @EventHandler
+    private fun onMouseClick(event: MouseButtonEvent) {
+        if (shouldHideGui() && event.button in 0..2 && SwapHandler.isInSwap) {
+            event.cancel()
+        }
     }
 
     override fun render(graphics: GuiGraphicsExtractor, tickTracker: DeltaTracker) {
