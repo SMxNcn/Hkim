@@ -6,6 +6,7 @@ import cn.hkim.addon.mixins.accessors.CameraAccessor;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -56,8 +57,17 @@ public abstract class CameraMixin {
         return zoom;
     }
 
-    @Inject(method = "alignWithEntity", at = @At("HEAD"))
-    private void onAlignWithEntityHead(float partialTicks, CallbackInfo ci) {
+    @Inject(method = "alignWithEntity", at = @At("HEAD"), cancellable = true)
+    private void onAlignWithEntity(float partialTicks, CallbackInfo ci) {
+        if (FreeCam.isFreecamActive()) {
+            this.detached = true;
+            setRotation(FreeCam.getCamYRot(), FreeCam.getCamXRot());
+            setPosition(FreeCam.getCamX(), FreeCam.getCamY(), FreeCam.getCamZ());
+            hkim$lastCameraType = mc.options.getCameraType();
+            ci.cancel();
+            return;
+        }
+
         CameraType current = mc.options.getCameraType();
         if (current != hkim$lastCameraType) {
             if (CameraHelper.isTransitionActive()) {
@@ -106,7 +116,7 @@ public abstract class CameraMixin {
                 float yaw = mc.player.getViewYRot(partialTicks);
                 float pitch = mc.player.getViewXRot(partialTicks);
                 float rad = (float) Math.PI / 180.0f;
-                org.joml.Quaternionf mirror = new org.joml.Quaternionf()
+                Quaternionf mirror = new Quaternionf()
                     .rotationYXZ(-yaw * rad, pitch * rad, 0.0f);
                 offsetWorld.rotate(mirror);
             } else {
@@ -126,13 +136,4 @@ public abstract class CameraMixin {
         return 1.0f - (float) Math.pow(1.0f - x, 3);
     }
 
-    @Inject(method = "alignWithEntity", at = @At("HEAD"), cancellable = true)
-    private void freecam$onAlignWithEntity(float partialTicks, CallbackInfo ci) {
-        if (FreeCam.isFreecamActive()) {
-            this.detached = true;
-            setRotation(FreeCam.getCamYRot(), FreeCam.getCamXRot());
-            setPosition(FreeCam.getCamX(), FreeCam.getCamY(), FreeCam.getCamZ());
-            ci.cancel();
-        }
-    }
 }

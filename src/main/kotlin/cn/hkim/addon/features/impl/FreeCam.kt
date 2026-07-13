@@ -25,13 +25,12 @@ import kotlin.math.sqrt
 
 @ModuleInfo("free_cam", Category.MISC)
 object FreeCam : Module("Free Camera", "Detach your camera and fly around freely.") {
-    private val acceleration by NumberSetting("Acceleration", "Movement acceleration (blocks/s²)", 50f, 5f, 500f, 5f)
-    private val maxSpeed by NumberSetting("Max Speed", "Maximum movement speed (blocks/s)", 50f, 5f, 500f, 5f)
-    private val slowdownFactor by NumberSetting("Slowdown", "Velocity multiplier per second when no key is held", 0.01f, 0.0001f, 0.5f, 0.001f)
-    private val movementMode by SelectorSetting("Movement Mode", "Default = camera moves on pitch plane; Spectator = horizontal-only", listOf("Default", "Spectator"), "Default")
-    private val rememberInputState by BooleanSetting("Remember Input", "Remember movement key state when toggling on/off", true)
-    private val showMyName by BooleanSetting("Show My Name", "Show your own name tag while in FreeCam", true)
-    private val toggleKey by KeybindSetting("Toggle FreeCam", "Key to toggle FreeCam on/off", GLFW.GLFW_KEY_F6)
+    private val acceleration by NumberSetting("Acceleration", "Movement acceleration (blocks/s²).", 50f, 5f, 500f, 5f)
+    private val maxSpeed by NumberSetting("Max Speed", "Maximum movement speed (blocks/s).", 50f, 5f, 500f, 5f)
+    private val slowdownFactor by NumberSetting("Slowdown", "Velocity multiplier per second when no key is held.", 0.01f, 0.0001f, 0.5f, 0.001f)
+    private val movementMode by SelectorSetting("Movement Mode", "Default = camera moves on pitch plane; Spectator = horizontal-only.", listOf("Default", "Spectator"), "Default")
+    private val showMyName by BooleanSetting("Show My Name", "Show your own name tag while in FreeCam.", true)
+    private val toggleKey by KeybindSetting("Toggle FreeCam", "Key to toggle FreeCam.", GLFW.GLFW_KEY_F6)
 
     @JvmStatic var isFreecamActive = false
         private set
@@ -63,8 +62,11 @@ object FreeCam : Module("Free Camera", "Detach your camera and fly around freely
 
     @EventHandler
     private fun onInput(event: InputEvent) {
-        if (event.key.type == InputConstants.Type.KEYSYM && event.key.value == toggleKey) {
+        if (event.key.type != InputConstants.Type.KEYSYM) return
+        if (event.key.value == toggleKey) {
             toggle()
+            event.cancel()
+        } else if (event.key.value == GLFW.GLFW_KEY_F5 && isFreecamActive) {
             event.cancel()
         }
     }
@@ -95,7 +97,7 @@ object FreeCam : Module("Free Camera", "Detach your camera and fly around freely
         isFreecamActive = true
 
         savedPlayerInput = player.input
-        player.input = createDummyInput(savedPlayerInput!!)
+        player.input = createDummyInput()
 
         oldCameraType = mc.options.cameraType
         mc.options.cameraType = CameraType.THIRD_PERSON_BACK
@@ -109,11 +111,6 @@ object FreeCam : Module("Free Camera", "Detach your camera and fly around freely
 
         recalcVectors()
 
-        val dist = -2.0
-        camX += forward.x().toDouble() * dist
-        camY += forward.y().toDouble() * dist
-        camZ += forward.z().toDouble() * dist
-
         forwardVel = 0.0
         leftVel = 0.0
         upVel = 0.0
@@ -124,6 +121,7 @@ object FreeCam : Module("Free Camera", "Detach your camera and fly around freely
         if (!isFreecamActive) return
         isFreecamActive = false
 
+        if (mc.options.cameraType != oldCameraType) CameraHelper.suppressNextTransition()
         mc.options.cameraType = oldCameraType
 
         val player = mc.player ?: return
@@ -216,13 +214,8 @@ object FreeCam : Module("Free Camera", "Detach your camera and fly around freely
         return vel * slow
     }
 
-    private fun createDummyInput(original: ClientInput): ClientInput {
-        val keys = if (rememberInputState) {
-            val kp = original.keyPresses
-            Input(kp.forward(), kp.backward(), kp.left(), kp.right(), kp.jump(), kp.shift(), kp.sprint())
-        } else {
-            Input(false, false, false, false, false, false, false)
-        }
+    private fun createDummyInput(): ClientInput {
+        val keys = Input(false, false, false, false, false, false, false)
         return object : ClientInput() {
             init {
                 this.keyPresses = keys
