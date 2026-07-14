@@ -101,6 +101,7 @@ object FreeCam : Module("Free Camera", "Detach your camera and fly around freely
 
         oldCameraType = mc.options.cameraType
         mc.options.cameraType = CameraType.THIRD_PERSON_BACK
+        mc.levelRenderer.needsUpdate()
 
         val pos = entity.position()
         camX = pos.x
@@ -123,6 +124,7 @@ object FreeCam : Module("Free Camera", "Detach your camera and fly around freely
 
         if (mc.options.cameraType != oldCameraType) CameraHelper.suppressNextTransition()
         mc.options.cameraType = oldCameraType
+        mc.levelRenderer.needsUpdate()
 
         val player = mc.player ?: return
         val saved = savedPlayerInput ?: return
