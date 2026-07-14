@@ -3,13 +3,16 @@ package cn.hkim.addon.events
 import cn.hkim.addon.Hkim
 import cn.hkim.addon.events.impl.ChatReceiveEvent
 import cn.hkim.addon.events.impl.GardenEvent
+import cn.hkim.addon.events.impl.PacketReceiveEvent
 import cn.hkim.addon.events.impl.TickEvent
 import cn.hkim.addon.utils.HudUtils
+import cn.hkim.addon.utils.cleanString
 import cn.hkim.addon.utils.schedule
 import cn.hkim.addon.utils.skyblock.Island
 import cn.hkim.addon.utils.skyblock.LocationUtils
 import cn.hkim.addon.utils.skyblock.MayorData
 import meteordevelopment.orbit.EventHandler
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
 
 object CustomEventDispatcher {
     private val visitRegex = Regex("\\[SkyBlock] (?:\\[.*?] )?(.*?) is visiting Your Garden!")
@@ -18,6 +21,14 @@ object CustomEventDispatcher {
     private val plotRegex = Regex("Plot - (\\d+)")
     private var activePestPlot = -1
     private var lastPestCount = -1
+
+    @EventHandler
+    private fun onPacketReceive(event: PacketReceiveEvent) {
+        if (event.packet !is ClientboundSystemChatPacket) return
+        val chatEvent = ChatReceiveEvent(event.packet.content, event.packet.content.cleanString)
+        Hkim.EVENT_BUS.post(chatEvent)
+        if (chatEvent.isCancelled) event.cancel()
+    }
 
     @EventHandler
     private fun onTick(event: TickEvent.End) {
