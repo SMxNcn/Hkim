@@ -47,6 +47,7 @@
     "TitleScreenMixin",
     "WindowMixin",
     "accessors.CameraAccessor",
+    "accessors.DebugScreenEntriesAccessor",
     "accessors.JoinMultiplayerScreenAccessor",
     "accessors.KeyMappingAccessor",
     "accessors.ScreenAccessor"

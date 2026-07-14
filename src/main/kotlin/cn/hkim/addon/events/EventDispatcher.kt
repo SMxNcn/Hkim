@@ -1,9 +1,11 @@
 package cn.hkim.addon.events
 
 import cn.hkim.addon.Hkim
+import cn.hkim.addon.config.debug.FreecamDebugEntry
 import cn.hkim.addon.events.impl.RenderEvent
 import cn.hkim.addon.events.impl.WorldEvent
 import cn.hkim.addon.features.ModuleManager.initOrbit
+import cn.hkim.addon.mixins.accessors.DebugScreenEntriesAccessor
 import cn.hkim.addon.utils.render.RenderBatchManager
 import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
@@ -45,6 +47,8 @@ class EventDispatcher {
                 SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("hkim", "disable")))
             Registry.register(BuiltInRegistries.SOUND_EVENT, Identifier.fromNamespaceAndPath("hkim", "zxf2"),
                 SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("hkim", "zxf2")))
+
+            DebugScreenEntriesAccessor.register(Identifier.fromNamespaceAndPath("hkim", "freecam_target_block"), FreecamDebugEntry)
         }
 
         fun registerListeners(vararg listeners: Any) {
