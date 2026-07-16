@@ -17,8 +17,7 @@ void main() {
 
     float dist = length(fragCoord - center);
 
-    // ── 外边缘抗锯齿 ────────────────────────────────────────────
-    float outerAlpha = 1.0 - smoothstep(radius - 0.5, radius + 0.5, dist);
+    float outerAlpha = 1.0 - smoothstep(radius - 0.25, radius + 0.25, dist);
 
     vec4 fillColor = vertexColor;
     float borderWidth = TextureMat[1][1];
@@ -26,13 +25,11 @@ void main() {
     if (borderWidth > 0.0) {
         float innerR = max(radius - borderWidth, 0.0);
 
-        // ── 原始 borderMask 计算（不改边框宽度） ───────────────
-        float innerAlpha = 1.0 - smoothstep(innerR - 0.5, innerR + 0.5, dist);
+        float innerAlpha = 1.0 - smoothstep(innerR - 0.25, innerR + 0.25, dist);
         float borderMask = outerAlpha - innerAlpha;
 
         vec4 borderColor = vec4(TextureMat[1][2], TextureMat[1][3], TextureMat[2][0], TextureMat[2][1]);
 
-        // ── Over 合成：边框图层在填充图层之上 ──────────────────
         float fillA = fillColor.a * innerAlpha;
         vec3 fillPm = fillColor.rgb * fillA;
 
