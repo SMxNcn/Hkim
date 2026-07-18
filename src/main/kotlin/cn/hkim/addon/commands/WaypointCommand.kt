@@ -23,7 +23,7 @@ val hwpCommand = Commodore("hwp") {
             val prefix = if (file == active) " §a■" else " §8■"
             val msg = Component.literal("$prefix §7$file.json").withStyle {
                 it.withHoverEvent(HoverEvent.ShowText(Component.literal("§7Click to load waypoint!")))
-                    .withClickEvent(ClickEvent.RunCommand("/nwp load $file"))
+                    .withClickEvent(ClickEvent.RunCommand("/hwp load $file"))
             }
             mc.execute { mc.gui.chat.addClientSystemMessage(msg) }
         }
