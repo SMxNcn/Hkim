@@ -6,7 +6,6 @@ import cn.hkim.addon.events.impl.InputEvent
 import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
-import cn.hkim.addon.utils.modMessage
 import cn.hkim.addon.utils.sendCommand
 import cn.hkim.addon.utils.skyblock.LocationUtils
 import meteordevelopment.orbit.EventHandler
@@ -26,10 +25,7 @@ object CommandKeybinds : Module("Command Keybinds", "Various keybinds for common
         when (event.key.value) {
             pet -> sendCommand("pets")
             armorWd -> sendCommand("wardrobe")
-            equipmentWd -> {
-                if (LocationUtils.inAlphaServer) sendCommand("equipment")
-                else modMessage("Equipment wardrobe not released yet!")
-            }
+            equipmentWd -> sendCommand("equipment")
             stats -> sendCommand("stats")
             potion -> sendCommand("potionbag")
             cookie -> sendCommand("boostercookie")
