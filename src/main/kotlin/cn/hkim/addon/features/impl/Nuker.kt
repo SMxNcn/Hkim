@@ -96,16 +96,17 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
 
         screenJustClosed = false
 
-        if (currentTarget != null) {
-            val state = level.getBlockState(currentTarget!!)
+        val target = currentTarget
+        if (target != null) {
+            val state = level.getBlockState(target)
             val mineralType = MineralType.fromBlock(state.block)
             val eyePos = player.eyePosition
-            val dx = currentTarget!!.x + 0.5 - eyePos.x
-            val dy = currentTarget!!.y + 0.5 - eyePos.y
-            val dz = currentTarget!!.z + 0.5 - eyePos.z
+            val dx = target.x + 0.5 - eyePos.x
+            val dy = target.y + 0.5 - eyePos.y
+            val dz = target.z + 0.5 - eyePos.z
             val outOfRange = dx * dx + dy * dy + dz * dz > SCAN_RADIUS * SCAN_RADIUS
             val hitPosBlocked = currentHitPos?.let {
-                !HitPosHelper.hasLineOfSight(level, eyePos, it, currentTarget!!)
+                !HitPosHelper.hasLineOfSight(level, eyePos, it, target)
             } ?: true
             if (outOfRange || mineralType == null || !MineralFilter.isMineralAllowed(mineralType, targetType, ignoreOthers, royalDivan, inDwarvenOnly, allowedTypes = resolveAllowedMineralTypes()) || hitPosBlocked) {
                 currentTarget = null

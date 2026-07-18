@@ -21,16 +21,14 @@ public class ConnectionMixin {
         if (packet instanceof ClientboundPingPacket pingPacket && pingPacket.getId() != 0) {
             Hkim.EVENT_BUS.post(new TickEvent.Server());
         }
-        Connection connection = (Connection) (Object) this;
-        PacketReceiveEvent event = new PacketReceiveEvent(packet, connection);
+        PacketReceiveEvent event = new PacketReceiveEvent(packet);
         Hkim.EVENT_BUS.post(event);
         if (event.isCancelled()) ci.cancel();
     }
 
     @Inject(method = "send(Lnet/minecraft/network/protocol/Packet;)V", at = @At("HEAD"), cancellable = true)
     private void handleSendPacket(Packet<?> packet, CallbackInfo ci) {
-        Connection connection = (Connection) (Object) this;
-        PacketSendEvent event = new PacketSendEvent(packet, connection);
+        PacketSendEvent event = new PacketSendEvent(packet);
         Hkim.EVENT_BUS.post(event);
         if (event.isCancelled()) ci.cancel();
     }

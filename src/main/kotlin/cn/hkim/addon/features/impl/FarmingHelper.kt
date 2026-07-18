@@ -48,7 +48,7 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
 
     private val nukerKeybind by KeybindSetting("Nuker Keybind", "Keybind to toggle nuker.", GLFW.GLFW_KEY_X)
 
-    val isJacobActive: Boolean
+    private val isJacobActive: Boolean
         get() = getScoreboardLines()?.lines?.any { it.contains("Jacob") } ?: false
 
     private val blossomIds: List<String>
@@ -57,7 +57,7 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
             else listOf("BLOSSOM_NECKLACE", "BLOSSOM_CLOAK", "BLOSSOM_BELT", "BLOSSOM_BRACELET")
 
     private val pestIds = listOf("PESTHUNTERS_NECKLACE", "PEST_VEST", "PESTHUNTERS_BELT", "PESTHUNTERS_GLOVES")
-    val specialItemList = listOf("SQUEAKY_MOUSEMAT", "ASPECT_OF_THE_VOID", "INFINI_VACUUM_HOOVERIUS")
+    private val specialItemList = listOf("SQUEAKY_MOUSEMAT", "ASPECT_OF_THE_VOID", "INFINI_VACUUM_HOOVERIUS")
 
     private var lastHeldSlot: Int = -1
     private var containerId = -1

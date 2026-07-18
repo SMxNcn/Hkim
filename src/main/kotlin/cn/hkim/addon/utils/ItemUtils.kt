@@ -50,8 +50,8 @@ inline val ItemStack.strength: Int
 inline val ItemStack.hasGlint: Boolean
     get() = get(DataComponents.ENCHANTMENT_GLINT_OVERRIDE) ?: false
 
-fun ItemStack.isEtherwarpItem(): CompoundTag? =
-    customData.takeIf { it.getInt("ethermerge").orElse(0) == 1 || it.itemId == "ETHERWARP_CONDUIT" }
+inline val ItemStack.hasEthermerge: Boolean
+    get() = customData.getInt("ethermerge").orElse(0) == 1
 
 fun isSkyBlockItem(stack: ItemStack): Boolean {
     if (stack.isEmpty) return false
