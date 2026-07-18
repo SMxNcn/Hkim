@@ -61,5 +61,4 @@ object CustomRenderPipelines {
             .withPrimitiveTopology(PrimitiveTopology.TRIANGLES)
             .build()
     )
-
 }
