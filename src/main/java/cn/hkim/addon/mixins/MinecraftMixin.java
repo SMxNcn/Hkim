@@ -3,11 +3,14 @@ package cn.hkim.addon.mixins;
 import cn.hkim.addon.Hkim;
 import cn.hkim.addon.config.ModuleConfig;
 import cn.hkim.addon.events.impl.TickEvent;
+import cn.hkim.addon.features.impl.FreeCam;
 import cn.hkim.addon.features.impl.TitleManager;
 import cn.hkim.addon.gui.Background;
 import cn.hkim.addon.utils.RotationUtils;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -48,6 +51,27 @@ public abstract class MinecraftMixin {
     private String modifyTitle(String originalTitle) {
         if (!TitleManager.INSTANCE.getEnabled()) return originalTitle;
         return TitleManager.INSTANCE.buildTitle();
+    }
+
+    @Inject(at = @At("HEAD"), method = "clearClientLevel")
+    private void freecam$onClearClientLevel(Screen screen, CallbackInfo ci) {
+        if (FreeCam.isFreecamActive()) {
+            FreeCam.INSTANCE.disable();
+        }
+    }
+
+    @Inject(at = @At("HEAD"), method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;ZZ)V")
+    private void freecam$onDisconnect(Screen screen, boolean keepResourcePacks, boolean stopSounds, CallbackInfo ci) {
+        if (FreeCam.isFreecamActive()) {
+            FreeCam.INSTANCE.disable();
+        }
+    }
+
+    @Inject(at = @At("HEAD"), method = "setLevel")
+    private void freecam$onSetLevel(ClientLevel level, CallbackInfo ci) {
+        if (FreeCam.isFreecamActive()) {
+            FreeCam.INSTANCE.disable();
+        }
     }
 
     @Inject(method = "pick(F)V", at = @At("HEAD"))

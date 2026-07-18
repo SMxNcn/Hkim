@@ -1,8 +1,10 @@
 package cn.hkim.addon.mixins;
 
 import cn.hkim.addon.Hkim;
+import cn.hkim.addon.features.impl.FreeCam;
 import cn.hkim.addon.features.impl.Nametags;
 import cn.hkim.addon.utils.RotationUtils;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.world.entity.Entity;
@@ -22,6 +24,14 @@ public class LivingEntityRendererMixin {
             cir.setReturnValue(false);
             cir.cancel();
         }
+    }
+
+    @ModifyExpressionValue(method = "shouldShowName*", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;getCameraEntity()Lnet/minecraft/world/entity/Entity;"))
+    private Entity freecam$modifyCameraEntityForName(Entity original) {
+        if (FreeCam.shouldShowPlayerName()) {
+            return null;
+        }
+        return original;
     }
 
     @Inject(method = "extractRenderState(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;F)V", at = @At("TAIL"))

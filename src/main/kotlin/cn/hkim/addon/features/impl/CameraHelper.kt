@@ -34,7 +34,19 @@ object CameraHelper : Module("Camera Helper", "Modify your camera") {
     fun getDistance() = cameraDist
 
     @JvmStatic
-    fun isTransitionActive() = enabled && smoothTransition
+    private var suppressTransition = false
+
+    @JvmStatic
+    fun suppressNextTransition() {
+        suppressTransition = true
+    }
+
+    @JvmStatic
+    fun isTransitionActive(): Boolean {
+        val active = enabled && smoothTransition && !suppressTransition
+        suppressTransition = false
+        return active
+    }
 
     @JvmStatic
     fun getTransitionDurationMs() = transitionDuration.toLong()

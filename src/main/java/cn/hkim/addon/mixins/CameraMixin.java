@@ -1,9 +1,13 @@
 package cn.hkim.addon.mixins;
 
 import cn.hkim.addon.features.impl.CameraHelper;
+import cn.hkim.addon.features.impl.CleanView;
+import cn.hkim.addon.features.impl.FreeCam;
 import cn.hkim.addon.mixins.accessors.CameraAccessor;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Mixin;
@@ -21,6 +25,15 @@ public abstract class CameraMixin {
 
     @Shadow
     protected abstract float getMaxZoom(float cameraDist);
+
+    @Shadow
+    private boolean detached;
+
+    @Shadow
+    protected abstract void setRotation(float yRot, float xRot);
+
+    @Shadow
+    protected abstract void setPosition(double x, double y, double z);
 
     @Unique
     private float hkim$transitionProgress = 0.0f;
@@ -46,8 +59,17 @@ public abstract class CameraMixin {
         return zoom;
     }
 
-    @Inject(method = "alignWithEntity", at = @At("HEAD"))
+    @Inject(method = "alignWithEntity", at = @At("HEAD"), cancellable = true)
     private void onAlignWithEntityHead(float partialTicks, CallbackInfo ci) {
+        if (FreeCam.isFreecamActive()) {
+            this.detached = true;
+            setRotation(FreeCam.getCamYRot(), FreeCam.getCamXRot());
+            setPosition(FreeCam.getCamX(), FreeCam.getCamY(), FreeCam.getCamZ());
+            hkim$lastCameraType = mc.options.getCameraType();
+            ci.cancel();
+            return;
+        }
+
         CameraType current = mc.options.getCameraType();
         if (current != hkim$lastCameraType) {
             if (CameraHelper.isTransitionActive()) {
@@ -108,6 +130,24 @@ public abstract class CameraMixin {
                 eyePos.z + (double) offsetWorld.z()
             );
             cam.invokeSetPosition(thirdPersonPos.lerp(eyePos, easeOutCubic(1.0f - hkim$transitionProgress)));
+        }
+    }
+
+    @ModifyExpressionValue(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isSpectator()Z"))
+    private boolean hkim$onExtractRenderStateIsSpectator(boolean isSpectator) {
+        return FreeCam.isFreecamActive() || CameraHelper.canCameraClip() || CleanView.shouldSeeThroughBlocks() || isSpectator;
+    }
+
+    /**
+     * isSpectator=true only triggers smartCull=false when the camera is inside a
+     * solid block (isSolidRender check). For FreeCam in open air, smartCull stays
+     * true and wrongly culls chunks. This tail injection unconditionally disables
+     * smart culling when the camera is detached from the player.
+     */
+    @Inject(method = "extractRenderState", at = @At("TAIL"))
+    private void hkim$onExtractRenderStateTail(CameraRenderState cameraState, float partialTicks, CallbackInfo ci) {
+        if (FreeCam.isFreecamActive() || CameraHelper.canCameraClip()) {
+            cameraState.smartCull = false;
         }
     }
 
