@@ -2,24 +2,17 @@ package cn.hkim.addon.utils.render.nvg
 
 import cn.hkim.addon.Hkim
 import cn.hkim.addon.Hkim.mc
-import net.minecraft.resources.Identifier
 import org.lwjgl.nanovg.NVGColor
 import org.lwjgl.nanovg.NVGPaint
 import org.lwjgl.nanovg.NanoVG.*
 import org.lwjgl.nanovg.NanoVGGL3.*
 import java.awt.Color
-import java.nio.ByteBuffer
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.round
 
 // Origin: https://github.com/odtheking/Odin/blob/main/src/main/kotlin/com/odtheking/odin/utils/ui/rendering/NVGRenderer.kt
 
 object NVGRenderer {
-    val defaultFont = Font("Default", mc.resourceManager.getResource(Identifier.fromNamespaceAndPath("hkim", "font.ttf")).get().open())
-    private val fontMap = HashMap<Font, NVGFont>()
-    private val fontBounds = FloatArray(4)
-
     private val images = HashMap<Image, NVGImage>()
 
     private val nvgPaint = NVGPaint.malloc()
@@ -171,51 +164,6 @@ object NVGRenderer {
         nvgFill(vg)
     }
 
-    fun text(text: String, x: Float, y: Float, size: Float, color: Color, font: Font) {
-        nvgFontSize(vg, size)
-        nvgFontFaceId(vg, getFontID(font))
-        color(color)
-        nvgFillColor(vg, nvgColor)
-        nvgText(vg, x, y + .5f, text)
-    }
-
-    fun textShadow(text: String, x: Float, y: Float, size: Float, color: Color, font: Font) {
-        nvgFontFaceId(vg, getFontID(font))
-        nvgFontSize(vg, size)
-        color(Color(0, 0, 0))
-        nvgFillColor(vg, nvgColor)
-        nvgText(vg, round(x + 2f), round(y + 2f), text)
-
-        color(color)
-        nvgFillColor(vg, nvgColor)
-        nvgText(vg, round(x), round(y), text)
-    }
-
-    fun textWidth(text: String, size: Float, font: Font): Float {
-        nvgFontSize(vg, size)
-        nvgFontFaceId(vg, getFontID(font))
-        return nvgTextBounds(vg, 0f, 0f, text, fontBounds)
-    }
-
-
-    fun loadFontResource(resourcePath: String, fontName: String): Font? {
-        return try {
-            val location = Identifier.parse(resourcePath)
-            val resource = mc.resourceManager.getResource(location)
-
-            if (resource.isPresent) {
-                Font(fontName, resource.get().open())
-            } else {
-                Hkim.logger.warn("Font resource not found: $resourcePath")
-                null
-            }
-        } catch (e: Exception) {
-            Hkim.logger.error("Failed to load font: $resourcePath", e)
-            null
-        }
-    }
-
-
     private fun color(color: Color) {
         nvgRGBAf(color.red / 255f, color.green / 255f, color.blue / 255f, color.alpha / 255f,
             nvgColor
@@ -249,13 +197,6 @@ object NVGRenderer {
         }
     }
 
-    private fun getFontID(font: Font): Int {
-        return fontMap.getOrPut(font) {
-            val buffer = font.buffer()
-            NVGFont(nvgCreateFontMem(vg, font.name, buffer, false), buffer)
-        }.id
-    }
-
     private class Scissor(val previous: Scissor?, val x: Float, val y: Float, val maxX: Float, val maxY: Float) {
         fun applyScissor() {
             if (previous == null) nvgScissor(vg, x, y, maxX - x, maxY - y)
@@ -281,5 +222,4 @@ object NVGRenderer {
     }
 
     private data class NVGImage(var count: Int, val nvg: Int)
-    private data class NVGFont(val id: Int, val buffer: ByteBuffer)
 }

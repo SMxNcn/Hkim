@@ -18,7 +18,6 @@ import net.minecraft.util.LightCoordsUtil
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
-import org.joml.Vector3f
 import java.awt.Color
 
 internal data class LineData(val from: Vec3, val to: Vec3, val color1: Int, val color2: Int, val thickness: Float, val depth: Boolean)
@@ -180,6 +179,17 @@ fun RenderEvent.Extract.drawText(text: String, pos: Vec3, scale: Float, depth: B
     consumer.texts.add(TextData(text, pos, scale, depth, cameraRotation, font, textWidth))
 }
 
+fun RenderEvent.Extract.drawLine(from: Vec3, to: Vec3, color: Color, thickness: Float = 1.5f, depth: Boolean = false) {
+    consumer.lines.add(LineData(from, to, color.rgb, color.rgb, thickness, depth))
+}
+
+/*fun RenderEvent.Extract.drawPathLine(points: List<Vec3>, color: Color, thickness: Float = 1.5f, depth: Boolean = false) {
+    if (points.size < 2) return
+    for (i in 0 until points.size - 1) {
+        drawLine(points[i], points[i + 1], color, thickness, depth)
+    }
+}*/
+
 object PrimitiveRenderer {
     private val edges = intArrayOf(
         0, 1,  1, 5,  5, 4,  4, 0,
@@ -243,33 +253,5 @@ object PrimitiveRenderer {
         vertex(minX, minY, minZ); vertex(minX, minY, maxZ); vertex(minX, maxY, maxZ); vertex(minX, maxY, minZ)
 
         vertex(maxX, minY, minZ); vertex(maxX, maxY, minZ); vertex(maxX, maxY, maxZ); vertex(maxX, minY, maxZ)
-    }
-
-    fun renderVector(
-        pose: PoseStack.Pose,
-        buffer: VertexConsumer,
-        start: Vector3f,
-        direction: Vec3,
-        startColor: Int,
-        endColor: Int,
-        thickness: Float
-    ) {
-        val endX = start.x() + direction.x.toFloat()
-        val endY = start.y() + direction.y.toFloat()
-        val endZ = start.z() + direction.z.toFloat()
-
-        val nx = direction.x.toFloat()
-        val ny = direction.y.toFloat()
-        val nz = direction.z.toFloat()
-
-        buffer.addVertex(pose, start.x(), start.y(), start.z())
-            .setColor(startColor)
-            .setNormal(pose, nx, ny, nz)
-            .setLineWidth(thickness)
-
-        buffer.addVertex(pose, endX, endY, endZ)
-            .setColor(endColor)
-            .setNormal(pose, nx, ny, nz)
-            .setLineWidth(thickness)
     }
 }
