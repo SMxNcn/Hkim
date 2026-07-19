@@ -30,6 +30,9 @@ object AutoFish : Module("Auto Fish", "Automatically casts and reels the fishing
     private var fishBitten = false
     private var waitStartTick = 0L
     private var hookUpTick = 0L
+    private var reelInTick = 0L
+    private var hasReeledIn = false
+    private var skipNextCast = false
 
     override fun onEnable() {
         val player = mc.player ?: run {
@@ -109,8 +112,8 @@ object AutoFish : Module("Auto Fish", "Automatically casts and reels the fishing
                 }
 
                 if (hook.onGround() && !hook.isInWater && !hook.isInLava) {
-                    useItemAction()
-                    hookUpTick = currentTime + (rethrowDelay / 50).toLong() + (-1..1).random()
+                    reelInTick = currentTime + (2..6).random()
+                    hasReeledIn = false
                     currentState = FishingState.CAST
                     return
                 }
@@ -125,20 +128,36 @@ object AutoFish : Module("Auto Fish", "Automatically casts and reels the fishing
 
                 checkHookArmorStand()
                 if (fishBitten) {
+                    reelInTick = currentTime + (2..6).random()
+                    hasReeledIn = false
                     currentState = FishingState.CAST
                 }
             }
 
             FishingState.CAST -> {
-                if (hookUpTick == 0L) {
-                    useItemAction()
-                    hookUpTick = currentTime + (rethrowDelay / 50).toLong() + (-1..1).random()
-                }
-
-                if (currentTime >= hookUpTick) {
-                    fishBitten = false
-                    currentState = FishingState.THROW
-                    hookUpTick = 0L
+                if (!hasReeledIn) {
+                    if (currentTime >= reelInTick) {
+                        useItemAction()
+                        hasReeledIn = true
+                        skipNextCast = (0..98).random() == 0
+                        if (!skipNextCast) {
+                            hookUpTick = currentTime + (rethrowDelay / 50).toLong() + (-1..1).random()
+                        } else {
+                            hookUpTick = currentTime + 2
+                        }
+                    }
+                } else {
+                    if (currentTime >= hookUpTick) {
+                        fishBitten = false
+                        hasReeledIn = false
+                        if (skipNextCast) {
+                            skipNextCast = false
+                            currentState = FishingState.IDLE
+                        } else {
+                            currentState = FishingState.THROW
+                        }
+                        hookUpTick = 0L
+                    }
                 }
             }
         }
@@ -162,5 +181,8 @@ object AutoFish : Module("Auto Fish", "Automatically casts and reels the fishing
         fishBitten = false
         waitStartTick = 0L
         hookUpTick = 0L
+        reelInTick = 0L
+        hasReeledIn = false
+        skipNextCast = false
     }
 }
