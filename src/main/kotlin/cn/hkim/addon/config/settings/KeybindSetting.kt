@@ -85,7 +85,7 @@ class KeybindSetting(name: String, desc: String, defaultKey: Int = GLFW.GLFW_KEY
         if (!isBinding) return false
 
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
-            value = default
+            value = GLFW.GLFW_KEY_UNKNOWN
             isBinding = false
             settingsChanged()
             return true
