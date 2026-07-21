@@ -7,6 +7,7 @@ import cn.hkim.addon.features.impl.FreeCam;
 import cn.hkim.addon.features.impl.TitleManager;
 import cn.hkim.addon.gui.Background;
 import cn.hkim.addon.utils.RotationUtils;
+import cn.hkim.addon.utils.render.GuiAnimation;
 import cn.hkim.addon.utils.render.nvg.NVGRenderer;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.minecraft.client.Minecraft;
@@ -42,6 +43,11 @@ public abstract class MinecraftMixin {
     private void onGameLoadFinished(CallbackInfo ci) {
         Background.loadBackgrounds();
         NVGRenderer.init();
+    }
+
+    @Inject(method = "close", at = @At("HEAD"))
+    private void onClose(CallbackInfo ci) {
+        GuiAnimation.shutdown();
     }
 
     @Inject(method = "stop", at = @At("HEAD"))

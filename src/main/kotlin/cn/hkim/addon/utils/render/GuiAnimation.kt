@@ -3,6 +3,7 @@ package cn.hkim.addon.utils.render
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
+import java.lang.ref.WeakReference
 
 class GuiAnimation internal constructor(
     private var from: Float = 0f,
@@ -101,6 +102,11 @@ class GuiAnimation internal constructor(
             return globalManager.create(from, to)
         }
 
+        @JvmStatic
+        fun shutdown() {
+            globalManager.shutdown()
+        }
+
         fun applyEasing(t: Float, easing: Easing): Float {
             if (t <= 0f) return 0f
             if (t >= 1f) return 1f
@@ -126,7 +132,7 @@ class GuiAnimation internal constructor(
 }
 
 class GuiAnimationManager {
-    private val animations = mutableListOf<GuiAnimation>()
+    private val animations = mutableListOf<WeakReference<GuiAnimation>>()
     private val updateInterval = 1000L / 150
 
     @Volatile
@@ -138,8 +144,10 @@ class GuiAnimationManager {
             val start = System.currentTimeMillis()
 
             synchronized(animations) {
-                for (anim in animations) {
-                    anim.update()
+                animations.removeAll { it.get() == null }
+
+                for (ref in animations) {
+                    ref.get()?.update()
                 }
             }
 
@@ -149,12 +157,12 @@ class GuiAnimationManager {
                 try { Thread.sleep(sleepTime) } catch (_: InterruptedException) { break }
             }
         }
-    }
+    }.apply { isDaemon = true }
 
     fun add(animation: GuiAnimation): GuiAnimation {
         synchronized(animations) {
-            if (!animations.contains(animation)) {
-                animations.add(animation)
+            if (animations.none { it.get() === animation }) {
+                animations.add(WeakReference(animation))
             }
         }
         startIfNeeded()
@@ -169,12 +177,21 @@ class GuiAnimationManager {
 
     fun remove(animation: GuiAnimation) {
         synchronized(animations) {
-            animations.remove(animation)
+            animations.removeAll { it.get() === animation }
         }
     }
 
     fun clear() {
         running = false
+        synchronized(animations) {
+            animations.clear()
+        }
+    }
+
+    fun shutdown() {
+        running = false
+        updateThread?.interrupt()
+        updateThread = null
         synchronized(animations) {
             animations.clear()
         }
