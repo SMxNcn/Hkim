@@ -18,11 +18,15 @@ class GuiAnimation internal constructor(
     private var currentValue = from
     private var currentProgress = 0f
 
-    internal fun update() {
+    private var lastEvalTime = -1L
+
+    private fun eval() {
         if (!running || completed) return
+        val now = System.currentTimeMillis()
+        if (now == lastEvalTime) return
+        lastEvalTime = now
 
-        val elapsed = System.currentTimeMillis() - startTime
-
+        val elapsed = now - startTime
         if (elapsed >= duration) {
             currentValue = to
             currentProgress = 1f
@@ -35,12 +39,23 @@ class GuiAnimation internal constructor(
         currentValue = from + (to - from) * currentProgress
     }
 
-    fun getValue(): Float = if (running || completed) currentValue else from
+    fun getValue(): Float {
+        eval()
+        return if (running || completed) currentValue else from
+    }
 
-    fun getProgress(): Float = if (running || completed) currentProgress else 0f
+    fun getProgress(): Float {
+        eval()
+        return if (running || completed) currentProgress else 0f
+    }
+
+    internal fun update() {
+        eval()
+    }
 
     fun start(): GuiAnimation {
         startTime = System.currentTimeMillis()
+        lastEvalTime = startTime
         running = true
         completed = false
         currentValue = from
@@ -50,6 +65,7 @@ class GuiAnimation internal constructor(
 
     fun reset() {
         startTime = -1L
+        lastEvalTime = -1L
         running = false
         completed = false
         currentValue = from
@@ -88,16 +104,15 @@ class GuiAnimation internal constructor(
     }
 
     fun animateTo(target: Float): GuiAnimation {
+        eval()
         from = currentValue
         to = target
         return start()
     }
 
     companion object {
-        private val globalManager = GuiAnimationManager()
-
         fun create(from: Float = 0f, to: Float = 1f): GuiAnimation {
-            return globalManager.create(from, to)
+            return GuiAnimation(from, to, 300L, Easing.LINEAR)
         }
 
         fun applyEasing(t: Float, easing: Easing): Float {
@@ -120,69 +135,6 @@ class GuiAnimation internal constructor(
                 Easing.CUBIC_IN_OUT -> if (t < 0.5f) 4f * t * t * t
                 else (t - 1f).let { it * it * (2f * it - 2f) + 1f }
             }
-        }
-    }
-}
-
-class GuiAnimationManager {
-    private val animations = mutableListOf<GuiAnimation>()
-    private val updateInterval = 1000L / 150
-
-    @Volatile
-    private var running = false
-    private var updateThread: Thread? = null
-
-    private fun createUpdateThread() = Thread {
-        while (running) {
-            val start = System.currentTimeMillis()
-
-            synchronized(animations) {
-                for (anim in animations) {
-                    anim.update()
-                }
-            }
-
-            val elapsed = System.currentTimeMillis() - start
-            val sleepTime = updateInterval - elapsed
-            if (sleepTime > 0) {
-                try { Thread.sleep(sleepTime) } catch (_: InterruptedException) { break }
-            }
-        }
-    }
-
-    fun add(animation: GuiAnimation): GuiAnimation {
-        synchronized(animations) {
-            if (!animations.contains(animation)) {
-                animations.add(animation)
-            }
-        }
-        startIfNeeded()
-        return animation
-    }
-
-    fun create(from: Float = 0f, to: Float = 1f): GuiAnimation {
-        val anim = GuiAnimation(from, to, 300L, Easing.LINEAR)
-        add(anim)
-        return anim
-    }
-
-    fun remove(animation: GuiAnimation) {
-        synchronized(animations) {
-            animations.remove(animation)
-        }
-    }
-
-    fun clear() {
-        running = false
-        synchronized(animations) {
-            animations.clear()
-        }
-    }
-
-    private fun startIfNeeded() {
-        if (!running) {
-            running = true
-            updateThread = createUpdateThread().apply { start() }
         }
     }
 }

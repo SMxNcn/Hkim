@@ -93,9 +93,9 @@ class PIPRenderer : PictureInPictureRenderer<PIPState>() {
 
         if (!frameResetDone) {
             frameResetDone = true
-            flushPendingCleanup()
             dynPoolIndex = 0
             projPoolIndex = 0
+            vtxPoolIndex = 0
             usedTexThisFrame.clear()
         }
     }
@@ -114,8 +114,8 @@ class PIPRenderer : PictureInPictureRenderer<PIPState>() {
 
         val bw = (state.x1() - state.x0()).coerceAtLeast(1)
         val bh = (state.y1() - state.y0()).coerceAtLeast(1)
-        val texW = bw * guiScale
-        val texH = bh * guiScale
+        val texW = (bw * guiScale).coerceAtLeast(1)
+        val texH = (bh * guiScale).coerceAtLeast(1)
         if (texW <= 0 || texH <= 0) return
 
         ensureStaticBuffers(device)
@@ -177,10 +177,6 @@ class PIPRenderer : PictureInPictureRenderer<PIPState>() {
             encoder.submit()
         } catch (e: Exception) {
             Hkim.logger.error("PIPRenderer: render pass failed", e)
-        } finally {
-            draws.forEach { d ->
-                pendingVtxCleanup.add(d.vtxBuffer)
-            }
         }
     }
 
@@ -340,8 +336,7 @@ class PIPRenderer : PictureInPictureRenderer<PIPState>() {
         if (vData.remaining() == 0) { mesh.close(); alloc.close(); return null }
         val vSize = vData.remaining().toLong()
 
-        val vtx = device.createBuffer({ "hkim_rr_v" },
-            GpuBuffer.USAGE_VERTEX or GpuBuffer.USAGE_MAP_WRITE, vSize)
+        val vtx = obtainVtx(device, vSize)
         vtx.map(0, vSize, false, true).use { it.data().put(vData) }
 
         mesh.close(); alloc.close()
@@ -383,8 +378,7 @@ class PIPRenderer : PictureInPictureRenderer<PIPState>() {
         if (vData.remaining() == 0) { mesh.close(); alloc.close(); return null }
         val vSize = vData.remaining().toLong()
 
-        val vtx = device.createBuffer({ "hkim_ci_v" },
-            GpuBuffer.USAGE_VERTEX or GpuBuffer.USAGE_MAP_WRITE, vSize)
+        val vtx = obtainVtx(device, vSize)
         vtx.map(0, vSize, false, true).use { it.data().put(vData) }
 
         mesh.close();
@@ -401,12 +395,16 @@ class PIPRenderer : PictureInPictureRenderer<PIPState>() {
         val indexCount: Int
     )
 
-    private val pendingVtxCleanup = mutableListOf<GpuBuffer>()
+    private val vtxPool = mutableListOf<GpuBuffer>()
+    private var vtxPoolIndex = 0
 
-    private fun flushPendingCleanup() {
-        val copy = pendingVtxCleanup.toList()
-        pendingVtxCleanup.clear()
-        copy.forEach { try { it.close() } catch (_: Exception) {} }
+    private fun obtainVtx(device: GpuDevice, size: Long): GpuBuffer {
+        if (vtxPoolIndex >= vtxPool.size) {
+            val buf = device.createBuffer({ "hkim_vtx_pool" },
+                GpuBuffer.USAGE_VERTEX or GpuBuffer.USAGE_MAP_WRITE, size)
+            vtxPool.add(buf)
+        }
+        return vtxPool[vtxPoolIndex++]
     }
 
     override fun close() {
@@ -416,7 +414,8 @@ class PIPRenderer : PictureInPictureRenderer<PIPState>() {
         texPool.clear()
         usedTexThisFrame.clear()
 
-        flushPendingCleanup()
+        vtxPool.forEach { try { it.close() } catch (_: Exception) {} }
+        vtxPool.clear()
 
         projPool.forEach { try { it.close() } catch (_: Exception) {} }
         projPool.clear()
