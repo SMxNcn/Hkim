@@ -33,14 +33,17 @@ object Nametags : Module("Nametags", "Render a nametag above players.") {
         val level = mc.level ?: return
         val player = mc.player ?: return
 
+        val origin = if (FreeCam.isFreecamActive) Vec3(FreeCam.camX, FreeCam.camY, FreeCam.camZ)
+                     else player.position()
+
         for (entity in level.players()) {
             if (entity == player) continue
             if (!isValidSkyBlockPlayer(entity)) continue
             if (entity.isRemoved || !entity.isAlive) continue
 
-            val distance = player.distanceTo(entity)
+            val distance = origin.distanceTo(entity.position())
             val nametagText = buildNametagText(entity, distance.toInt())
-            val scale = calculateScale(distance)
+            val scale = calculateScale(distance.toFloat())
             val yOffset = if (entity.isCrouching) 0.6 + scale / 5f else 0.8 + scale / 5f
             val renderPos = Vec3(entity.renderX, entity.renderY + entity.eyeHeight + yOffset, entity.renderZ)
 
