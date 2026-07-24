@@ -174,10 +174,10 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
     override fun onEnable() {
         val player = mc.player ?: return
         val held = player.mainHandItem
-        if (held.isEmpty || (!held.`is`(ItemTags.PICKAXES) && !held.itemId.containsOneOf("DRILL" , "GEMSTONE_GAUNTLET"))) {
-            modMessage("${held.displayName.legacy} §cis not a valid mining tool!")
-            enabled = false
-            return
+            if (held.isEmpty || (!held.`is`(ItemTags.PICKAXES) && !held.itemId.containsOneOf("DRILL" , "GEMSTONE_GAUNTLET"))) {
+                modMessage("${held.hoverName.legacy} §cis not a valid mining tool!")
+                enabled = false
+                return
         }
         modMessage("§6Nuker§a enabled.")
     }

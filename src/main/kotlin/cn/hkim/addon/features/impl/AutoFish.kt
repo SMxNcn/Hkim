@@ -8,6 +8,7 @@ import cn.hkim.addon.events.impl.TickEvent
 import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
+import cn.hkim.addon.mixins.accessors.FishingHookAccessor
 import cn.hkim.addon.utils.*
 import cn.hkim.addon.utils.skyblock.LocationUtils
 import meteordevelopment.orbit.EventHandler
@@ -41,7 +42,7 @@ object AutoFish : Module("Auto Fish", "Automatically casts and reels the fishing
         }
         val item = player.mainHandItem
         if (!isValidRod(item)) {
-            val name = item.displayName.legacy
+            val name = item.hoverName.legacy
             modMessage("$name §cis not a valid fishing rod!")
             enabled = false
             return
@@ -111,8 +112,9 @@ object AutoFish : Module("Auto Fish", "Automatically casts and reels the fishing
                     return
                 }
 
-                if (hook.onGround() && !hook.isInWater && !hook.isInLava) {
-                    reelInTick = currentTime + (2..6).random()
+                val outOfWaterTime = (hook as FishingHookAccessor).outOfWaterTime
+                if (!hook.isInLava && outOfWaterTime > 5) {
+                    reelInTick = currentTime + (0..2).random()
                     hasReeledIn = false
                     currentState = FishingState.CAST
                     return
@@ -128,7 +130,7 @@ object AutoFish : Module("Auto Fish", "Automatically casts and reels the fishing
 
                 checkHookArmorStand()
                 if (fishBitten) {
-                    reelInTick = currentTime + (2..6).random()
+                    reelInTick = currentTime + (0..2).random()
                     hasReeledIn = false
                     currentState = FishingState.CAST
                 }
@@ -140,10 +142,10 @@ object AutoFish : Module("Auto Fish", "Automatically casts and reels the fishing
                         useItemAction()
                         hasReeledIn = true
                         skipNextCast = (0..98).random() == 0
-                        if (!skipNextCast) {
-                            hookUpTick = currentTime + (rethrowDelay / 50).toLong() + (-1..1).random()
+                        hookUpTick = if (!skipNextCast) {
+                            currentTime + (rethrowDelay / 50).toLong() + (-1..1).random()
                         } else {
-                            hookUpTick = currentTime + 2
+                            currentTime + 2
                         }
                     }
                 } else {

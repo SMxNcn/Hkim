@@ -47,6 +47,7 @@
     "WindowMixin",
     "accessors.CameraAccessor",
     "accessors.DebugScreenEntriesAccessor",
+    "accessors.FishingHookAccessor",
     "accessors.JoinMultiplayerScreenAccessor",
     "accessors.KeyMappingAccessor",
     "accessors.ScreenAccessor"
