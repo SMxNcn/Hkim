@@ -16,7 +16,7 @@ import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
 
 object CustomEventDispatcher {
     private val visitRegex = Regex("\\[SkyBlock] (?:\\[.*?] )?(.*?) is visiting Your Garden!")
-    private val pestSpawnRegex = Regex("(?:A ൠ Pest has appeared|\\d+ ൠ Pest have spawned) in Plot - (\\d{1,2})!")
+    private val pestSpawnRegex = Regex("(?:A \uE018 Pest has appeared|\\d+ \uE018 Pest have spawned) in Plot - (\\d{1,2})!")
     private val cleanRegex = Regex("§[0-9a-fk-or]")
     private val plotRegex = Regex("Plot - (\\d+)")
     private var activePestPlot = -1
@@ -78,7 +78,7 @@ object CustomEventDispatcher {
 
     private fun getCurrentPestCount(plot: Int): Int {
         val pestRegex = pestRegexCache.getOrPut(plot) {
-            Regex("Plot - $plot(?: ൠ x(\\d+))?")
+            Regex("Plot - $plot(?: \uE018 x(\\d+))?")
         }
         return HudUtils.getScoreboard().firstNotNullOfOrNull { line ->
             pestRegex.find(line.replace(cleanRegex, ""))?.groupValues?.getOrNull(1)?.toIntOrNull()

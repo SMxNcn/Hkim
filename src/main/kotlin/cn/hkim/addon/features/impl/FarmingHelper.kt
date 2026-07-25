@@ -80,22 +80,16 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
 
     @EventHandler
     private fun onPestReady(event: GardenEvent.PestReady) {
-        if (!enabled || ignorePests) return
+        if (!enabled || ignorePests || !CropNuker.enabled) return
         val player = mc.player ?: return
         lastHeldSlot = player.inventory.selectedSlot
 
-        if (!CropNuker.enabled) return
-
         Hkim.scope.launch {
-            CropNuker.stop()
-
+            delay(randomDelay(100, 100))
             if (!swapLoadoutTo(mantidArmorSlot.toInt())) {
                 modMessage("§cFailed to swap loadout to Mantid slot!")
                 return@launch
             }
-
-            delay(randomDelay(100, 50))
-            CropNuker.start()
         }
     }
 
@@ -104,7 +98,7 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
         if (!enabled || !CropNuker.enabled || ignorePests) return
 
         Hkim.scope.launch {
-            delay(randomDelay(500, 100))
+            delay(randomDelay(500, 500))
             CropNuker.stop()
             sendCommand("setspawn")
             delay(randomDelay(250, 50))
@@ -127,7 +121,7 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
         val player = mc.player ?: return
 
         Hkim.scope.launch {
-            delay(100)
+            delay(randomDelay(100, 100))
             holdKey(mc.options.keyShift, true)
             sendCommand("warp garden")
             delay(randomDelay(200, 100))

@@ -73,7 +73,7 @@ object LocationUtils {
         val scoreboard = getScoreboard()
         if (scoreboard.isEmpty()) return null
         for (line in scoreboard) {
-            Regex("[⏣ф\uE067\uE020]\\s*(.+)").find(line.clean)?.let {
+            Regex("[\uE067\uE020]\\s*(.+)").find(line.clean)?.let {
                 return it.groupValues[1].trim()
             }
         }
