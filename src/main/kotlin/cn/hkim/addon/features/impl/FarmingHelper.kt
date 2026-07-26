@@ -12,8 +12,11 @@ import cn.hkim.addon.utils.*
 import cn.hkim.addon.utils.HudUtils.alert
 import cn.hkim.addon.utils.render.drawStyledBox
 import cn.hkim.addon.utils.render.drawText
+import cn.hkim.addon.utils.render.drawWireFrameBox
 import cn.hkim.addon.utils.skyblock.Island
 import cn.hkim.addon.utils.skyblock.LocationUtils
+import cn.hkim.addon.utils.skyblock.farming.PestTracker
+import cn.hkim.addon.utils.skyblock.farming.Plot
 import cn.hkim.addon.utils.skyblock.inventory.LoadoutUtils.swapLoadoutTo
 import cn.hkim.addon.utils.waypoints.FarmingWaypoints
 import kotlinx.coroutines.delay
@@ -21,6 +24,7 @@ import kotlinx.coroutines.launch
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import org.lwjgl.glfw.GLFW
@@ -31,19 +35,22 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
     private val renderWps by BooleanSetting("Render Waypoints", "Render waypoints.", true)
     private val renderOnFarming by BooleanSetting("Render on Farming", "Render waypoints when CropNuker is disabled.", false)
 
-    private val armorDropdown by DropdownSetting("Armor")
-    private val mossyArmorSlot by NumberSetting("Mossy Slot", "Mossy loadout slot.", 1f, 1f, 12f, 1f).depends { armorDropdown }
-    private val mantidArmorSlot by NumberSetting("Mantid Slot", "Mantid loadout slot.", 2f, 1f, 12f, 1f).depends { armorDropdown }
+    private val loadoutDropdown by DropdownSetting("Loadout")
+    private val mossyArmorSlot by NumberSetting("Mossy Slot", "Mossy loadout slot.", 1f, 1f, 12f, 1f).depends { loadoutDropdown }
+    private val mantidArmorSlot by NumberSetting("Mantid Slot", "Mantid loadout slot.", 2f, 1f, 12f, 1f).depends { loadoutDropdown }
 
     private val otherDropdown by DropdownSetting("Others")
     private val autoKick by BooleanSetting("Auto Kick", "Auto kick player who visiting your garden.", true).depends { otherDropdown }
     private val ignorePests by BooleanSetting("Ignore Pests", "CropNuker will not respond to pest ready/spawned/killed events.", false).depends { otherDropdown }
     private val changeTimeOnPest by BooleanSetting("Change Time (Fireflies)", "Set garden time to day for Sunset's Overbloom bonus.", false).depends { otherDropdown }
+    private val pestEsp by BooleanSetting("Pest ESP", "Render wireframe boxes on pest armor stands.", false).depends { otherDropdown }
+    private val plotScale by NumberSetting("Plot Scale", "Scale of Garden Plot Screen.", 1f, 1f, 2f, 0.1f).depends { otherDropdown }
 
     private val nukerKeybind by KeybindSetting("Nuker Keybind", "Keybind to toggle nuker.", GLFW.GLFW_KEY_X)
 
     private var lastHeldSlot: Int = -1
     private var containerId = -1
+    val plotScreenScale get() = if (enabled) plotScale else 1f
 
     @EventHandler
     private fun onTick(event: TickEvent.End) {
@@ -53,8 +60,10 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
 
     @EventHandler
     private fun onMouseClick(event: MouseButtonEvent) {
-        if (!enabled || !allowEdits || event.button != 1 || mc.screen != null) return
+        if (!enabled || mc.screen != null) return
         if (LocationUtils.currentArea != Island.Garden) return
+
+        if (!allowEdits || event.button != 1) return
 
         val pos = reachPosition ?: return
         if (mc.player?.isCrouching == true) {
@@ -69,9 +78,18 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
 
     @EventHandler
     private fun onRender(event: RenderEvent.Extract) {
-        if (!renderWps || LocationUtils.currentArea != Island.Garden) return
-        if (!enabled || !renderOnFarming && CropNuker.enabled) return
+        if (!enabled || LocationUtils.currentArea != Island.Garden) return
+        val level = mc.level ?: return
 
+        if (pestEsp) {
+            for (entity in level.entitiesForRendering()) {
+                if (entity !is ArmorStand || !PestTracker.isPestEntity(entity)) continue
+                val headCenter = entity.renderPos.add(0.0, entity.bbHeight - 0.2, 0.0)
+                event.drawWireFrameBox(AABB.ofSize(headCenter, 0.8, 0.8, 0.8), Colors.MINECRAFT_DARK_GREEN, 2f)
+            }
+        }
+
+        if (!renderWps || !renderOnFarming && CropNuker.enabled) return
         for (wp in FarmingWaypoints.currentWaypoints) {
             event.drawStyledBox(AABB(wp.blockPos), Colors.MINECRAFT_GRAY, 1, false)
             event.drawText("#${wp.id}", wp.blockPos.center.add(0.0, 1.1, 0.0), 1.2f, false)
@@ -86,16 +104,20 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
 
         Hkim.scope.launch {
             delay(randomDelay(100, 100))
+            CropNuker.stop()
             if (!swapLoadoutTo(mantidArmorSlot.toInt())) {
                 modMessage("§cFailed to swap loadout to Mantid slot!")
                 return@launch
             }
+            CropNuker.start()
         }
     }
 
     @EventHandler
     private fun onPestSpawned(event: GardenEvent.PestSpawned) {
-        if (!enabled || !CropNuker.enabled || ignorePests) return
+        if (!enabled) return
+        PestTracker.lastPestPlot = event.plot
+        if (!CropNuker.enabled || ignorePests) return
 
         Hkim.scope.launch {
             delay(randomDelay(500, 500))
@@ -121,7 +143,6 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
         val player = mc.player ?: return
 
         Hkim.scope.launch {
-            delay(randomDelay(100, 100))
             holdKey(mc.options.keyShift, true)
             sendCommand("warp garden")
             delay(randomDelay(200, 100))
@@ -142,9 +163,17 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
 
     @EventHandler
     private fun onGuiOpen(event: GuiEvent.Open) {
-        if (!enabled || CropNuker.enabled || ignorePests || !changeTimeOnPest) return
+        if (!enabled) return
         val chest = (event.screen as? AbstractContainerScreen<*>) ?: return
-        if (!chest.title.cleanString.containsOneOf("Desk", "Garden Time", "Pesthunter")) return
+        val title = chest.title.cleanString
+
+        if (title.contains("Configure Plot", ignoreCase = true)) {
+            schedule(1) { mc.player?.containerMenu?.let { Plot.scanConfigurePlot(it) } }
+            return
+        }
+
+        if (CropNuker.enabled || ignorePests || !changeTimeOnPest) return
+        if (!title.containsOneOf("Desk", "Garden Time", "Pesthunter")) return
         containerId = mc.player?.containerMenu?.containerId ?: return
     }
 

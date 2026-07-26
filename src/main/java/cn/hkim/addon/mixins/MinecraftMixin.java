@@ -9,6 +9,7 @@ import cn.hkim.addon.gui.Background;
 import cn.hkim.addon.utils.RotationUtils;
 import cn.hkim.addon.utils.render.GuiAnimation;
 import cn.hkim.addon.utils.render.nvg.NVGRenderer;
+import cn.hkim.addon.utils.skyblock.farming.Plot;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -38,6 +39,9 @@ public abstract class MinecraftMixin {
     private void onEndTick(CallbackInfo ci) {
         Hkim.EVENT_BUS.post(new TickEvent.End());
     }
+
+    @Unique
+    private boolean hkim$plotDataLoaded = false;
 
     @Inject(method = "onGameLoadFinished", at = @At("HEAD"))
     private void onGameLoadFinished(CallbackInfo ci) {
@@ -76,7 +80,11 @@ public abstract class MinecraftMixin {
     }
 
     @Inject(at = @At("HEAD"), method = "setLevel")
-    private void freecam$onSetLevel(ClientLevel level, CallbackInfo ci) {
+    private void onSetLevel(ClientLevel level, CallbackInfo ci) {
+        if (!hkim$plotDataLoaded) {
+            hkim$plotDataLoaded = true;
+            Plot.load();
+        }
         if (FreeCam.isFreecamActive()) {
             FreeCam.INSTANCE.disable();
         }

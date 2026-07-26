@@ -4,47 +4,71 @@ import cn.hkim.addon.Hkim
 import cn.hkim.addon.events.impl.ChatReceiveEvent
 import cn.hkim.addon.events.impl.GardenEvent
 import cn.hkim.addon.events.impl.PacketReceiveEvent
-import cn.hkim.addon.events.impl.TickEvent
 import cn.hkim.addon.utils.HudUtils
+import cn.hkim.addon.utils.clean
 import cn.hkim.addon.utils.cleanString
 import cn.hkim.addon.utils.schedule
 import cn.hkim.addon.utils.skyblock.Island
 import cn.hkim.addon.utils.skyblock.LocationUtils
 import cn.hkim.addon.utils.skyblock.MayorData
+import cn.hkim.addon.utils.skyblock.farming.PestTracker
 import meteordevelopment.orbit.EventHandler
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
 
 object CustomEventDispatcher {
     private val visitRegex = Regex("\\[SkyBlock] (?:\\[.*?] )?(.*?) is visiting Your Garden!")
     private val pestSpawnRegex = Regex("(?:A \uE018 Pest has appeared|\\d+ \uE018 Pest have spawned) in Plot - (\\d{1,2})!")
-    private val cleanRegex = Regex("§[0-9a-fk-or]")
+    private val aliveRegex = Regex("Alive: (\\d+)")
+    private val plotsRegex = Regex("Plots:\\s*([\\d, ]+)")
     private val plotRegex = Regex("Plot - (\\d+)")
-    private var activePestPlot = -1
-    private var lastPestCount = -1
+    private var lastAliveCount = -1
 
     @EventHandler
     private fun onPacketReceive(event: PacketReceiveEvent) {
-        if (event.packet !is ClientboundSystemChatPacket) return
-        val chatEvent = ChatReceiveEvent(event.packet.content, event.packet.content.cleanString)
-        Hkim.EVENT_BUS.post(chatEvent)
-        if (chatEvent.isCancelled) event.cancel()
+        when (event.packet) {
+            is ClientboundSystemChatPacket -> {
+                val chatEvent = ChatReceiveEvent(event.packet.content, event.packet.content.cleanString)
+                Hkim.EVENT_BUS.post(chatEvent)
+                if (chatEvent.isCancelled) event.cancel()
+            }
+
+            is ClientboundPlayerInfoUpdatePacket -> {
+                if (LocationUtils.currentArea != Island.Garden) return
+                if (event.packet.actions().none { it == ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER || it == ClientboundPlayerInfoUpdatePacket.Action.UPDATE_DISPLAY_NAME }) return
+                handleTabList(event.packet)
+            }
+        }
     }
 
-    @EventHandler
-    private fun onTick(event: TickEvent.End) {
-        if (LocationUtils.currentArea != Island.Garden || activePestPlot == -1) return
+    private fun handleTabList(packet: ClientboundPlayerInfoUpdatePacket) {
+        var aliveCount = -1
 
-        val currentPlot = getCurrentPlot() ?: return
-        if (currentPlot != activePestPlot) return
+        for (entry in packet.entries()) {
+            val display = entry.displayName()?.cleanString ?: continue
 
-        val currentPestCount = getCurrentPestCount(activePestPlot)
+            aliveRegex.find(display)?.let { m ->
+                aliveCount = m.groupValues[1].toIntOrNull() ?: -1
+            }
 
-        if (lastPestCount > 0 && currentPestCount == 0) {
-            Hkim.EVENT_BUS.post(GardenEvent.PestKilled())
-            activePestPlot = -1
+            plotsRegex.find(display)?.let { m ->
+                PestTracker.pestPlots = m.groupValues[1]
+                    .split(",")
+                    .mapNotNull { it.trim().toIntOrNull() }
+                    .toSet()
+            }
         }
 
-        lastPestCount = currentPestCount
+        if (aliveCount == -1) return
+        PestTracker.aliveCount = aliveCount
+
+        if (lastAliveCount > 0 && aliveCount == 0 && isOnPestPlot()) {
+            PestTracker.clearKnownPests()
+            PestTracker.pestPlots = emptySet()
+            Hkim.EVENT_BUS.post(GardenEvent.PestKilled())
+            PestTracker.lastPestPlot = -1
+        }
+        lastAliveCount = aliveCount
     }
 
     @EventHandler
@@ -57,8 +81,10 @@ object CustomEventDispatcher {
         }
 
         pestSpawnRegex.find(event.message)?.let { pestMatcher ->
-            activePestPlot = pestMatcher.groupValues[1].toInt()
-            Hkim.EVENT_BUS.post(GardenEvent.PestSpawned(activePestPlot))
+            val plot = pestMatcher.groupValues[1].toInt()
+            PestTracker.lastPestPlot = plot
+            lastAliveCount = -1
+            Hkim.EVENT_BUS.post(GardenEvent.PestSpawned(plot))
 
             schedule((MayorData.pestSpawnCooldown - 10) * 20, true) {
                 Hkim.EVENT_BUS.post(GardenEvent.PestReady())
@@ -68,20 +94,14 @@ object CustomEventDispatcher {
         if (event.message.contains("Everybody unlocks exclusive perks!")) MayorData.fetchData()
     }
 
-    private val pestRegexCache = HashMap<Int, Regex>(32)
-
     private fun getCurrentPlot(): Int? {
         return HudUtils.getScoreboard().firstNotNullOfOrNull { line ->
-            plotRegex.find(line.replace(cleanRegex, ""))?.groupValues[1]?.toIntOrNull()
+            plotRegex.find(line.clean)?.groupValues?.get(1)?.toIntOrNull()
         }
     }
 
-    private fun getCurrentPestCount(plot: Int): Int {
-        val pestRegex = pestRegexCache.getOrPut(plot) {
-            Regex("Plot - $plot(?: \uE018 x(\\d+))?")
-        }
-        return HudUtils.getScoreboard().firstNotNullOfOrNull { line ->
-            pestRegex.find(line.replace(cleanRegex, ""))?.groupValues?.getOrNull(1)?.toIntOrNull()
-        } ?: 0
+    private fun isOnPestPlot(): Boolean {
+        val plot = getCurrentPlot() ?: return false
+        return plot == PestTracker.lastPestPlot
     }
 }

@@ -3,6 +3,7 @@ package cn.hkim.addon.commands
 import cn.hkim.addon.Hkim
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.clickgui.ClickGUIScreen
+import cn.hkim.addon.gui.GardenPlotScreen
 import cn.hkim.addon.gui.HudEditScreen
 import cn.hkim.addon.utils.skyblock.inventory.EquipmentUtils.swapEquipment
 import cn.hkim.addon.utils.skyblock.inventory.LoadoutUtils.swapLoadoutTo
@@ -18,6 +19,10 @@ val hkimCommand = Commodore("hkim") {
 
     literal("hud").runs {
         mc.execute { mc.setScreen(HudEditScreen(null)) }
+    }
+
+    literal("plot").runs {
+        mc.execute { mc.setScreen(GardenPlotScreen()) }
     }
 
     literal("swapArmor").runs { index: Int, page: Int? ->
