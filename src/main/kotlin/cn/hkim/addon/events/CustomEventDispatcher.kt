@@ -12,16 +12,17 @@ import cn.hkim.addon.utils.skyblock.Island
 import cn.hkim.addon.utils.skyblock.LocationUtils
 import cn.hkim.addon.utils.skyblock.MayorData
 import cn.hkim.addon.utils.skyblock.farming.PestTracker
+import cn.hkim.addon.utils.skyblock.farming.Plot
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
 
 object CustomEventDispatcher {
     private val visitRegex = Regex("\\[SkyBlock] (?:\\[.*?] )?(.*?) is visiting Your Garden!")
-    private val pestSpawnRegex = Regex("(?:A \uE018 Pest has appeared|\\d+ \uE018 Pest have spawned) in Plot - (\\d{1,2})!")
+    private val pestSpawnRegex = Regex("(?:A \uE018 Pest has appeared|\\d+ \uE018 Pest have spawned) in Plot - ([^!]+)!")
     private val aliveRegex = Regex("Alive: (\\d+)")
     private val plotsRegex = Regex("Plots:\\s*([\\d, ]+)")
-    private val plotRegex = Regex("Plot - (\\d+)")
+    private val plotRegex = Regex("Plot - (.+)")
     private var lastAliveCount = -1
 
     @EventHandler
@@ -81,10 +82,11 @@ object CustomEventDispatcher {
         }
 
         pestSpawnRegex.find(event.message)?.let { pestMatcher ->
-            val plot = pestMatcher.groupValues[1].toInt()
-            PestTracker.lastPestPlot = plot
+            val plot = pestMatcher.groupValues[1].trim()
+            val plotId = Plot.resolveName(plot) ?: return@let
+            PestTracker.lastPestPlot = plotId
             lastAliveCount = -1
-            Hkim.EVENT_BUS.post(GardenEvent.PestSpawned(plot))
+            Hkim.EVENT_BUS.post(GardenEvent.PestSpawned(plotId))
 
             schedule((MayorData.pestSpawnCooldown - 10) * 20, true) {
                 Hkim.EVENT_BUS.post(GardenEvent.PestReady())
@@ -96,7 +98,9 @@ object CustomEventDispatcher {
 
     private fun getCurrentPlot(): Int? {
         return HudUtils.getScoreboard().firstNotNullOfOrNull { line ->
-            plotRegex.find(line.clean)?.groupValues?.get(1)?.toIntOrNull()
+            plotRegex.find(line.clean)?.let { m ->
+                Plot.resolveName(m.groupValues[1].trim())
+            }
         }
     }
 

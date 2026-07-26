@@ -74,6 +74,12 @@ data class Plot(val id: Int, val corner1: BlockPos, val corner2: BlockPos) {
 
         fun byId(id: Int): Plot? = plotsById[id]
 
+        fun byName(name: String): Plot? =
+            all.firstOrNull { it.displayName == name }
+
+        fun resolveName(name: String): Int? =
+            name.toIntOrNull() ?: byName(name)?.id
+
         fun at(pos: BlockPos): Plot? {
             if (pos.x < ORIGIN_X || pos.x > ORIGIN_X + GRID * SIZE - 1) return null
             if (pos.z > ORIGIN_Z || pos.z < ORIGIN_Z - GRID * SIZE + 1) return null
