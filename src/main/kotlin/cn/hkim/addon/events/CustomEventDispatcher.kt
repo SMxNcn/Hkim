@@ -1,11 +1,10 @@
 package cn.hkim.addon.events
 
 import cn.hkim.addon.Hkim
+import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.events.impl.ChatReceiveEvent
 import cn.hkim.addon.events.impl.GardenEvent
 import cn.hkim.addon.events.impl.PacketReceiveEvent
-import cn.hkim.addon.utils.HudUtils
-import cn.hkim.addon.utils.clean
 import cn.hkim.addon.utils.cleanString
 import cn.hkim.addon.utils.schedule
 import cn.hkim.addon.utils.skyblock.Island
@@ -22,7 +21,6 @@ object CustomEventDispatcher {
     private val pestSpawnRegex = Regex("(?:A \uE018 Pest has appeared|\\d+ \uE018 Pest have spawned) in Plot - ([^!]+)!")
     private val aliveRegex = Regex("Alive: (\\d+)")
     private val plotsRegex = Regex("Plots:\\s*([\\d, ]+)")
-    private val plotRegex = Regex("Plot - (.+)")
     private var lastAliveCount = -1
 
     @EventHandler
@@ -96,16 +94,9 @@ object CustomEventDispatcher {
         if (event.message.contains("Everybody unlocks exclusive perks!")) MayorData.fetchData()
     }
 
-    private fun getCurrentPlot(): Int? {
-        return HudUtils.getScoreboard().firstNotNullOfOrNull { line ->
-            plotRegex.find(line.clean)?.let { m ->
-                Plot.resolveName(m.groupValues[1].trim())
-            }
-        }
-    }
-
     private fun isOnPestPlot(): Boolean {
-        val plot = getCurrentPlot() ?: return false
-        return plot == PestTracker.lastPestPlot
+        val player = mc.player ?: return false
+        val plot = Plot.byId(PestTracker.lastPestPlot) ?: return false
+        return plot.contains(player.blockPosition())
     }
 }
