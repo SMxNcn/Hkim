@@ -52,8 +52,8 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
     private val headerH = 45f
     private val contentPadding = 12f
 
-    private val sidebarLogo = Identifier.fromNamespaceAndPath("hkim", "textures/clickgui/sidebar/icon20x.png")
-    private val editIcon = Identifier.fromNamespaceAndPath("hkim", "textures/clickgui/sidebar/edit.png")
+    private val sidebarLogo = Identifier.fromNamespaceAndPath("hkim", "textures/clickgui/icon20x.png")
+    private val editIcon = Identifier.fromNamespaceAndPath("hkim", "textures/clickgui/edit.png")
 
     private var selectedCategory: Category? = null
     private var searchQuery = ""
@@ -328,7 +328,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         var iconY = y + 50f
 
         for (category in Category.entries) {
-            val iconTex = Identifier.fromNamespaceAndPath("hkim", "textures/clickgui/sidebar/${category.name.lowercase()}.png")
+            val iconTex = Identifier.fromNamespaceAndPath("hkim", "textures/clickgui/${category.name.lowercase()}.png")
             graphics.blit(RenderPipelines.GUI_TEXTURED, iconTex, iconX.toInt(), iconY.toInt(), 0f, 0f, 20, 20, 20, 20)
 
             if (HudUtils.isPointInRect(mouseX.toFloat(), mouseY.toFloat(), iconX, iconY, iconSize, iconSize)) {
