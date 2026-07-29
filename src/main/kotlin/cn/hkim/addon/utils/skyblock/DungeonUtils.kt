@@ -129,7 +129,7 @@ enum class P2LeapAreas(val displayName: String, val corner1: BlockPos, val corne
     PurplePad("Purple Pad", BlockPos(122, 170, 86), BlockPos(160, 180, 102)),
     YellowPillar("Yellow Pillar", BlockPos(59, 169, 54), BlockPos(34, 174, 74)),
     YellowPad("Yellow Pad", BlockPos(40, 170, 102), BlockPos(24, 180, 86)),
-    PurpleStorm("Purple Storm", BlockPos(102, 166, 90), BlockPos(98, 170, 94));
+    PurpleStorm("Purple Storm", BlockPos(102, 162, 90), BlockPos(94, 170, 94));
 
     companion object {
         fun getP2Area(): P2LeapAreas? {

@@ -62,12 +62,12 @@ fun isPlayerInArea(corner1: BlockPos, corner2: BlockPos, playerPos: BlockPos): B
             playerPos.z in minZ..maxZ
 }
 
-fun leapTo(name: String, screenHandler: AbstractContainerScreen<*>) {
+fun leapTo(name: String, screenHandler: AbstractContainerScreen<*>, sendMessage: Boolean = true) {
     val index = screenHandler.menu.slots.subList(11, 16).firstOrNull {
         it.item.hoverName.string.substringAfter(' ').equals(name.clean, ignoreCase = true)
     }?.index ?: return
     mc.player?.clickInventorySlot(index, screenHandler.menu.containerId)
-    modMessage("Teleport to $name!")
+    if (sendMessage) modMessage("Teleport to $name!")
 }
 
 private val romanMap = mapOf('I' to 1, 'V' to 5, 'X' to 10, 'L' to 50, 'C' to 100, 'D' to 500, 'M' to 1000)
