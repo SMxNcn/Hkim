@@ -49,6 +49,7 @@
     "accessors.DebugScreenEntriesAccessor",
     "accessors.FishingHookAccessor",
     "accessors.JoinMultiplayerScreenAccessor",
+    "accessors.LevelRendererAccessor",
     "accessors.KeyMappingAccessor",
     "accessors.ScreenAccessor"
   ]

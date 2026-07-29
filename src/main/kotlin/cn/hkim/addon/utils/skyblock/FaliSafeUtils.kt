@@ -87,8 +87,11 @@ object FailSafeUtils {
         val player = mc.player ?: return
         val currentSlot = player.inventory.selectedSlot
         if (lastSelectedSlot != -1 && currentSlot != lastSelectedSlot) {
-            trigger("Held Item Change")
+            if (!Nuker.isTimiteSlotSwitch) {
+                trigger("Held Item Change")
+            }
         }
+        Nuker.isTimiteSlotSwitch = false
         lastSelectedSlot = currentSlot
     }
 

@@ -6,7 +6,8 @@ import net.minecraft.world.level.block.Blocks
 enum class MineralCategory {
     DWARVEN_METALS,
     GEMSTONES,
-    ORE
+    ORE,
+    RIFT
 }
 
 enum class MineralType(
@@ -126,6 +127,22 @@ enum class MineralType(
     GOLD(
         "Gold", MineralCategory.ORE, listOf(
             Blocks.GOLD_BLOCK
+        )
+    ),
+
+    YOUNGITE(
+        "Youngite", MineralCategory.RIFT, listOf(
+            Blocks.LIGHT_BLUE_STAINED_GLASS_PANE
+        )
+    ),
+    TIMITE(
+        "Timite", MineralCategory.RIFT, listOf(
+            Blocks.BLUE_STAINED_GLASS_PANE
+        )
+    ),
+    OBSOLITE(
+        "Obsolite", MineralCategory.RIFT, listOf(
+            Blocks.PURPLE_STAINED_GLASS_PANE
         )
     );
 
