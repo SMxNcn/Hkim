@@ -18,11 +18,11 @@ object AutoClicker : Module("Auto Clicker", "Auto clicker with options for left-
     private val mode by SelectorSetting("Mode", "Click mode.", listOf("Normal", "Terminator"), "Normal")
     private val cps by NumberSetting("CPS", "Clicks per second.", 5.0f, 3.0f, 15.0f, 0.5f).depends { mode == 1 }
     private val rightClickBlock by BooleanSetting("Right Click Block", "Auto right-click when holding a block in Terminator mode.", true).depends { mode == 1 }
-    private val blockCps by NumberSetting("Block CPS", "Right clicks per second for block spam.", 10.0f, 3.0f, 20.0f, 0.5f).depends { mode == 1 && rightClickBlock }
+    private val blockCps by NumberSetting("Block CPS", "Right clicks per second for block spam.", 10.0f, 5.0f, 20.0f, 0.5f).depends { mode == 1 && rightClickBlock }
     private val enableLeftClick by BooleanSetting("Enable Left Click", "Enable auto-clicking for left-click.", true).depends { mode == 0 }
     private val enableRightClick by BooleanSetting("Enable Right Click", "Enable auto-clicking for right-click.", true).depends { mode == 0 }
-    private val leftCps by NumberSetting("Left CPS", "Left clicks per second.", 5.0f, 3.0f, 15.0f, 0.5f).depends { mode == 0 }
-    private val rightCps by NumberSetting("Right CPS", "Right clicks per second.", 5.0f, 3.0f, 15.0f, 0.5f).depends { mode == 0 }
+    private val leftCps by NumberSetting("Left CPS", "Left clicks per second.", 5.0f, 1.0f, 15.0f, 0.5f).depends { mode == 0 }
+    private val rightCps by NumberSetting("Right CPS", "Right clicks per second.", 5.0f, 1.0f, 15.0f, 0.5f).depends { mode == 0 }
 
     private var nextLeftClick = 0.0
     private var nextRightClick = 0.0
