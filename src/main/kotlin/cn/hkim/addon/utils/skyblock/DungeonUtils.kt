@@ -124,12 +124,12 @@ enum class P3Stages(val corner1: BlockPos, val corner2: BlockPos) {
     }
 }
 
-enum class P2LeapAreas(val displayName: String, val corner1: BlockPos, val corner2: BlockPos) {
-    PurplePillar("Purple Pillar", BlockPos(87, 169, 54), BlockPos(112, 174, 74)),
-    PurplePad("Purple Pad", BlockPos(122, 170, 86), BlockPos(160, 180, 102)),
-    YellowPillar("Yellow Pillar", BlockPos(59, 169, 54), BlockPos(34, 174, 74)),
-    YellowPad("Yellow Pad", BlockPos(40, 170, 102), BlockPos(24, 180, 86)),
-    PurpleStorm("Purple Storm", BlockPos(102, 162, 90), BlockPos(94, 170, 94));
+enum class P2LeapAreas(val corner1: BlockPos, val corner2: BlockPos) {
+    PurplePillar(BlockPos(87, 169, 54), BlockPos(112, 174, 74)),
+    PurplePad(BlockPos(122, 170, 86), BlockPos(160, 180, 102)),
+    YellowPillar(BlockPos(59, 169, 54), BlockPos(34, 174, 74)),
+    YellowPad(BlockPos(40, 170, 102), BlockPos(24, 180, 86)),
+    PurpleStorm(BlockPos(102, 162, 90), BlockPos(94, 170, 94));
 
     companion object {
         fun getP2Area(): P2LeapAreas? {
