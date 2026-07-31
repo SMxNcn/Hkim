@@ -15,7 +15,7 @@ object AntiPlace : Module("Anti Place", "Prevent placing block-based weapons and
     @JvmStatic
     fun shouldCancelPlacement(stack: ItemStack): Boolean {
         if (!enabled) return false
-        if (!LocationUtils.inSkyBlock || LocationUtils.isCurrentArea(Island.PrivateIsland)) return false
+        if (!LocationUtils.inSkyBlock || LocationUtils.isCurrentArea(Island.PrivateIsland, Island.Garden)) return false
         return stack.item is BlockItem && isBlockCarrier(stack)
     }
 }
