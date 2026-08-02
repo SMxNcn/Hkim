@@ -7,6 +7,7 @@ import cn.hkim.addon.utils.HudUtils.bGL
 import cn.hkim.addon.utils.HudUtils.gGL
 import cn.hkim.addon.utils.HudUtils.multiplyAlpha
 import cn.hkim.addon.utils.HudUtils.rGL
+import cn.hkim.addon.utils.render.RenderBatchManager.noFogBuffer
 import cn.hkim.addon.utils.render.RenderBatchManager.pipelineContexts
 import cn.hkim.addon.utils.render.RenderBatchManager.usedPipelines
 import com.mojang.blaze3d.PrimitiveTopology
@@ -34,6 +35,8 @@ import org.joml.Quaternionf
 import org.joml.Vector3f
 import org.joml.Vector4f
 import java.awt.Color
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.util.*
 
 internal data class LineData(val from: Vec3, val to: Vec3, val color1: Int, val color2: Int, val thickness: Float, val depth: Boolean)
@@ -68,6 +71,14 @@ object RenderBatchManager {
     val pipelineContexts = mutableMapOf<RenderPipeline, PipelineContext>()
     val usedPipelines = mutableSetOf<RenderPipeline>()
     private const val ALLOCATOR_SIZE = 2097152 // 2MB
+    const val NO_FOG_SIZE = 40
+    val noFogBytes: ByteBuffer = ByteBuffer.allocateDirect(NO_FOG_SIZE).order(ByteOrder.nativeOrder()).apply {
+        putFloat(1f); putFloat(1f); putFloat(1f); putFloat(0f)
+        putFloat(0f); putFloat(0f)
+        putFloat(0f); putFloat(0f)
+        putFloat(0f); putFloat(0f)
+    }.flip()
+    var noFogBuffer: GpuBuffer? = null
 
     fun init() {
         listOf(
@@ -347,6 +358,14 @@ private val COLOR_MODULATOR = Vector4f(1f, 1f, 1f, 1f)
 private val MODEL_OFFSET = Vector3f()
 private val TEXTURE_MATRIX = Matrix4f()
 
+private fun ensureNoFogBuffer() {
+    if (noFogBuffer != null) return
+    val device = RenderSystem.getDevice()
+    noFogBuffer = device.createBuffer({ "hkim_no_fog" }, GpuBuffer.USAGE_UNIFORM or GpuBuffer.USAGE_COPY_DST, RenderBatchManager.NO_FOG_SIZE.toLong())
+    val uploadEncoder = device.createCommandEncoder()
+    uploadEncoder.writeToBuffer(noFogBuffer!!.slice(0, RenderBatchManager.NO_FOG_SIZE.toLong()), RenderBatchManager.noFogBytes)
+}
+
 private fun drawPipeline(ctx: RenderBatchManager.PipelineContext, viewMatrix: Matrix4f, encoder: CommandEncoder) {
     val meshData = ctx.bufferBuilder.buildOrThrow()
     ctx.bufferBuilder = BufferBuilder(ctx.allocator, ctx.pipeline.primitiveTopology, ctx.pipeline.getVertexFormatBinding(0)!!)
@@ -388,6 +407,8 @@ private fun drawPipeline(ctx: RenderBatchManager.PipelineContext, viewMatrix: Ma
         rp.setPipeline(ctx.pipeline)
         RenderSystem.bindDefaultUniforms(rp)
         rp.setUniform("DynamicTransforms", dynamicTransforms)
+        ensureNoFogBuffer()
+        rp.setUniform("Fog", noFogBuffer!!)
         rp.setVertexBuffer(0, ctx.vertexBuffer!!.slice())
         rp.setIndexBuffer(indices, indexType)
 
