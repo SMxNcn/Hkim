@@ -3,6 +3,7 @@ package cn.hkim.addon.commands
 import cn.hkim.addon.Hkim
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.clickgui.ClickGUIScreen
+import cn.hkim.addon.gui.HudEditScreen
 import cn.hkim.addon.utils.customData
 import cn.hkim.addon.utils.modMessage
 import cn.hkim.addon.utils.playSoundAtPlayer
@@ -18,6 +19,10 @@ import net.minecraft.sounds.SoundEvent
 val hkimCommand = Commodore("hkim") {
     runs {
         mc.execute { mc.gui.setScreen(ClickGUIScreen(null)) }
+    }
+
+    literal("hud") {
+        mc.execute { mc.gui.setScreen(HudEditScreen(null)) }
     }
 
     literal("swapArmor").runs { index: Int, page: Int? ->
