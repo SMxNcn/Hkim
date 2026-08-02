@@ -91,9 +91,10 @@ public abstract class ItemInHandRendererMixin {
     }
 
     @WrapOperation(method = "renderArmWithItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/AbstractClientPlayer;isUsingItem()Z", ordinal = 1))
-    private boolean insertOldSwordAnimationIf(AbstractClientPlayer player, Operation<Boolean> original, @Local(argsOnly = true, name = "itemStack") ItemStack itemStack, @Local(argsOnly = true, name = "poseStack") PoseStack poseStack, @Local(argsOnly = true, name = "attack") float attack, @Local(argsOnly = true, name = "inverseArmHeight") float inverseArmHeight) {
+    private boolean insertOldSwordAnimationIf(AbstractClientPlayer player, Operation<Boolean> original, @Local(argsOnly = true, name = "hand") InteractionHand hand, @Local(argsOnly = true, name = "itemStack") ItemStack itemStack, @Local(argsOnly = true, name = "poseStack") PoseStack poseStack, @Local(argsOnly = true, name = "attack") float attack, @Local(argsOnly = true, name = "inverseArmHeight") float inverseArmHeight) {
         if (Animations.INSTANCE.shouldApplyOldAnimation(itemStack)) {
-            Animations.INSTANCE.animationVanilla(poseStack, inverseArmHeight, attack);
+            HumanoidArm arm = hand == InteractionHand.MAIN_HAND ? player.getMainArm() : player.getMainArm().getOpposite();
+            Animations.INSTANCE.animationVanilla(poseStack, arm, inverseArmHeight, attack);
             return false;
         }
         return original.call(player);
