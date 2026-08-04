@@ -19,7 +19,6 @@
     "ConnectionMixin",
     "ContainerScreenMixin",
     "DisconnectedScreenMixin",
-    "DownloadedPackSourceMixin",
     "EntityMixin",
     "EntityRendererMixin",
     "FallingBlockRendererMixin",
