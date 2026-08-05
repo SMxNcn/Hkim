@@ -169,5 +169,5 @@ object HuntingHelper : Module("Hunting Helper", "Automation tools for creature h
     }
 
     private fun isHuntingArea(): Boolean =
-        LocationUtils.isCurrentArea(Island.LotusAtoll, Island.Galatea, Island.TorrhusCanyon, Island.Safari)
+        LocationUtils.isCurrentArea(Island.LotusAtoll, Island.MoongladeMarsh, Island.TorrhusCanyon, Island.Safari)
 }
