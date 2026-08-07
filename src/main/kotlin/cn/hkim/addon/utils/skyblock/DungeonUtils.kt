@@ -8,7 +8,7 @@ import cn.hkim.addon.events.impl.WorldEvent
 import cn.hkim.addon.features.impl.LeapMenu
 import cn.hkim.addon.utils.Colors
 import cn.hkim.addon.utils.clean
-import cn.hkim.addon.utils.isPlayerInArea
+import cn.hkim.addon.utils.isPositionInArea
 import cn.hkim.addon.utils.romanToInt
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.core.BlockPos
@@ -114,7 +114,7 @@ enum class P3Stages(val corner1: BlockPos, val corner2: BlockPos) {
             for (stage in entries) {
                 if (stage == Unknown) continue
 
-                if (isPlayerInArea(stage.corner1, stage.corner2, playerPos)) {
+                if (isPositionInArea(stage.corner1, stage.corner2, playerPos)) {
                     return stage
                 }
             }
@@ -138,7 +138,7 @@ enum class P2LeapAreas(val corner1: BlockPos, val corner2: BlockPos) {
             val player = mc.player!!
             val playerPos = BlockPos(player.x.toInt(), player.y.toInt(), player.z.toInt())
 
-            return entries.firstOrNull { isPlayerInArea(it.corner1, it.corner2, playerPos) }
+            return entries.firstOrNull { isPositionInArea(it.corner1, it.corner2, playerPos) }
         }
     }
 }

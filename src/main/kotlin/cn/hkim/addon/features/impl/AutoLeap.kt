@@ -158,7 +158,7 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players based on predefined 
                         else DungeonClass.Archer
                     }
                     P3Stages.S4 -> {
-                        if (isPlayerInArea(BlockPos(62, 126, 34), BlockPos(64, 130, 36), playerPos)) {
+                        if (isPositionInArea(BlockPos(62, 126, 34), BlockPos(64, 130, 36), playerPos)) {
                             DungeonClass.Tank
                         } else DungeonClass.Mage
                     }
@@ -179,7 +179,7 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players based on predefined 
                     }
                     P3Stages.S2 -> null
                     P3Stages.S3 -> {
-                        if (isPlayerInArea(BlockPos(-3, 125, 80), BlockPos(3, 118, 74), playerPos)) {
+                        if (isPositionInArea(BlockPos(-3, 125, 80), BlockPos(3, 118, 74), playerPos)) {
                             DungeonClass.Berserk
                         } else if (isCore) DungeonClass.Mage
                         else DungeonClass.Archer

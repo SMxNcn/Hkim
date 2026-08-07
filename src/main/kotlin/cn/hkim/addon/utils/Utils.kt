@@ -49,7 +49,7 @@ inline val Entity.renderBoundingBox: AABB
 inline val mcVersion: String
     get() = SharedConstants.getCurrentVersion().name()
 
-fun isPlayerInArea(corner1: BlockPos, corner2: BlockPos, playerPos: BlockPos): Boolean {
+fun isPositionInArea(corner1: BlockPos, corner2: BlockPos, pos: BlockPos): Boolean {
     val minX = minOf(corner1.x, corner2.x)
     val maxX = maxOf(corner1.x, corner2.x)
     val minY = minOf(corner1.y, corner2.y)
@@ -57,9 +57,9 @@ fun isPlayerInArea(corner1: BlockPos, corner2: BlockPos, playerPos: BlockPos): B
     val minZ = minOf(corner1.z, corner2.z)
     val maxZ = maxOf(corner1.z, corner2.z)
 
-    return playerPos.x in minX..maxX &&
-            playerPos.y in minY..maxY &&
-            playerPos.z in minZ..maxZ
+    return pos.x in minX..maxX &&
+            pos.y in minY..maxY &&
+            pos.z in minZ..maxZ
 }
 
 fun leapTo(name: String, screenHandler: AbstractContainerScreen<*>, sendMessage: Boolean = true) {
