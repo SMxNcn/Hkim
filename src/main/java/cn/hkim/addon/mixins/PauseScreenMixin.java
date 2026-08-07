@@ -21,31 +21,42 @@ import static cn.hkim.addon.Hkim.mc;
 public abstract class PauseScreenMixin {
 
     @Unique
-    private static final Component REPORT_PLAYER_KEY = Component.translatable("menu.playerReporting");
+    private static final Component OPTIONS_KEY = Component.translatable("menu.options");
     @Unique
     private static final Component SERVER_LIST_LABEL = Component.translatable("hkim.server_list");
 
     @Inject(method = "init", at = @At("RETURN"))
-    private void replaceReportPlayerButton(CallbackInfo ci) {
+    private void addServerListButton(CallbackInfo ci) {
         Screen screen = (Screen) (Object) this;
+        if (mc.player == null) return;
+
         ScreenAccessor accessor = (ScreenAccessor) screen;
         List<AbstractWidget> renderables = accessor.getRenderables();
 
         for (int i = 0; i < renderables.size(); i++) {
             AbstractWidget widget = renderables.get(i);
-            if (widget instanceof Button button && REPORT_PLAYER_KEY.equals(button.getMessage())) {
+            if (widget instanceof Button button && OPTIONS_KEY.equals(button.getMessage())) {
+                if (button.getWidth() != 204) return;
+
+                int oldX = button.getX(), oldY = button.getY(), oldW = button.getWidth(), oldH = button.getHeight();
+                int halfW = 98;
+                int gap = 4;
+                int newX = oldX + (oldW - halfW * 2 - gap) / 2;
+
+                button.setX(newX);
+                button.setWidth(halfW);
+
                 Button serverListBtn = Button.builder(
                     SERVER_LIST_LABEL, _ -> mc.gui.setScreen(new JoinMultiplayerScreen(screen))
-                ).bounds(button.getX(), button.getY(), button.getWidth(), button.getHeight()).build();
+                ).bounds(newX + halfW + gap, oldY, halfW, oldH).build();
 
-                renderables.set(i, serverListBtn);
+                renderables.add(i + 1, serverListBtn);
 
                 List<AbstractWidget> children = accessor.getChildren();
                 int childIndex = children.indexOf(button);
                 if (childIndex != -1) {
-                    children.set(childIndex, serverListBtn);
+                    children.add(childIndex + 1, serverListBtn);
                 }
-
                 break;
             }
         }
