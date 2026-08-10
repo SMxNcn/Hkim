@@ -19,6 +19,7 @@ repositories {
     maven("https://maven.deftu.dev/snapshots")
     maven("https://maven.deftu.dev/releases")
     maven("https://maven.nucleoid.xyz/releases")
+    maven("https://api.modrinth.com/maven")
 }
 
 dependencies {
@@ -33,6 +34,7 @@ dependencies {
     implementation("com.terraformersmc:modmenu:${property("modmenu_version")}")
     runtimeOnly("me.djtheredstoner:DevAuth-fabric:${property("devauth_version")}")
     compileOnly("eu.pb4:placeholder-api:${property("placeholder_api_version")}")
+    compileOnly("maven.modrinth:iris:${property("iris_version")}")
 
     include("meteordevelopment:orbit:${property("orbit_version")}")
     include("com.github.stivais:Commodore:${property("commodore_version")}")

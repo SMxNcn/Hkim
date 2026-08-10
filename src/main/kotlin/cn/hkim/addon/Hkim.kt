@@ -11,6 +11,7 @@ import cn.hkim.addon.features.ModuleManager
 import cn.hkim.addon.gui.Background
 import cn.hkim.addon.utils.ServerUtils
 import cn.hkim.addon.utils.TickTasks
+import cn.hkim.addon.utils.render.IrisCompatibility
 import cn.hkim.addon.utils.skyblock.DungeonUtils
 import cn.hkim.addon.utils.skyblock.FailSafeUtils
 import cn.hkim.addon.utils.skyblock.LocationUtils
@@ -44,7 +45,7 @@ object Hkim : ClientModInitializer {
 
         EventDispatcher.postEvents()
         EventDispatcher.registerListeners(
-            CustomEventDispatcher, DungeonUtils, FailSafeUtils, LocationUtils, ServerUtils, TickTasks
+            CustomEventDispatcher, DungeonUtils, FailSafeUtils, IrisCompatibility, LocationUtils, ServerUtils, TickTasks
         )
         ModuleManager.initModules()
         ModuleConfig.loadConfig()
