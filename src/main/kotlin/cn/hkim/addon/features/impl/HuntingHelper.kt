@@ -63,7 +63,7 @@ object HuntingHelper : Module("Hunting Helper", "Features for creature hunting."
     private val huntingMobs = listOf(
         HuntingMob("Hideonsun", EntityType.SHULKER, Colors.MINECRAFT_GOLD, { hideonsunEsp },
             area = Island.TorrhusCanyon,
-            extra = { val c = (it as Shulker).color; c == DyeColor.YELLOW || c == DyeColor.BROWN }),
+            extra = { val c = (it as Shulker).color; c == DyeColor.YELLOW || c == DyeColor.ORANGE || c == DyeColor.BROWN }),
         HuntingMob("Hideonwall", EntityType.SHULKER, Colors.MINECRAFT_DARK_PURPLE, { hideonwallEsp },
             area = Island.Safari,
             extra = { (it as Shulker).color == DyeColor.PURPLE }),
