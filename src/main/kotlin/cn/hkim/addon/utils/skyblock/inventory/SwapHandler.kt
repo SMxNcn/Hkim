@@ -6,6 +6,7 @@ import cn.hkim.addon.events.impl.PacketReceiveEvent
 import cn.hkim.addon.features.impl.SwapOptions
 import cn.hkim.addon.utils.ViewLock
 import cn.hkim.addon.utils.cleanString
+import cn.hkim.addon.utils.schedule
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.client.player.ClientInput
 import net.minecraft.network.chat.Component
@@ -65,23 +66,24 @@ abstract class SwapHandler {
 
     @EventHandler
     protected open fun onPacket(event: PacketReceiveEvent) {
-        if (!SwapOptions.shouldHideGui() || !isInSwap || !isActive) return
+        if (!isInSwap || !isActive) return
+        val packet = event.packet as? ClientboundOpenScreenPacket ?: return
         val player = mc.player ?: return
-        when (val packet = event.packet) {
-            is ClientboundOpenScreenPacket -> {
-                mc.execute {
-                    player.containerMenu = packet.type.create(packet.containerId, player.inventory)
-                    consumeGuiOpen(packet.title)
-                }
-                event.cancel()
+        containerId = packet.containerId
+        if (SwapOptions.shouldHideGui()) {
+            mc.execute {
+                player.containerMenu = packet.type.create(packet.containerId, player.inventory)
+                consumeGuiOpen(packet.title)
             }
+            event.cancel()
+        } else {
+            schedule(1) { consumeGuiOpen(packet.title) }
         }
     }
 
     fun consumeGuiOpen(title: Component): Boolean {
         if (!isActive) return false
         if (isProcessing) return true
-        containerId = mc.player?.containerMenu?.containerId ?: return true
         handleGuiOpen(title.cleanString)
         return true
     }
