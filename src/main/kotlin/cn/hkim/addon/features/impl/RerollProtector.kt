@@ -1,5 +1,6 @@
 package cn.hkim.addon.features.impl
 
+import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.settings.BooleanSetting
 import cn.hkim.addon.config.settings.TextSetting
 import cn.hkim.addon.events.impl.GuiEvent
@@ -64,12 +65,18 @@ object RerollProtector : Module("Reroll Protector", "Prevent reroll when rare re
     }
 
     @EventHandler
-    private fun onSlotClock(event: GuiEvent.SlotClick) {
+    private fun onSlotClick(event: GuiEvent.SlotClick) {
         if (!enabled || !hasRareItems || event.slotId != REROLL_BUTTON_ID || !(LocationUtils.inDungeons || LocationUtils.inKuudra)) return
-        if (event.button == 0 || event.button == 1) {
-            event.cancel()
-            modMessage("§cReroll button has been §lDISABLED§r§c!")
-        }
+        event.cancel()
+        modMessage("§cReroll button has been §lDISABLED§r§c!")
+    }
+
+    @EventHandler
+    private fun onKeyPress(event: GuiEvent.KeyPress) {
+        if (!enabled || !hasRareItems || !(LocationUtils.inDungeons || LocationUtils.inKuudra)) return
+        if (!mc.options.keyDrop.matches(event.input)) return
+        event.cancel()
+        modMessage("§cReroll button has been §lDISABLED§r§c!")
     }
 
     @EventHandler
