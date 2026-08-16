@@ -2,6 +2,7 @@ package cn.hkim.addon.utils
 
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.mixins.accessors.KeyMappingAccessor
+import cn.hkim.addon.utils.skyblock.inventory.SwapHandler
 import net.minecraft.SharedConstants
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
@@ -48,7 +49,7 @@ inline val Entity.renderBoundingBox: AABB
 inline val mcVersion: String
     get() = SharedConstants.getCurrentVersion().name()
 
-fun isPlayerInArea(corner1: BlockPos, corner2: BlockPos, playerPos: BlockPos): Boolean {
+fun isPositionInArea(corner1: BlockPos, corner2: BlockPos, pos: BlockPos): Boolean {
     val minX = minOf(corner1.x, corner2.x)
     val maxX = maxOf(corner1.x, corner2.x)
     val minY = minOf(corner1.y, corner2.y)
@@ -56,17 +57,17 @@ fun isPlayerInArea(corner1: BlockPos, corner2: BlockPos, playerPos: BlockPos): B
     val minZ = minOf(corner1.z, corner2.z)
     val maxZ = maxOf(corner1.z, corner2.z)
 
-    return playerPos.x in minX..maxX &&
-            playerPos.y in minY..maxY &&
-            playerPos.z in minZ..maxZ
+    return pos.x in minX..maxX &&
+            pos.y in minY..maxY &&
+            pos.z in minZ..maxZ
 }
 
-fun leapTo(name: String, screenHandler: AbstractContainerScreen<*>) {
+fun leapTo(name: String, screenHandler: AbstractContainerScreen<*>, sendMessage: Boolean = true) {
     val index = screenHandler.menu.slots.subList(11, 16).firstOrNull {
         it.item.hoverName.string.substringAfter(' ').equals(name.clean, ignoreCase = true)
     }?.index ?: return
     mc.player?.clickInventorySlot(index, screenHandler.menu.containerId)
-    modMessage("Teleport to $name!")
+    if (sendMessage) modMessage("Teleport to $name!")
 }
 
 private val romanMap = mapOf('I' to 1, 'V' to 5, 'X' to 10, 'L' to 50, 'C' to 100, 'D' to 500, 'M' to 1000)
@@ -86,12 +87,12 @@ fun romanToInt(s: String): Int {
 fun toRadians(degrees: Float): Float = degrees * (PI / 180f).toFloat()
 
 fun Player.clickInventorySlot(slot: Int, containerId: Int, rightClick: Boolean = false) {
-    if (mc.gui.screen() == null) return
+    if (mc.gui.screen() == null && !SwapHandler.isInSwap) return
     mc.gameMode?.handleContainerInput(containerId, slot, if (rightClick) 1 else 0, ContainerInput.PICKUP, this)
 }
 
 fun Player.clickPlayerInventorySlot(slot: Int, containerId: Int) {
-    if (mc.gui.screen() == null) return
+    if (mc.gui.screen() == null && !SwapHandler.isInSwap) return
     val containerSlots = containerMenu.slots.size
     val actualSlot: Int
 

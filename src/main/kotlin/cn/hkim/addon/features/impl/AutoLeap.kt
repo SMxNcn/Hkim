@@ -11,9 +11,10 @@ import cn.hkim.addon.utils.*
 import cn.hkim.addon.utils.skyblock.*
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.core.BlockPos
 
 @ModuleInfo("auto_leap", Category.SKYBLOCK)
-object AutoLeap : Module("Auto Leap", "Auto leap to players based on predefined rules.") {
+object AutoLeap : Module("Auto Leap", "Auto leap to players in dungeons.") {
     private val m7py by BooleanSetting("Always PY", "Always doing PY in F/M7.", true)
     private val ee2Mage by BooleanSetting("Archer EE2", "Set EE2 leap target to Mage.", false)
     private val forceMageCore by BooleanSetting("Force Mage Core", "Always treat mage as core in P3 S3.", true)
@@ -24,7 +25,7 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players based on predefined 
 
     @EventHandler
     private fun onMouseClick(event: MouseButtonEvent) {
-        if (event.button != 0 || !LocationUtils.inDungeons) return
+        if (!enabled || event.button != 0 || !LocationUtils.inDungeons) return
 
         if (mc.player?.mainHandItem?.itemId.equalsOneOf("INFINITE_SPIRIT_LEAP", "SPIRIT_LEAP")) {
             targetClass = selectLeapTarget()
@@ -36,6 +37,7 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players based on predefined 
 
     @EventHandler
     private fun onGuiOpen(event: GuiEvent.Open) {
+        if (!enabled) return
         val chest = (event.screen as? AbstractContainerScreen<*>) ?: return
         inLeapGui = chest.title.string.equalsOneOf("Spirit Leap", "Teleport to Player")
         if (!LocationUtils.inDungeons || !inLeapGui || !shouldAutoLeap) return
@@ -58,7 +60,7 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players based on predefined 
         }
 
         try {
-            leapTo(targetPlayer.name, screen)
+            leapTo(targetPlayer.name, screen, false)
             modMessage("Teleporting to ${targetPlayer.name} (${targetClass})")
         } catch (_: Exception) {} finally {
             inLeapGui = false
@@ -118,6 +120,9 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players based on predefined 
     private fun queryRule(sourceClass: DungeonClass, phase: M7Phases, p3Stage: P3Stages, isCore: Boolean = false): DungeonClass? {
         if (phase == M7Phases.P2) return queryP2Rule(sourceClass)
 
+        val player = mc.player!!
+        val playerPos = BlockPos(player.x.toInt(), player.y.toInt(), player.z.toInt())
+
         return when (sourceClass) {
             DungeonClass.Archer -> when (phase) {
                 M7Phases.P1 -> DungeonClass.Berserk
@@ -152,7 +157,11 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players based on predefined 
                         if (isCore) DungeonClass.Mage
                         else DungeonClass.Archer
                     }
-                    P3Stages.S4 -> DungeonClass.Mage
+                    P3Stages.S4 -> {
+                        if (isPositionInArea(BlockPos(62, 126, 34), BlockPos(64, 130, 36), playerPos)) {
+                            DungeonClass.Tank
+                        } else DungeonClass.Mage
+                    }
                     P3Stages.Tunnel -> DungeonClass.Healer
                     else -> null
                 }
@@ -170,7 +179,9 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players based on predefined 
                     }
                     P3Stages.S2 -> null
                     P3Stages.S3 -> {
-                        if (isCore) DungeonClass.Mage
+                        if (isPositionInArea(BlockPos(-3, 125, 80), BlockPos(3, 118, 74), playerPos)) {
+                            DungeonClass.Berserk
+                        } else if (isCore) DungeonClass.Mage
                         else DungeonClass.Archer
                     }
                     P3Stages.S4 -> DungeonClass.Mage

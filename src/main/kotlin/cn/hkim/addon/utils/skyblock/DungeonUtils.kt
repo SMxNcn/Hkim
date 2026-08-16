@@ -8,7 +8,7 @@ import cn.hkim.addon.events.impl.WorldEvent
 import cn.hkim.addon.features.impl.LeapMenu
 import cn.hkim.addon.utils.Colors
 import cn.hkim.addon.utils.clean
-import cn.hkim.addon.utils.isPlayerInArea
+import cn.hkim.addon.utils.isPositionInArea
 import cn.hkim.addon.utils.romanToInt
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.core.BlockPos
@@ -114,7 +114,7 @@ enum class P3Stages(val corner1: BlockPos, val corner2: BlockPos) {
             for (stage in entries) {
                 if (stage == Unknown) continue
 
-                if (isPlayerInArea(stage.corner1, stage.corner2, playerPos)) {
+                if (isPositionInArea(stage.corner1, stage.corner2, playerPos)) {
                     return stage
                 }
             }
@@ -124,12 +124,12 @@ enum class P3Stages(val corner1: BlockPos, val corner2: BlockPos) {
     }
 }
 
-enum class P2LeapAreas(val displayName: String, val corner1: BlockPos, val corner2: BlockPos) {
-    PurplePillar("Purple Pillar", BlockPos(87, 169, 54), BlockPos(112, 174, 74)),
-    PurplePad("Purple Pad", BlockPos(122, 170, 86), BlockPos(160, 180, 102)),
-    YellowPillar("Yellow Pillar", BlockPos(59, 169, 54), BlockPos(34, 174, 74)),
-    YellowPad("Yellow Pad", BlockPos(40, 170, 102), BlockPos(24, 180, 86)),
-    PurpleStorm("Purple Storm", BlockPos(102, 166, 90), BlockPos(98, 170, 94));
+enum class P2LeapAreas(val corner1: BlockPos, val corner2: BlockPos) {
+    PurplePillar(BlockPos(87, 169, 54), BlockPos(112, 174, 74)),
+    PurplePad(BlockPos(122, 170, 86), BlockPos(106, 180, 102)),
+    YellowPillar(BlockPos(59, 169, 54), BlockPos(34, 174, 74)),
+    YellowPad(BlockPos(40, 170, 102), BlockPos(24, 180, 86)),
+    PurpleStorm(BlockPos(102, 162, 90), BlockPos(94, 170, 94));
 
     companion object {
         fun getP2Area(): P2LeapAreas? {
@@ -138,7 +138,7 @@ enum class P2LeapAreas(val displayName: String, val corner1: BlockPos, val corne
             val player = mc.player!!
             val playerPos = BlockPos(player.x.toInt(), player.y.toInt(), player.z.toInt())
 
-            return entries.firstOrNull { isPlayerInArea(it.corner1, it.corner2, playerPos) }
+            return entries.firstOrNull { isPositionInArea(it.corner1, it.corner2, playerPos) }
         }
     }
 }

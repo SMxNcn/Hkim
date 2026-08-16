@@ -47,8 +47,8 @@ inline val ItemStack.strength: Int
         strengthRegex.find(lineString)?.groups?.get(1)?.value?.toIntOrNull()
     } ?: 0
 
-fun ItemStack.isEtherwarpItem(): CompoundTag? =
-    customData.takeIf { it.getInt("ethermerge").orElse(0) == 1 || it.itemId == "ETHERWARP_CONDUIT" }
+inline val ItemStack.hasEthermerge: Boolean
+    get() = customData.getInt("ethermerge").orElse(0) == 1
 
 fun isSkyBlockItem(stack: ItemStack): Boolean {
     if (stack.isEmpty) return false
@@ -56,11 +56,11 @@ fun isSkyBlockItem(stack: ItemStack): Boolean {
     return customData.copy().contains("id")
 }
 
-fun findItemByID(itemID: String?): Int {
+fun findItemByID(itemID: String?, hotbar: Boolean = false): Int {
     if (itemID.isNullOrEmpty()) return -1
     val player = mc.player ?: return -1
 
-    return (0 until 36)
+    return (0 until if (hotbar) 9 else 36)
         .firstOrNull { slot ->
             val stack = player.inventory.getItem(slot)
             !stack.isEmpty && stack.itemId.contains(itemID, ignoreCase = true)
@@ -128,3 +128,6 @@ private fun isBlockCarrier(block: Block, state: BlockState): Boolean {
             block is AzaleaBlock ||
             block is FrogspawnBlock
 }
+
+inline val ItemStack.hasGlint: Boolean
+    get() = get(DataComponents.ENCHANTMENT_GLINT_OVERRIDE) ?: false
