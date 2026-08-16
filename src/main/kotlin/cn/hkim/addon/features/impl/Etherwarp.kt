@@ -19,7 +19,7 @@ object Etherwarp : Module("Etherwarp", "Sneak to instantly Etherwarp with AOTV/A
 
     @EventHandler
     private fun onInput(event: InputEvent) {
-        if (!enabled || !LocationUtils.inSkyBlock || mc.player == null || mc.screen != null) return
+        if (!enabled || FreeCam.isFreecamActive || !LocationUtils.inSkyBlock || mc.player == null || mc.screen != null) return
         if (event.key != mc.options.keyShift.defaultKey) return
         if (handledThisPress) return
         handledThisPress = true
