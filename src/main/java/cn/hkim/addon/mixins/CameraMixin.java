@@ -138,12 +138,6 @@ public abstract class CameraMixin {
         return FreeCam.isFreecamActive() || CameraHelper.canCameraClip() || CleanView.shouldSeeThroughBlocks() || isSpectator;
     }
 
-    /**
-     * isSpectator=true only triggers smartCull=false when the camera is inside a
-     * solid block (isSolidRender check). For FreeCam in open air, smartCull stays
-     * true and wrongly culls chunks. This tail injection unconditionally disables
-     * smart culling when the camera is detached from the player.
-     */
     @Inject(method = "extractRenderState", at = @At("TAIL"))
     private void hkim$onExtractRenderStateTail(CameraRenderState cameraState, float partialTicks, CallbackInfo ci) {
         if (FreeCam.isFreecamActive() || CameraHelper.canCameraClip()) {

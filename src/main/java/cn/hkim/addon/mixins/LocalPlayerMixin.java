@@ -1,7 +1,5 @@
 package cn.hkim.addon.mixins;
 
-import cn.hkim.addon.Hkim;
-import cn.hkim.addon.events.impl.PlayerEvent;
 import cn.hkim.addon.features.impl.AutoSprint;
 import cn.hkim.addon.utils.RotationUtils;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
@@ -16,9 +14,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class LocalPlayerMixin {
 
     @Unique
-    private boolean lastSneaking = false;
-
-    @Unique
     private float hkim$savedYaw;
 
     @Unique
@@ -29,16 +24,6 @@ public class LocalPlayerMixin {
 
     @Unique
     private boolean hkim$hasLastSentYaw;
-
-    @Inject(method = "tick", at = @At("HEAD"))
-    private void onTick(CallbackInfo ci) {
-        LocalPlayer self = (LocalPlayer) (Object) this;
-        boolean sneaking = self.input.keyPresses.shift();
-        if (!lastSneaking && sneaking) {
-            Hkim.EVENT_BUS.post(new PlayerEvent.Sneak());
-        }
-        lastSneaking = sneaking;
-    }
 
     @Inject(method = "tick", at = @At("RETURN"))
     private void onTickEnd(CallbackInfo ci) {

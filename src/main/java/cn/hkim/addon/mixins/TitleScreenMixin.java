@@ -26,14 +26,14 @@ public abstract class TitleScreenMixin {
             return;
         }
 
-        ClientButton ncBtn = new ClientButton(screen.width - 55, -7, 50, 18, coloredChar("Necron", 0xFF8EDDFF), _ -> {
+        ClientButton hkimButton = new ClientButton(screen.width - 55, -7, 50, 18, coloredChar("Hkim", 0xFF8EDDFF), _ -> {
             MainMenuModule.INSTANCE.setEnabled(true);
             ModuleConfig.INSTANCE.saveConfig();
             mc.gui.setScreen(new MainMenu());
         });
 
         ScreenAccessor accessor = (ScreenAccessor)screen;
-        accessor.getRenderables().add(ncBtn);
-        accessor.getChildren().add(ncBtn);
+        accessor.getRenderables().add(hkimButton);
+        accessor.getChildren().add(hkimButton);
     }
 }
