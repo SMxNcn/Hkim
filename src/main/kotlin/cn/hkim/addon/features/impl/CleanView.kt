@@ -8,6 +8,7 @@ import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.utils.cleanString
+import cn.hkim.addon.utils.containsOneOf
 import cn.hkim.addon.utils.skyblock.LocationUtils
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.world.inventory.ChestMenu
@@ -41,7 +42,8 @@ object CleanView : Module("Clean View", "Hides unwanted renderings.") {
         val chest = mc.player?.containerMenu as? ChestMenu ?: return
         val slot = chest.slots.getOrNull(event.slotId) ?: return
 
-        if (cleanGui && slot.hasItem() && slot.item.displayName.cleanString.isBlank()) {
+        if (cleanGui && slot.hasItem() && slot.item.displayName.cleanString.isBlank() &&
+            !event.screen.title.cleanString.containsOneOf("Chronomatron", "Ultrasequencer")) {
             event.cancel()
             return
         }

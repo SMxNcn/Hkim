@@ -44,7 +44,7 @@ abstract class Module(
     open fun onDisable() {}
     open fun render(graphics: GuiGraphicsExtractor, tickTracker: DeltaTracker) {
         for (hud in hudElements) {
-            hud.render(graphics, tickTracker)
+            hud.render(graphics)
         }
     }
 

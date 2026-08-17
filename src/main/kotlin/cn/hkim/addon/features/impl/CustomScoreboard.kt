@@ -53,7 +53,7 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard background & l
 
     private val hud by HudElement("Scoreboard", "Replaces the vanilla scoreboard.",
         alignment = HudAlignment.TOP_RIGHT
-    ) { graphics, _ ->
+    ) { graphics ->
         if (!this@CustomScoreboard.enabled) return@HudElement Pair(0f, 0f)
         val size = renderScoreboard(graphics)
         afterRender(size)

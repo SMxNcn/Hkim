@@ -59,7 +59,6 @@ object TimiteHelper {
 
 
     private fun scanInventory() {
-        println("Scan Inventory!")
         val player = mc.player ?: return
 
         var y = 0; var t = 0; var o = 0

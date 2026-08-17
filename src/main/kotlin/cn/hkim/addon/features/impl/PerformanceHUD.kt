@@ -23,7 +23,7 @@ object PerformanceHUD : Module("Performance HUD", "Shows performance information
 
     private val hud by HudElement("Performance", "Shows performance information on the screen.",
         x = 5f, y = 5f, alignment = HudAlignment.TOP_LEFT
-    ) { graphics, _ ->
+    ) { graphics ->
         if (this@PerformanceHUD.enabled) renderContent(graphics) else Pair(0f, 0f)
     }
 

@@ -26,7 +26,7 @@ object ModuleList : Module("Module List", "Enabled features list.") {
     private val moduleNames: List<String>
         get() = ModuleManager.getEnabledToName()
 
-    private val hud by HudElement("Array List", "Render enabled modules.") { graphics, _ ->
+    private val hud by HudElement("Array List", "Render enabled modules.") { graphics ->
         if (this@ModuleList.enabled && !mc.options.hideGui) {
             this@ModuleList.renderContent(graphics)
         } else {

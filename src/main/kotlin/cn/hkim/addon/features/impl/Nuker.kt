@@ -9,6 +9,8 @@ import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.mixins.accessors.LevelRendererAccessor
 import cn.hkim.addon.utils.*
 import cn.hkim.addon.utils.render.drawWireFrameBox
+import cn.hkim.addon.utils.skyblock.Island
+import cn.hkim.addon.utils.skyblock.LocationUtils
 import cn.hkim.addon.utils.skyblock.mining.*
 import cn.hkim.addon.utils.skyblock.mining.MineralType.Companion.isHighPriorityBlock
 import meteordevelopment.orbit.EventHandler
@@ -147,6 +149,46 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
         }
     }
 
+    @EventHandler
+    private fun onBlockUpdate(event: WorldEvent.BlockUpdate) {
+        if (!enabled || !isMiningArea()) return
+        if (event.pos == currentTarget && !HitPosHelper.matchesAnyMineral(event.newState)) {
+            clearTarget()
+        }
+        if (targetType == 4 && HitPosHelper.matchesAnyMineral(event.oldState)
+            && !HitPosHelper.matchesAnyMineral(event.newState)) {
+            TimiteHelper.scanNow()
+        }
+    }
+
+    @EventHandler
+    private fun onRender(event: RenderEvent.Extract) {
+        if (!enabled) {
+            if (RotationUtils.isSilentAiming || RotationUtils.isStoppingAiming) {
+                RotationUtils.tickStopAiming(aimSpeed / 5f)
+            }
+            return
+        }
+
+        if (mc.screen != null || wasScreenOpen || screenJustClosed) return
+
+        val hitPos = currentHitPos
+        if (hitPos != null) {
+            aimAt(hitPos)
+        } else if (!hasMineralsInRange && (RotationUtils.isSilentAiming || RotationUtils.isStoppingAiming)) {
+            RotationUtils.tickStopAiming(aimSpeed / 5f)
+            return
+        }
+
+        val pos = currentTarget ?: return
+        event.drawWireFrameBox(
+            AABB(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(),
+                pos.x + 1.0, pos.y + 1.0, pos.z + 1.0),
+            Color(highlightColor),
+            2f, false
+        )
+    }
+
     private fun executeTimiteAction(player: Player) {
         val blockMineral = currentMineral ?: run {
             holdKey(mc.options.keyUse, false)
@@ -198,45 +240,6 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
         MineralType.TIMITE to 1,
         MineralType.OBSOLITE to 2,
     )
-
-    @EventHandler
-    private fun onBlockUpdate(event: WorldEvent.BlockUpdate) {
-        if (event.pos == currentTarget && !HitPosHelper.matchesAnyMineral(event.newState)) {
-            clearTarget()
-        }
-        if (targetType == 4 && HitPosHelper.matchesAnyMineral(event.oldState)
-            && !HitPosHelper.matchesAnyMineral(event.newState)) {
-            TimiteHelper.scanNow()
-        }
-    }
-
-    @EventHandler
-    private fun onRender(event: RenderEvent.Extract) {
-        if (!enabled) {
-            if (RotationUtils.isSilentAiming || RotationUtils.isStoppingAiming) {
-                RotationUtils.tickStopAiming(aimSpeed / 5f)
-            }
-            return
-        }
-
-        if (mc.screen != null || wasScreenOpen || screenJustClosed) return
-
-        val hitPos = currentHitPos
-        if (hitPos != null) {
-            aimAt(hitPos)
-        } else if (!hasMineralsInRange && (RotationUtils.isSilentAiming || RotationUtils.isStoppingAiming)) {
-            RotationUtils.tickStopAiming(aimSpeed / 5f)
-            return
-        }
-
-        val pos = currentTarget ?: return
-        event.drawWireFrameBox(
-            AABB(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(),
-                 pos.x + 1.0, pos.y + 1.0, pos.z + 1.0),
-            Color(highlightColor),
-            2f, false
-        )
-    }
 
     override fun onEnable() {
         val player = mc.player ?: return
@@ -372,4 +375,7 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
             1 -> RotationUtils.aimSilent(hitPos, aimSpeed / 10f, 1.2f)
         }
     }
+
+    private fun isMiningArea(): Boolean =
+        LocationUtils.isCurrentArea(Island.DwarvenMines, Island.CrystalHollows, Island.Mineshaft, Island.Rift)
 }

@@ -1,6 +1,7 @@
 package cn.hkim.addon.utils.skyblock
 
 import cn.hkim.addon.Hkim
+import cn.hkim.addon.utils.skyblock.hunting.SafariArea
 import net.minecraft.resources.Identifier
 
 enum class RollType(val displayName: String) {
@@ -78,10 +79,11 @@ object InfoUtils {
         val pos = Hkim.mc.player?.blockPosition() ?: return "Unknown"
         val coord = "x: ${pos.x}, y: ${pos.y}, z: ${pos.z}"
         val zonePrefix = if (LocationUtils.isCurrentArea(Island.Rift)) "ф" else "⏣"
-        val location = when {
-            LocationUtils.inDungeons -> "${LocationUtils.currentArea.displayName} ${DungeonUtils.floor?.name ?: ""}"
-            LocationUtils.inKuudra -> "${LocationUtils.currentArea.displayName} ${LocationUtils.kuudraTier.ifEmpty { "" }}"
-            else -> "${LocationUtils.currentArea.displayName} - $zonePrefix ${LocationUtils.getCurrentZone() ?: ""}"
+        val location = LocationUtils.currentArea.displayName + when {
+            LocationUtils.inDungeons -> " ${DungeonUtils.floor?.name ?: ""}"
+            LocationUtils.inKuudra -> " ${LocationUtils.kuudraTier.ifEmpty { "" } }"
+            LocationUtils.isCurrentArea(Island.Safari) -> " ${SafariArea.getCurrentArea()?.name ?: ""} Area"
+            else -> " - $zonePrefix ${LocationUtils.getCurrentZone() ?: ""}"
         }
         return "$coord | $location"
     }

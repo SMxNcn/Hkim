@@ -3,7 +3,6 @@ package cn.hkim.addon.hud
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.features.Module
 import com.google.gson.JsonObject
-import net.minecraft.client.DeltaTracker
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import kotlin.math.round
 import kotlin.properties.PropertyDelegateProvider
@@ -20,7 +19,7 @@ class HudElement(
     y: Float = 10f,
     scale: Float = 1f,
     alignment: HudAlignment = HudAlignment.TOP_LEFT,
-    val renderContent: (GuiGraphicsExtractor, DeltaTracker) -> Pair<Float, Float>
+    val renderContent: (GuiGraphicsExtractor) -> Pair<Float, Float>
 ) : PropertyDelegateProvider<Module, HudElement> {
 
     var configKey: String = "hud"
@@ -121,7 +120,7 @@ class HudElement(
         }
     }
 
-    fun render(graphics: GuiGraphicsExtractor, tickTracker: DeltaTracker) {
+    fun render(graphics: GuiGraphicsExtractor) {
         if (!isVisible()) return
 
         if (!hasRendered) {
@@ -134,7 +133,7 @@ class HudElement(
         graphics.pose().pushMatrix()
         graphics.pose().translate(actualX(), actualY())
         graphics.pose().scale(hudScale, hudScale)
-        val (w, h) = renderContent(graphics, tickTracker)
+        val (w, h) = renderContent(graphics)
         contentWidth = w
         contentHeight = h
         graphics.pose().popMatrix()
