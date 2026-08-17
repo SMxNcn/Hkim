@@ -14,13 +14,11 @@
   "client": [
     "AbstractContainerScreenMixin",
     "CameraMixin",
-    "ChatComponentMixin",
     "ClientPacketListenerMixin",
     "ConnectionMixin",
     "ConnectScreenMixin",
     "ContainerScreenMixin",
     "DisconnectedScreenMixin",
-    "DownloadedPackSourceMixin",
     "EntityMixin",
     "EntityRendererMixin",
     "FallingBlockRendererMixin",
