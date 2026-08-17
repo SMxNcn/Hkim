@@ -1,6 +1,8 @@
 package cn.hkim.addon.utils.skyblock.farming
 
 import cn.hkim.addon.Hkim
+import cn.hkim.addon.utils.clean
+import cn.hkim.addon.utils.cleanString
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
@@ -75,10 +77,10 @@ data class Plot(val id: Int, val corner1: BlockPos, val corner2: BlockPos) {
         fun byId(id: Int): Plot? = plotsById[id]
 
         fun byName(name: String): Plot? =
-            all.firstOrNull { it.displayName == name }
+            all.firstOrNull { it.displayName.clean == name.clean }
 
         fun resolveName(name: String): Int? =
-            name.toIntOrNull() ?: byName(name)?.id
+            name.toIntOrNull()?.takeIf { it in 0..24 } ?: byName(name)?.id
 
         fun at(pos: BlockPos): Plot? {
             if (pos.x < ORIGIN_X || pos.x > ORIGIN_X + GRID * SIZE - 1) return null
@@ -115,7 +117,7 @@ data class Plot(val id: Int, val corner1: BlockPos, val corner2: BlockPos) {
                     val plotId = PLOT_GRID[GRID - 1 - localRow][localCol]
                     val plot = plotsById[plotId] ?: continue
                     plot.itemStack = item
-                    val fullName = item.hoverName.string
+                    val fullName = item.hoverName.cleanString
                     plot.displayName = plotNameRegex.find(fullName)?.groupValues?.get(1) ?: fullName
                 }
             }
@@ -130,7 +132,7 @@ data class Plot(val id: Int, val corner1: BlockPos, val corner2: BlockPos) {
                 for (i in 0 until json.size().coerceAtMost(25)) {
                     val obj = json.get(i).asJsonObject
                     val plot = byId(i) ?: continue
-                    plot.displayName = if (obj.has("name")) obj.get("name").asString else i.toString()
+                    plot.displayName = if (obj.has("name")) obj.get("name").asString.clean else i.toString()
                     val itemIdStr = obj.get("item")?.asString
                     if (itemIdStr != null && itemIdStr.contains(":")) {
                         val parts = itemIdStr.split(":", limit = 2)

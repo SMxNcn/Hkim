@@ -53,7 +53,7 @@ object CustomEventDispatcher {
             plotsRegex.find(display)?.let { m ->
                 PestTracker.pestPlots = m.groupValues[1]
                     .split(",")
-                    .mapNotNull { it.trim().toIntOrNull() }
+                    .mapNotNull { Plot.resolveName(it.trim()) }
                     .toSet()
             }
         }
