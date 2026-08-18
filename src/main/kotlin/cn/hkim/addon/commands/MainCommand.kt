@@ -26,6 +26,10 @@ val hkimCommand = Commodore("hkim") {
         mc.execute { mc.gui.setScreen(HudEditScreen(null)) }
     }
 
+    literal("plot").runs {
+        mc.execute { mc.gui.setScreen(GardenPlotScreen()) }
+    }
+
     literal("swapArmor").runs { index: Int, page: Int? ->
         Hkim.scope.launch {
             if (page != null) swapArmorTo(index, page)
