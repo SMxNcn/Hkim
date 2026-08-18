@@ -41,6 +41,7 @@
     "OptionsMixin",
     "ParticleEngineMixin",
     "PauseScreenMixin",
+    "RenderSystemMixin",
     "ScreenEffectRendererMixin",
     "ScreenMixin",
     "TitleScreenMixin",

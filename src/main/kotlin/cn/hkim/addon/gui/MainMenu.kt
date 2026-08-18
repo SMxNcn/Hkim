@@ -47,16 +47,16 @@ class MainMenu : Screen(Component.literal("Main Menu")) {
     }
 
     override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
-        val s1 = "Minecraft $mcVersion"
+        val s1 = " · Minecraft $mcVersion"
         val s2 = "Hkim v${Hkim.VERSION}"
         val s3 = "Cheaters get banned!"
-        val versionComp = buildGradientComponent(s2, Color(142, 221, 255).rgb, Color(166, 166, 166).rgb, 3)
+        val versionComp = buildGradientComponent(s2, Color(142, 221, 255).rgb, Color(180, 180, 180).rgb, 3)
 
         Background.update()
         this.updateParallax(mouseX.toDouble(), mouseY.toDouble())
         this.extractBackground(graphics, mouseX, mouseY, partialTick)
-        graphics.text(mc.font, s1, 2, height - 10, 0xFFFFFFFF.toInt())
-        graphics.text(mc.font, versionComp, 2, height - 20, 0xFFFFFFFF.toInt(), true)
+        graphics.text(mc.font, s1, mc.font.width(s2) + 2, height - 10, 0xFFFFFFFF.toInt())
+        graphics.text(mc.font, versionComp, 2, height - 10, 0xFFFFFFFF.toInt(), true)
         graphics.text(mc.font, s3, width - mc.font.width(s3) - 2, height - 10, 0xFFFFFFFF.toInt())
         super.extractRenderState(graphics, mouseX, mouseY, partialTick)
     }
@@ -105,8 +105,8 @@ class MainMenu : Screen(Component.literal("Main Menu")) {
         Background.renderBackground(this, graphics, currentParallaxX, currentParallaxY)
 
         NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
-            NVGRenderer.rect((centerX - rectW / 4f) * 2f, (centerY - rectH / 4f) * 2f, rectW, rectW, Color(0x0f8C8C8C, true), 12f)
-            NVGRenderer.hollowRect((centerX - rectW / 4f) * 2f, (centerY - rectH / 4f) * 2f, rectW, rectW, 2.5f, Color(0x4D969696, true), 12f)
+            NVGRenderer.rect((centerX - rectW / 4f) * 2f, (centerY - rectH / 4f) * 2f, rectW, rectW, Color(0x0f8C8C8C, true), 16f)
+            NVGRenderer.hollowRect((centerX - rectW / 4f) * 2f, (centerY - rectH / 4f) * 2f, rectW, rectW, 2.5f, Color(0x4D969696, true), 16f)
         }
 
         val logoSize = 64
