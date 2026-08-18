@@ -4,6 +4,7 @@ import cn.hkim.addon.Hkim
 import cn.hkim.addon.config.settings.*
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleManager
+import cn.hkim.addon.utils.HudUtils
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
 import net.fabricmc.loader.api.FabricLoader
@@ -127,9 +128,9 @@ object ModuleConfig {
                         val rawValue = if (element.isJsonPrimitive && element.asJsonPrimitive.isNumber) {
                             element.asInt
                         } else {
-                            ColorSetting.fromHexString(element.asString)
+                            HudUtils.fromHexString(element.asString)
                         }
-                        setting.set(rawValue)
+                        rawValue?.let { setting.set(it) }
                     }
                     is NumberSetting -> setting.set(snapNumber(element.asDouble, setting.min, setting.max, setting.step))
                     is KeybindSetting -> {
@@ -159,7 +160,7 @@ object ModuleConfig {
 
             when (setting) {
                 is BooleanSetting -> json.addProperty(key, value as Boolean)
-                is ColorSetting -> json.addProperty(key, ColorSetting.toHexString(value as Int))
+                is ColorSetting -> json.addProperty(key, HudUtils.toHexString(value as Int))
                 is NumberSetting -> json.addProperty(key, (cleanDoubleForJson(value as Number)))
                 is KeybindSetting -> json.addProperty(key, KeybindSetting.keyCodeToGlfwName(value as Int))
                 is TextSetting -> json.addProperty(key, value as String)

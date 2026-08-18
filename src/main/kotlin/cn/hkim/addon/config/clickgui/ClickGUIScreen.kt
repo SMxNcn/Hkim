@@ -637,7 +637,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
 
     private fun parseColorHex(hex: String): Int? {
         return try {
-            ColorSetting.fromHexString(hex)
+            HudUtils.fromHexString(hex)
         } catch (_: Exception) { null }
     }
 }
