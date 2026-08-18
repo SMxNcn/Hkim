@@ -21,15 +21,15 @@ import meteordevelopment.orbit.EventHandler
 object AutoSwap : Module("Auto Swap", "Auto swap spirit/bonzo.") {
     private val useCustomDelay by BooleanSetting("Custom Swap Delay", "Customize delay before swapping items.", false)
     private val custom by DropdownSetting("Delay", "Delay settings.", false).depends { useCustomDelay }
-    private val spiritDelay by NumberSetting("Spirit Swap Delay", "Delay before equipping Spirit Mask.", 200f, 100f, 2000f, 50f).depends { custom }
-    private val phoenixDelay by NumberSetting("Phoenix Swap Delay", "Delay before use Auto Pet rod.", 200f, 100f, 2000f, 50f).depends { custom }
+    private val spiritDelay by NumberSetting("Spirit Delay", "Delay before equipping Spirit Mask.", 200f, 100f, 2000f, 50f, unit = "ms").depends { custom }
+    private val phoenixDelay by NumberSetting("Phoenix Delay", "Delay before use Auto Pet rod.", 200f, 100f, 2000f, 50f, unit = "ms").depends { custom }
 
     private val bonzoRegex = Regex("^Your (?:. )?Bonzo's Mask saved your life!$")
     private val spiritRegex = Regex("^Second Wind Activated! Your Spirit Mask saved your life!$")
 
     @EventHandler
     private fun onChat(event: ChatReceiveEvent) {
-        if (!LocationUtils.inDungeons) return
+        if (!enabled || !LocationUtils.inDungeons) return
 
         when {
             event.message.matches(bonzoRegex) -> Hkim.scope.launch { handleBonzo() }

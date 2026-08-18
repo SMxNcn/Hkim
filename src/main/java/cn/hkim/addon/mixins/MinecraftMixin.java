@@ -44,7 +44,7 @@ public abstract class MinecraftMixin {
 
     @Inject(method = "stop", at = @At("HEAD"))
     private void onStop(CallbackInfo ci) {
-        ModuleConfig.INSTANCE.saveConfig();
+        ModuleConfig.INSTANCE.saveConfigImmediate();
     }
 
     @ModifyReturnValue(method = "createTitle", at = @At("RETURN"))

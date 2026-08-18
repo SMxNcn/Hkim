@@ -51,7 +51,7 @@ object ModuleManager {
                 }
             }
         }
-        Hkim.logger.info("HUD element render hook registered")
+        Hkim.logger.info("HUD element render hook registered.")
     }
 
     private fun registerAll(modules: List<Module>) {

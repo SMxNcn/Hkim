@@ -15,7 +15,7 @@ import net.minecraft.network.chat.Component
 import java.awt.Color
 
 @ModuleInfo("custom_scoreboard", Category.MISC)
-object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard background & last-line replacement.") {
+object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard features.") {
     private const val EXAMPLE_TITLE = "§e§lSKYBLOCK"
     private val EXAMPLE_LINES = listOf(
         "§6  5,234,567",
@@ -53,7 +53,7 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard background & l
 
     private val hud by HudElement("Scoreboard", "Replaces the vanilla scoreboard.",
         alignment = HudAlignment.TOP_LEFT
-    ) { graphics, _ ->
+    ) { graphics ->
         if (!this@CustomScoreboard.enabled) return@HudElement Pair(0f, 0f)
         val size = renderScoreboard(graphics)
         afterRender(size)

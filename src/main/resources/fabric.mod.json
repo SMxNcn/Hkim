@@ -3,16 +3,21 @@
   "id": "hkim",
   "version": "${mod_version}",
   "name": "Hkim",
-  "description": "Orbit test mod.",
-  "authors": [],
+  "description": "A Hypixel Skyblock mod.",
+  "authors": ["SMxNcn"],
   "contact": {
-    "homepage": "https://nckim.top",
-    "github": "https://github.com/SMxNcn/Hkim"
+    "sources": "https://github.com/SMxNcn/Hkim"
   },
   "license": "BSD-3-Clause",
   "icon": "assets/hkim/icon.png",
   "environment": "client",
   "entrypoints": {
+    "preLaunch": [
+      {
+        "adapter": "kotlin",
+        "value": "cn.hkim.prelaunch.HkimPreLaunch"
+      }
+    ],
     "client": [
       {
         "adapter": "kotlin",
@@ -30,7 +35,9 @@
     "fabricloader": ">=${loader_version}",
     "fabric-api": ">=${fabric_api_version}",
     "minecraft": "~26.2",
-    "fabric-language-kotlin": ">=${fabric_kotlin_version}",
-    "modmenu": ">=${modmenu_version}"
+    "fabric-language-kotlin": ">=${fabric_kotlin_version}"
+  },
+  "breaks": {
+    "iris": "*"
   }
 }

@@ -20,7 +20,7 @@ class HudElement(
     y: Float = 10f,
     scale: Float = 1f,
     alignment: HudAlignment = HudAlignment.TOP_LEFT,
-    val renderContent: (GuiGraphicsExtractor, DeltaTracker) -> Pair<Float, Float>
+    val renderContent: (GuiGraphicsExtractor) -> Pair<Float, Float>
 ) : PropertyDelegateProvider<Module, HudElement> {
 
     var configKey: String = "hud"
@@ -134,7 +134,7 @@ class HudElement(
         graphics.pose().pushMatrix()
         graphics.pose().translate(actualX(), actualY())
         graphics.pose().scale(hudScale, hudScale)
-        val (w, h) = renderContent(graphics, tickTracker)
+        val (w, h) = renderContent(graphics)
         contentWidth = w
         contentHeight = h
         graphics.pose().popMatrix()

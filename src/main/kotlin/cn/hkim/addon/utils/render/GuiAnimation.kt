@@ -110,6 +110,14 @@ class GuiAnimation internal constructor(
         return start()
     }
 
+    fun snapTo(value: Float): GuiAnimation {
+        reset()
+        from = value
+        to = value
+        currentValue = value
+        return this
+    }
+
     companion object {
         fun create(from: Float = 0f, to: Float = 1f): GuiAnimation {
             return GuiAnimation(from, to, 300L, Easing.LINEAR)

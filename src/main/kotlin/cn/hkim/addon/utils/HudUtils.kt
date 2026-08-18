@@ -13,6 +13,7 @@ import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.PlayerTeam
 import java.awt.Color
 import java.net.URI
+import kotlin.math.roundToInt
 import kotlin.math.sin
 
 object HudUtils {
@@ -185,6 +186,91 @@ object HudUtils {
         return mergeChannel(a, 24) or mergeChannel(r, 16) or mergeChannel(g, 8) or mergeChannel(b, 0)
     }
 
+    fun hsbOf(argb: Int): FloatArray {
+        val r = ((argb shr 16) and 0xFF) / 255f
+        val g = ((argb shr 8) and 0xFF) / 255f
+        val b = (argb and 0xFF) / 255f
+        val max = maxOf(r, g, b)
+        val min = minOf(r, g, b)
+        val d = max - min
+        var h = when {
+            d == 0f -> 0f
+            max == r -> (((g - b) / d) % 6f) / 6f
+            max == g -> ((b - r) / d + 2f) / 6f
+            else -> ((r - g) / d + 4f) / 6f
+        }
+        if (h < 0f) h += 1f
+        val s = if (max == 0f) 0f else d / max
+        return floatArrayOf(h, s, max)
+    }
+
+    fun hsvToRgb(h: Float, s: Float, v: Float): Int {
+        if (s <= 0f) {
+            val gray = (v * 255f + 0.5f).toInt()
+            return rgb(gray, gray, gray)
+        }
+        val hh = (h - h.toInt()) * 6f
+        val sector = hh.toInt()
+        val f = hh - sector
+        val p = (v * (1f - s) * 255f + 0.5f).toInt()
+        val q = (v * (1f - s * f) * 255f + 0.5f).toInt()
+        val t = (v * (1f - s * (1f - f)) * 255f + 0.5f).toInt()
+        val v255 = (v * 255f + 0.5f).toInt()
+        return when (sector % 6) {
+            0 -> rgb(v255, t, p)
+            1 -> rgb(q, v255, p)
+            2 -> rgb(p, v255, t)
+            3 -> rgb(p, q, v255)
+            4 -> rgb(t, p, v255)
+            else -> rgb(v255, p, q)
+        }
+    }
+
+    fun clamp(v: Float, lo: Float, hi: Float): Float = maxOf(lo, minOf(hi, v))
+
+    fun alphaOf(argb: Int): Int = (argb shr 24) and 0xFF
+
+    fun alphaToPercent(a: Int): Int = (a * 100f / 255f).roundToInt()
+
+    fun percentToAlpha(p: Int): Int = (p * 255f / 100f).roundToInt()
+
+    fun toHexString(color: Int): String {
+        val a = (color shr 24) and 0xFF
+        val r = (color shr 16) and 0xFF
+        val g = (color shr 8) and 0xFF
+        val b = color and 0xFF
+        return String.format("#%02X%02X%02X%02X", r, g, b, a)
+    }
+
+    fun toHexStringRGB(color: Int): String {
+        val r = (color shr 16) and 0xFF
+        val g = (color shr 8) and 0xFF
+        val b = color and 0xFF
+        return String.format("#%02X%02X%02X", r, g, b)
+    }
+
+    fun fromHexString(hex: String): Int? {
+        val clean = hex.replace("#", "").trim().uppercase()
+        return try {
+            when (clean.length) {
+                6 -> {
+                    val rgb = clean.toLong(16).toInt()
+                    rgb or (0xFF shl 24)
+                }
+                8 -> {
+                    val r = clean.substring(0, 2).toInt(16)
+                    val g = clean.substring(2, 4).toInt(16)
+                    val b = clean.substring(4, 6).toInt(16)
+                    val a = clean.substring(6, 8).toInt(16)
+                    (a shl 24) or (r shl 16) or (g shl 8) or b
+                }
+                else -> null
+            }
+        } catch (_: Exception) { null }
+    }
+
+    private fun rgb(r: Int, g: Int, b: Int): Int = 0xFF000000.toInt() or (r shl 16) or (g shl 8) or b
+    
     fun getChromaColor(start: Color, end: Color, index: Int, speed: Int, offset: Int): Color {
         val currentTime = System.nanoTime() / 1_000_000_000.0
 

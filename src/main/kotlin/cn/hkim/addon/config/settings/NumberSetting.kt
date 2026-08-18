@@ -2,29 +2,32 @@ package cn.hkim.addon.config.settings
 
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.Setting
+import cn.hkim.addon.config.clickgui.Theme
 import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.playSoundAtPlayer
-import cn.hkim.addon.utils.render.pip.ShapeRenderer.drawCircleWithBorder
-import cn.hkim.addon.utils.render.pip.ShapeRenderer.drawRoundedRect
-import cn.hkim.addon.utils.render.pip.ShapeRenderer.drawRoundedRectWithBorder
+import cn.hkim.addon.utils.render.Easing
+import cn.hkim.addon.utils.render.GuiAnimation
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawCircleWithBorder
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRect
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRectWithBorder
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoText
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.skikoTextWidth
 import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
-import kotlin.math.abs
+import org.lwjgl.glfw.GLFW
 import kotlin.math.roundToInt
 
-class NumberSetting(name: String, desc: String, default: Float, val min: Float, val max: Float, val step: Float) : Setting<Float>(name, desc, default) {
+class NumberSetting(name: String, desc: String, default: Float, val min: Float, val max: Float, val step: Float, val unit: String = "") : Setting<Float>(name, desc, default) {
     private var isDragging = false
+    private var sliderPressed = false
 
-    private var animationProgress: Float
-    private var targetProgress: Float
-    private var lastUpdateTime = System.currentTimeMillis()
-    private val animationSpeed = 0.15f
+    private val knobAnim = GuiAnimation.create(0f, 0f)
+        .duration(150L)
+        .easing(Easing.CUBIC_OUT)
 
     init {
-        val initialVal = snapToStep(default)
-        targetProgress = calculateProgress(initialVal)
-        animationProgress = targetProgress
+        knobAnim.snapTo(calculateProgress(snapToStep(default)))
     }
 
     override var value: Float = snapToStep(default)
@@ -36,18 +39,16 @@ class NumberSetting(name: String, desc: String, default: Float, val min: Float, 
         val snapped = snapToStep(newValue)
         if (value != snapped) {
             value = snapped
-            targetProgress = calculateProgress(snapped)
-            lastUpdateTime = System.currentTimeMillis()
+            knobAnim.animateTo(calculateProgress(snapped))
         }
     }
 
     override fun reset() {
         super.reset()
         settingsChanged()
-        targetProgress = calculateProgress(default)
-        animationProgress = targetProgress
-        lastUpdateTime = System.currentTimeMillis()
+        knobAnim.snapTo(calculateProgress(default))
         isDragging = false
+        sliderPressed = false
     }
 
     override fun render(
@@ -57,34 +58,28 @@ class NumberSetting(name: String, desc: String, default: Float, val min: Float, 
         themeColor: Int,
         delta: Float, visibleTop: Float, visibleBottom: Float
     ): Float {
-        val height = 20f
-        val isHovered = (visibleTop == -1f || mouseY in visibleTop..visibleBottom) && HudUtils.isPointInRect(mouseX, mouseY, x, y, width, height)
-
-        updateAnimation()
+        val height = Theme.SETTING_HEIGHT
+        val isHovered = computeIsHovered(mouseX, mouseY, x, y, width, height, visibleTop, visibleBottom)
 
         if (isHovered) {
-            graphics.drawRoundedRectWithBorder(x, y, width, height, 0x15FFFFFF, 0, 0f, 3f)
+            graphics.drawRoundedRectWithBorder(x, y, width, height, Theme.controlHover, 0, 0f, 3f)
         }
 
-        graphics.text(mc.font, name, x.toInt() + 10, y.toInt() + 6, 0xFFCCCCCC.toInt(), false)
+        graphics.drawSkikoText(name, x + 10f, y + 3f, Theme.CARD_FONT_SIZE, Theme.controlText)
 
-        val decimals = if (step % 1f == 0f) 0 else {
-            val str = step.toString()
-            val dot = str.indexOf('.')
-            if (dot < 0) 0 else str.length - dot - 1
-        }
-        val valueText = String.format("%.${decimals}f", value.toDouble())
-        val valueWidth = mc.font.width(valueText)
-        graphics.text(mc.font, valueText, (x + width - valueWidth - 8).toInt(), y.toInt() + 6, themeColor, false)
+        val valueText = formatValue()
+        val valueWidth = skikoTextWidth(valueText, Theme.CARD_FONT_SIZE)
 
-        val sliderX = x + 120f
-        val sliderY = y + 8f
-        val sliderW = width - 150f - 15f
+        val sliderW = width - 130f
+        val sliderX = x + width - 8f - sliderW
+        val sliderY = y + 7f
         val sliderH = 4f
 
-        graphics.drawRoundedRect(sliderX, sliderY, sliderW, sliderH, 0xFF3A3A3A.toInt(), 2f)
+        graphics.drawSkikoText(valueText, sliderX - valueWidth - 10f, y + 3.5f, Theme.CARD_FONT_SIZE, Theme.controlTextActive)
 
-        val displayProgress = if (isDragging) targetProgress else animationProgress
+        graphics.drawRoundedRect(sliderX, sliderY, sliderW, sliderH, Theme.controlButtonBg, 2f)
+
+        val displayProgress = if (isDragging) calculateProgress(value) else knobAnim.getValue()
         val filledW = sliderW * displayProgress
         if (filledW > 0f) {
             graphics.drawRoundedRect(sliderX, sliderY, filledW, sliderH, themeColor, 2f)
@@ -99,8 +94,6 @@ class NumberSetting(name: String, desc: String, default: Float, val min: Float, 
             val isOverSlider = HudUtils.isPointInRect(mouseX, mouseY, sliderX, sliderY - 2f, sliderW, 12f)
             if (isOverSlider) {
                 graphics.requestCursor(if (isDragging) CursorTypes.RESIZE_EW else CursorTypes.POINTING_HAND)
-            } else {
-                graphics.requestCursor(CursorTypes.POINTING_HAND)
             }
         }
 
@@ -108,15 +101,15 @@ class NumberSetting(name: String, desc: String, default: Float, val min: Float, 
         return height
     }
 
-    override fun mouseClicked(mouseX: Float, mouseY: Float, button: Int, x: Float, y: Float, width: Float): Boolean {
+    override fun mouseClicked(mouseX: Float, mouseY: Float, button: Int, x: Float, y: Float, width: Float, doubleClick: Boolean): Boolean {
         if (button != 0) return false
 
-        val sliderX = x + 120f
-        val sliderY = y + 8f
-        val sliderW = width - 150f - 15f
+        val sliderW = width - 130f
+        val sliderX = x + width - 8f - sliderW
+        val sliderY = y + 7f
 
         if (HudUtils.isPointInRect(mouseX, mouseY, sliderX, sliderY - 2f, sliderW, 12f)) {
-            isDragging = true
+            sliderPressed = true
             playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value(), 0.3f)
             updateValueFromMouse(mouseX, sliderX, sliderW)
             return true
@@ -125,9 +118,10 @@ class NumberSetting(name: String, desc: String, default: Float, val min: Float, 
     }
 
     override fun mouseDragged(mouseX: Float, mouseY: Float, button: Int, deltaX: Float, deltaY: Float, x: Float, y: Float, width: Float): Boolean {
-        if (isDragging && button == 0) {
-            val sliderX = x + 120f
-            val sliderW = width - 150f - 15f
+        if (button == 0 && sliderPressed) {
+            isDragging = true
+            val sliderW = width - 130f
+            val sliderX = x + width - 8f - sliderW
 
             updateValueFromMouse(mouseX, sliderX, sliderW)
             return true
@@ -136,12 +130,46 @@ class NumberSetting(name: String, desc: String, default: Float, val min: Float, 
     }
 
     override fun mouseReleased(mouseX: Float, mouseY: Float, button: Int, x: Float, y: Float, width: Float): Boolean {
-        if (isDragging && button == 0) {
+        if (sliderPressed && button == 0) {
             settingsChanged()
             isDragging = false
+            sliderPressed = false
             return true
         }
         return false
+    }
+
+    override fun mouseScrolled(
+        mouseX: Float, mouseY: Float, scrollX: Double, scrollY: Double,
+        x: Float, y: Float, width: Float
+    ): Boolean {
+        if (scrollY == 0.0) return false
+        if (!isShiftDown()) return false
+
+        val sliderW = width - 130f
+        val sliderX = x + width - 8f - sliderW
+        val sliderY = y + 7f
+        if (!HudUtils.isPointInRect(mouseX, mouseY, sliderX, sliderY - 2f, sliderW, 12f)) return false
+
+        val direction = if (scrollY > 0) 1f else -1f
+        set(value + step * direction)
+        settingsChanged()
+        return true
+    }
+
+    private fun isShiftDown(): Boolean {
+        val handle = mc.window.handle()
+        return GLFW.glfwGetKey(handle, GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS ||
+            GLFW.glfwGetKey(handle, GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS
+    }
+
+    private fun formatValue(): String {
+        val decimals = if (step % 1f == 0f) 0 else {
+            val str = step.toString()
+            val dot = str.indexOf('.')
+            if (dot < 0) 0 else str.length - dot - 1
+        }
+        return String.format("%.${decimals}f", value.toDouble()) + unit
     }
 
     private fun updateValueFromMouse(mx: Float, sliderX: Float, sliderW: Float) {
@@ -161,23 +189,6 @@ class NumberSetting(name: String, desc: String, default: Float, val min: Float, 
         snapped = snapped.coerceIn(min.toDouble(), max.toDouble())
 
         return snapped.toFloat()
-    }
-
-    private fun updateAnimation() {
-        val currentTime = System.currentTimeMillis()
-        val deltaTime = (currentTime - lastUpdateTime) / 10f
-        lastUpdateTime = currentTime
-
-        if (!isDragging) {
-            val step = animationSpeed * deltaTime.coerceAtMost(3f)
-            animationProgress = when {
-                abs(animationProgress - targetProgress) < 0.01f -> targetProgress
-                animationProgress < targetProgress -> (animationProgress + step).coerceAtMost(targetProgress)
-                else -> (animationProgress - step).coerceAtLeast(targetProgress)
-            }
-        } else {
-            animationProgress = targetProgress
-        }
     }
 
     private fun calculateProgress(value: Float): Float {

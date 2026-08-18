@@ -12,7 +12,7 @@ import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.utils.*
 import cn.hkim.addon.utils.HudUtils.getQuadrant
 import cn.hkim.addon.utils.HudUtils.scaledText
-import cn.hkim.addon.utils.render.pip.ShapeRenderer.drawRoundedRect
+// import cn.hkim.addon.utils.render.pip.ShapeRenderer.drawRoundedRect
 import cn.hkim.addon.utils.skyblock.DungeonClass
 import cn.hkim.addon.utils.skyblock.DungeonPlayer
 import cn.hkim.addon.utils.skyblock.LocationUtils
@@ -89,13 +89,13 @@ object LeapMenu : Module("Leap Menu", "Custom leap menu.") {
 
     @EventHandler
     private fun onGuiBackground(event: GuiEvent.DrawBackground) {
-        if (!isLeapMenu(event.screen)) return
+        if (!enabled || !isLeapMenu(event.screen)) return
         event.cancel()
     }
 
     @EventHandler
     private fun onGuiKey(event: GuiEvent.KeyPress) {
-        if (!isLeapMenu(event.screen)) return
+        if (!enabled || !isLeapMenu(event.screen)) return
         val screen = event.screen as AbstractContainerScreen<*>
 
         val keybindList = if (keybindType == 0) listOf(topLeftKeybind, topRightKeybind, bottomLeftKeybind, bottomRightKeybind)
@@ -114,7 +114,7 @@ object LeapMenu : Module("Leap Menu", "Custom leap menu.") {
 
     @EventHandler
     private fun onGuiClick(event: GuiEvent.MouseClick) {
-        if (!isLeapMenu(event.screen)) return
+        if (!enabled || !isLeapMenu(event.screen)) return
         val screen = event.screen as AbstractContainerScreen<*>
 
         val centerX = mc.window.guiScaledWidth / 2
@@ -143,12 +143,12 @@ object LeapMenu : Module("Leap Menu", "Custom leap menu.") {
 
     @EventHandler
     private fun onChat(event: ChatReceiveEvent) {
-        if (!(leapAnnounce && LocationUtils.inDungeons)) return
+        if (!enabled || !(leapAnnounce && LocationUtils.inDungeons)) return
         leapedRegex.find(event.message)?.groupValues?.get(1)?.let { sendCommand("pc Leaped to ${it}.") }
     }
 
     private fun renderCard(graphics: GuiGraphicsExtractor, player: DungeonPlayer, x: Int, y: Int) {
-        graphics.drawRoundedRect(x.toFloat(), y.toFloat(), CARD_WIDTH.toFloat(), CARD_HEIGHT.toFloat(), 0xBF262626.toInt(), 6f)
+        // graphics.drawRoundedRect(x.toFloat(), y.toFloat(), CARD_WIDTH.toFloat(), CARD_HEIGHT.toFloat(), 0xBF262626.toInt(), 6f)
 
         val avatarX = x + 14
         val avatarY = (y + (CARD_HEIGHT - AVATAR_SIZE) / 2)
@@ -197,6 +197,6 @@ object LeapMenu : Module("Leap Menu", "Custom leap menu.") {
 
     fun isLeapMenu(screen: Screen): Boolean {
         val chest = (screen as? AbstractContainerScreen<*>) ?: return false
-        return chest.title.string./*equalsOneOf*/containsOneOf("Leap", "Teleport to Player", "Chest") && leapTeammates.isNotEmpty() && leapTeammates.all { it != EMPTY }
+        return chest.title.string.containsOneOf("Leap", "Teleport to Player") && leapTeammates.isNotEmpty() && leapTeammates.all { it != EMPTY }
     }
 }

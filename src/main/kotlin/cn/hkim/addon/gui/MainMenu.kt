@@ -4,10 +4,12 @@ import cn.hkim.addon.Hkim
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.ModuleConfig
 import cn.hkim.addon.features.impl.MainMenuModule
-import cn.hkim.addon.utils.buildGradientComponent
 import cn.hkim.addon.utils.coloredChar
 import cn.hkim.addon.utils.mcVersion
-import cn.hkim.addon.utils.render.pip.ShapeRenderer.drawRoundedRectWithBorder
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRectWithBorder
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoGradientText
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoText
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.skikoTextWidth
 import com.terraformersmc.modmenu.gui.ModsScreen
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
@@ -46,17 +48,20 @@ class MainMenu : Screen(Component.literal("Main Menu")) {
     }
 
     override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
-        val s1 = "Minecraft $mcVersion"
+        val s1 = " · Minecraft $mcVersion"
         val s2 = "Hkim v${Hkim.VERSION}"
         val s3 = "Cheaters get banned!"
-        val versionComp = buildGradientComponent(s2, Color(142, 221, 255).rgb, Color(166, 166, 166).rgb, 3)
+
+        val startColor = Color(142, 221, 255).rgb
+        val endColor = Color(180, 180, 180).rgb
+        val fontSize = 9f
 
         Background.update()
         this.updateParallax(mouseX.toDouble(), mouseY.toDouble())
         this.extractBackground(graphics, mouseX, mouseY, partialTick)
-        graphics.text(mc.font, s1, 2, height - 10, 0xFFFFFFFF.toInt())
-        graphics.text(mc.font, versionComp, 2, height - 20, 0xFFFFFFFF.toInt(), true)
-        graphics.text(mc.font, s3, width - mc.font.width(s3) - 2, height - 10, 0xFFFFFFFF.toInt())
+        graphics.drawSkikoText(s1, skikoTextWidth(s2, fontSize) + 4, (height - 14).toFloat(), fontSize, 0xFFFFFFFF.toInt())
+        graphics.drawSkikoGradientText(s2, 4f, (height - 14).toFloat(), fontSize, startColor, endColor)
+        graphics.drawSkikoText(s3, (width - skikoTextWidth(s3, fontSize) - 4), (height - 14).toFloat(), fontSize, 0xFFFFFFFF.toInt())
         super.extractRenderState(graphics, mouseX, mouseY, partialTick)
     }
 
@@ -106,7 +111,7 @@ class MainMenu : Screen(Component.literal("Main Menu")) {
         graphics.drawRoundedRectWithBorder(
             centerX - rectW / 4f, centerY - rectH / 4f,
             rectW / 2f, rectW / 2f,
-            0x0f8C8C8C, 0x4D969696, 1f, 6f
+            0x0f8C8C8C, 0x4D969696, 1f, 8f
         )
 
         val logoSize = 64

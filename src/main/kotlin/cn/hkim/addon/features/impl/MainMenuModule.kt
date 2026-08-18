@@ -3,6 +3,7 @@ package cn.hkim.addon.features.impl
 import cn.hkim.addon.Hkim
 import cn.hkim.addon.config.settings.ActionSetting
 import cn.hkim.addon.config.settings.NumberSetting
+import cn.hkim.addon.config.settings.SelectorSetting
 import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
@@ -11,7 +12,8 @@ import java.io.File
 
 @ModuleInfo("main_menu", Category.MISC, true)
 object MainMenuModule : Module("Main Menu", "Custom main menu.") {
-    val switchInterval by NumberSetting("Switch Interval (s)", "Background image switching interval.", 10f, 3f, 60f, 1f)
+    val backgroundMode by SelectorSetting("Background Mode", "Background rendering mode.", listOf("Picture", "Shader"), "Shader")
+    val switchInterval by NumberSetting("Switch Interval", "Background image switching interval.", 10f, 3f, 60f, 1f, "s")
 
     private val openBackgroundsFolder by ActionSetting("Open Backgrounds Folder", "Open the background images folder.") {
         val bgDir = File(FabricLoader.getInstance().configDir.toFile(), "hkim/backgrounds")

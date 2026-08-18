@@ -1,9 +1,9 @@
 package cn.hkim.addon.config
 
-import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.features.Module
+import cn.hkim.addon.gui.SkikoTooltip.drawTooltip
+import cn.hkim.addon.utils.HudUtils
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.network.chat.Component
 import kotlin.properties.PropertyDelegateProvider
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -13,6 +13,18 @@ abstract class Setting<T>(
     val desc: String,
     val default: T
 ) : ReadWriteProperty<Module, T>, PropertyDelegateProvider<Module, Setting<T>> {
+    companion object {
+        @JvmStatic var activeModalPopup: Setting<*>? = null
+    }
+
+    protected fun computeIsHovered(
+        mouseX: Float, mouseY: Float,
+        x: Float, y: Float, width: Float, height: Float,
+        visibleTop: Float, visibleBottom: Float
+    ): Boolean {
+        if (activeModalPopup != null) return false
+        return (visibleTop == -1f || mouseY in visibleTop..visibleBottom) && HudUtils.isPointInRect(mouseX, mouseY, x, y, width, height)
+    }
     open var value: T = default
     var configKey: String = name.replace(" ", "_").lowercase()
     var dependsCondition: (() -> Boolean)? = null
@@ -69,13 +81,14 @@ abstract class Setting<T>(
         mouseY: Float
     ) {
         if (isHovered && desc.isNotEmpty()) {
-            graphics.setTooltipForNextFrame(mc.font, Component.literal(desc), mouseX.toInt(), mouseY.toInt())
+            graphics.drawTooltip(desc, mouseX, mouseY, delayTicks = 8)
         }
     }
 
     open fun mouseClicked(
         mouseX: Float, mouseY: Float, button: Int,
-        x: Float, y: Float, width: Float
+        x: Float, y: Float, width: Float,
+        doubleClick: Boolean = false
     ): Boolean = false
 
     open fun mouseReleased(
@@ -86,6 +99,11 @@ abstract class Setting<T>(
     open fun mouseDragged(
         mouseX: Float, mouseY: Float, button: Int,
         deltaX: Float, deltaY: Float,
+        x: Float, y: Float, width: Float
+    ): Boolean = false
+
+    open fun mouseScrolled(
+        mouseX: Float, mouseY: Float, scrollX: Double, scrollY: Double,
         x: Float, y: Float, width: Float
     ): Boolean = false
 }

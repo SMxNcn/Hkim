@@ -3,6 +3,7 @@ package cn.hkim.addon.gui
 import cn.hkim.addon.Hkim
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.features.impl.MainMenuModule
+import cn.hkim.addon.utils.render.CustomRenderPipelines
 import com.mojang.blaze3d.platform.NativeImage
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -17,7 +18,7 @@ import javax.imageio.ImageIO
 
 object Background {
     private const val FADE_DURATION = 1000L
-    private const val BG_URL = "https://gitee.com/mixturedg/necron-client-repo/raw/master/bg/bg0.png"
+    private const val BG_URL = "https://gitee.com/mixturedg/hkim-repo/raw/master/bg/bg0.png"
 
     private val cacheDir: Path by lazy {
         FabricLoader.getInstance().configDir.resolve("hkim/backgrounds").also { it.toFile().mkdirs() }
@@ -84,6 +85,11 @@ object Background {
     }
 
     fun renderBackground(screen: Screen, graphics: GuiGraphicsExtractor, offsetX: Float, offsetY: Float) {
+        if (MainMenuModule.backgroundMode == 1) {
+            renderShaderBackground(screen, graphics, 0f, 0f)
+            return
+        }
+
         val currentBg = backgrounds.getOrNull(currentIndex)
         if (currentBg != null && currentAlpha > 0) {
             renderBackgroundWithAlpha(screen, graphics, currentBg, offsetX, offsetY, currentAlpha)
@@ -119,7 +125,6 @@ object Background {
         val drawWidth = screen.width + extraSize * 2
         val drawHeight = screen.height + extraSize * 2
 
-
         val intOffX = offsetX.toInt()
         val intOffY = offsetY.toInt()
         val fracOffX = offsetX - intOffX
@@ -130,7 +135,6 @@ object Background {
 
         val alphaInt = (alpha * 255).toInt()
         val color = (alphaInt shl 24) or 0x00FFFFFF
-
 
         graphics.pose().pushMatrix()
         graphics.pose().translate(fracOffX, fracOffY)
@@ -147,7 +151,40 @@ object Background {
         graphics.pose().popMatrix()
     }
 
+    fun renderShaderBackground(screen: Screen, graphics: GuiGraphicsExtractor, offsetX: Float, offsetY: Float) {
+        val mouse = mc.mouseHandler
+        BackgroundShader.update(mc.window.width, mc.window.height, mouse.getScaledXPos(mc.window), mouse.getScaledYPos(mc.window))
+
+        val extraSize = 30
+        val intOffX = offsetX.toInt()
+        val intOffY = offsetY.toInt()
+        val fracOffX = offsetX - intOffX
+        val fracOffY = offsetY - intOffY
+
+        val alphaInt = (currentAlpha * 255).toInt().coerceIn(0, 255)
+        val color = (alphaInt shl 24) or 0x00FFFFFF
+
+        graphics.pose().pushMatrix()
+        graphics.pose().translate(fracOffX, fracOffY)
+        graphics.fill(
+            CustomRenderPipelines.BACKGROUND,
+            intOffX - extraSize,
+            intOffY - extraSize,
+            intOffX - extraSize + screen.width + extraSize * 2,
+            intOffY - extraSize + screen.height + extraSize * 2,
+            color
+        )
+        graphics.pose().popMatrix()
+    }
+
     fun update() {
+        if (MainMenuModule.backgroundMode == 1) {
+            isFading = false
+            currentAlpha = 1f
+            nextAlpha = 0f
+            return
+        }
+
         ensureInitialized()
         if (!isFading && backgrounds.size > 1) {
             val now = System.currentTimeMillis()

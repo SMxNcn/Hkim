@@ -18,8 +18,8 @@ import net.minecraft.world.item.ItemStack
 
 @ModuleInfo("auto_fish", Category.SKYBLOCK)
 object AutoFish : Module("Auto Fish", "Automatically casts and reels the fishing rod.") {
-    private val rethrowDelay by NumberSetting("Rethrow Delay (ms)", "Delay before rethrowing fishing hook.", 200f, 20f, 400f, 10f)
-    private val waitTime by NumberSetting("Max Wait Time (s)", "Maximum time to wait for bite before rethrowing.", 20f, 20f, 40f, 1f)
+    private val rethrowDelay by NumberSetting("Rethrow Delay", "Delay before rethrowing fishing hook.", 200f, 20f, 400f, 10f, "ms")
+    private val waitTime by NumberSetting("Max Wait Time", "Maximum time to wait for bite before rethrowing.", 20f, 20f, 40f, 1f, "s")
     private val toggleKeybind by KeybindSetting("Toggle Keybind", "Key to toggle auto fish.")
 
     enum class FishingState {

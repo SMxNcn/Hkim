@@ -3,6 +3,7 @@ package cn.hkim.addon.commands
 import cn.hkim.addon.Hkim
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.clickgui.ClickGUIScreen
+import cn.hkim.addon.gui.GardenPlotScreen
 import cn.hkim.addon.gui.HudEditScreen
 import cn.hkim.addon.utils.customData
 import cn.hkim.addon.utils.modMessage
@@ -21,7 +22,7 @@ val hkimCommand = Commodore("hkim") {
         mc.execute { mc.gui.setScreen(ClickGUIScreen(null)) }
     }
 
-    literal("hud") {
+    literal("hud").runs {
         mc.execute { mc.gui.setScreen(HudEditScreen(null)) }
     }
 
