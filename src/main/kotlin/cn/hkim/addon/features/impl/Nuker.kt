@@ -81,7 +81,7 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
 
     @EventHandler
     private fun onTick(event: TickEvent.Start) {
-        if (!enabled) return
+        if (!enabled || !LocationUtils.inSkyBlock) return
 
         cachedAllowedTypes = null
         val player = mc.player ?: return
@@ -163,9 +163,9 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
 
     @EventHandler
     private fun onRender(event: RenderEvent.Extract) {
-        if (!enabled) {
+        if (!enabled || !LocationUtils.inSkyBlock) {
             if (RotationUtils.isSilentAiming || RotationUtils.isStoppingAiming) {
-                RotationUtils.tickStopAiming(aimSpeed / 5f)
+                RotationUtils.tickStopAiming(aimSpeed / 5f, this)
             }
             return
         }
@@ -176,7 +176,7 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
         if (hitPos != null) {
             aimAt(hitPos)
         } else if (!hasMineralsInRange && (RotationUtils.isSilentAiming || RotationUtils.isStoppingAiming)) {
-            RotationUtils.tickStopAiming(aimSpeed / 5f)
+            RotationUtils.tickStopAiming(aimSpeed / 5f, this)
             return
         }
 
@@ -371,11 +371,11 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
 
     private fun aimAt(hitPos: Vec3) {
         when (aimMode) {
-            0 -> RotationUtils.aimVisible(hitPos, aimSpeed / 10f)
-            1 -> RotationUtils.aimSilent(hitPos, aimSpeed / 10f, 1.2f)
+            0 -> RotationUtils.aimVisible(hitPos, aimSpeed / 10f, this)
+            1 -> RotationUtils.aimSilent(hitPos, aimSpeed / 10f, 1.2f, this)
         }
     }
 
     private fun isMiningArea(): Boolean =
-        LocationUtils.isCurrentArea(Island.DwarvenMines, Island.CrystalHollows, Island.Mineshaft, Island.Rift)
+        LocationUtils.inSkyBlock && LocationUtils.isCurrentArea(Island.DwarvenMines, Island.CrystalHollows, Island.Mineshaft, Island.Rift)
 }
