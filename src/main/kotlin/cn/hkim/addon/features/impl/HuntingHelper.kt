@@ -21,33 +21,32 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Display
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.Interaction
 import net.minecraft.world.entity.animal.bee.Bee
-import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.entity.monster.Shulker
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.DyeColor
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.AABB
-import net.minecraft.world.phys.Vec3
 import java.awt.Color
 
 @ModuleInfo("hunting_helper", Category.SKYBLOCK)
 object HuntingHelper : Module("Hunting Helper", "Features for creature hunting.") {
-    private val esp by DropdownSetting("ESP")
-    private val hideonsunEsp by BooleanSetting("Hideonsun ESP", "Highlight Hideonsun.", false).depends { esp }
-    private val pangolinEsp by BooleanSetting("Pangolin ESP", "Highlight Pangolin.", false).depends { esp }
-    private val beeHeemothEsp by BooleanSetting("BeeHeemoth ESP", "Highlight BeeHeemoth.", false).depends { esp }
-    private val blueJayEsp by BooleanSetting("Blue Jay ESP", "Highlight Blue Jay.", false).depends { esp }
-    private val hideonwallEsp by BooleanSetting("Hideonwall ESP", "Highlight Hideonwall  in Safari.", false).depends { esp }
-    private val hideonfloorEsp by BooleanSetting("Hideonfloor ESP", "Highlight Hideonfloor in Safari.", false).depends { esp }
-    private val bloodbatEsp by BooleanSetting("Bloodbat ESP", "Highlight Bloodbat in Safari.", false).depends { esp }
-    private val floordropEsp by BooleanSetting("Floordrop ESP", "Highlight floordrop item in Safari.", false).depends { esp }
-    private val tikiEsp by BooleanSetting("Tiki ESP", "Highlight Tiki in Torrhus Canyon.", false).depends { esp }
+    private val torrhus by DropdownSetting("Torrhus Canyon")
+    private val hideonsunEsp by BooleanSetting("Hideonsun ESP", "Highlight Hideonsun  in Torrhus Canyon.", false).depends { torrhus }
+    private val pangolinEsp by BooleanSetting("Pangolin ESP", "Highlight Pangolin in Torrhus Canyon.", false).depends { torrhus }
+    private val beeHeemothEsp by BooleanSetting("BeeHeemoth ESP", "Highlight BeeHeemoth in Torrhus Canyon.", false).depends { torrhus }
+    private val tikiEsp by BooleanSetting("Tiki ESP", "Highlight Tiki in Torrhus Canyon.", false).depends { torrhus }
 
-    private val triggerbot by DropdownSetting("Triggerbot")
-    private val autoReel by BooleanSetting("Auto Reel", "Auto reel Lasso.", false).depends { triggerbot }
-    private val autoFloordrop by BooleanSetting("Auto Floordrop", "Auto right-click at a floordrop.", false).depends { triggerbot }
+    private val safari by DropdownSetting("Critter Safari")
+    private val hideonwallEsp by BooleanSetting("Hideonwall ESP", "Highlight Hideonwall in Safari.", true).depends { safari }
+    private val hideonfloorEsp by BooleanSetting("Hideonfloor ESP", "Highlight Hideonfloor in Safari.", true).depends { safari }
+    private val bloodbatEsp by BooleanSetting("Bloodbat ESP", "Highlight Bloodbat in Safari.", true).depends { safari }
+    private val floordropEsp by BooleanSetting("Floordrop ESP", "Highlight floordrops in Safari.", false).depends { safari }
+    private val duplicoEsp by BooleanSetting("Duplico ESP", "Highlight hiding Duplico in safari.", true).depends { safari }
+    private val hideyhoEsp by BooleanSetting("Hidehyo ESP", "Highlight Hideyho NPC in Safari.", true).depends { safari }
+    private val autoFloordrop by BooleanSetting("Auto Floordrop", "Auto pick up floordrops in Safari.", false).depends { safari }
 
     data class HuntingMob(
         val name: String,
@@ -71,26 +70,24 @@ object HuntingHelper : Module("Hunting Helper", "Features for creature hunting."
             area = Island.Safari,
             extra = { (it as Shulker).color == DyeColor.GREEN }),
         HuntingMob("Bloodbat", EntityType.BAT, Colors.MINECRAFT_RED, { bloodbatEsp },
-            area = Island.Safari),
+            area = Island.Safari,
+            extra = { SafariArea.getCurrentArea() == SafariArea.Haunted }),
 
         HuntingMob("Pangolin", EntityType.ARMADILLO, Color(0x9F5656), { pangolinEsp }),
-        HuntingMob("BeeHeemoth", EntityType.BEE, Color(0xFECE3E), { beeHeemothEsp }, extra = { (it as Bee).scale == 9.0f }),
-        HuntingMob("Blue Jay", EntityType.PARROT, Colors.MINECRAFT_BLUE, { blueJayEsp }, area = Island.TorrhusCanyon),
+        HuntingMob("BeeHeemoth", EntityType.BEE, Color(0xFECE3E), { beeHeemothEsp }, extra = { (it as Bee).scale == 9.0f })
     )
 
     private val floordrops = mutableSetOf<BlockPos>()
-    private val reelStands = mutableListOf<ArmorStand>()
     private val tikis = mutableListOf<BlockPos>()
 
     private var scanTick = 0
     private var lastTikiScan = 0L
-    private var lastReelTime = 0L
-    private var reelingStandId = -1
     private var lastFloordropClick = 0L
 
     @EventHandler
     private fun onTick(event: TickEvent.End) {
         if (!enabled || !isHuntingArea()) return
+        val player = mc.player ?: return
         val now = System.currentTimeMillis()
 
         if (tikiEsp && LocationUtils.isCurrentArea(Island.TorrhusCanyon) && now - lastTikiScan >= 1000L) {
@@ -103,14 +100,31 @@ object HuntingHelper : Module("Hunting Helper", "Features for creature hunting."
             refreshTargets()
         }
 
-        val player = mc.player ?: return
-        tryAutoReel(player, now)
         tryAutoFloordrop(player, now)
     }
 
     @EventHandler
     private fun onRender(event: RenderEvent.Extract) {
         if (!enabled || !isHuntingArea()) return
+        val player = mc.player ?: return
+        val level = mc.level ?: return
+
+        if (SafariArea.getCurrentArea() == SafariArea.Haunted) {
+            val area = SafariArea.Haunted
+            if (duplicoEsp) {
+                for (entity in level.entitiesForRendering()) {
+                    if (entity is Interaction && isPositionInArea(area.corner1, area.corner2, entity.blockPosition())) {
+                        event.drawWireFrameBox(entity.renderBoundingBox, Colors.MINECRAFT_GREEN, 2f)
+                    }
+                }
+            }
+            if (hideyhoEsp) {
+                for (entity in level.players()) {
+                    if (entity == player || entity.isRemoved || !entity.isAlive || !entity.name.string.contains("Hideyho")) continue
+                    event.drawWireFrameBox(entity.renderBoundingBox, Color(0xA335EE), 2f)
+                }
+            }
+        }
 
         renderMobEsp(event)
         renderFloordropEsp(event)
@@ -148,7 +162,6 @@ object HuntingHelper : Module("Hunting Helper", "Features for creature hunting."
     private fun refreshTargets() {
         val level = mc.level ?: return
         huntingMobs.forEach { it.targets.clear() }
-        reelStands.clear()
         floordrops.clear()
 
         val activeMobs = huntingMobs.filter { it.area == null || LocationUtils.isCurrentArea(it.area) }
@@ -157,11 +170,7 @@ object HuntingHelper : Module("Hunting Helper", "Features for creature hunting."
             for (mob in activeMobs) {
                 if (entity.type == mob.type && mob.extra(entity)) mob.targets.add(entity)
             }
-            if (entity is ArmorStand && entity.displayName.cleanString.contains("REEL", ignoreCase = true)) {
-                reelStands.add(entity)
-            }
-            if ((floordropEsp || autoFloordrop) && entity is Display.ItemDisplay &&
-                entity.itemRenderState()?.itemStack()?.item == Items.STRING) {
+            if ((floordropEsp || autoFloordrop) && entity is Display.ItemDisplay && entity.itemStack.item == Items.STRING) {
                 floordrops.add(entity.blockPosition())
             }
         }
@@ -173,7 +182,7 @@ object HuntingHelper : Module("Hunting Helper", "Features for creature hunting."
 
         val renderDist = mc.options.renderDistance().get()
         val playerChunkX = (mc.player?.blockX ?: return) shr 4
-        val playerChunkZ = mc.player!!.blockZ shr 4
+        val playerChunkZ = (mc.player?.blockZ ?: return) shr 4
 
         for (cx in playerChunkX - renderDist..playerChunkX + renderDist) {
             for (cz in playerChunkZ - renderDist..playerChunkZ + renderDist) {
@@ -193,51 +202,14 @@ object HuntingHelper : Module("Hunting Helper", "Features for creature hunting."
         }
     }
 
-    private fun tryAutoReel(player: Player, now: Long) {
-        if (!autoReel) return
-
-        if (reelingStandId != -1) {
-            val stand = mc.level?.getEntity(reelingStandId)
-            reelingStandId = when {
-                stand == null || !stand.isAlive -> -1
-                now - lastReelTime >= 3000L -> -1
-                else -> return
-            }
-        }
-        if (now - lastReelTime < 250L) return
-
-        val held = player.mainHandItem
-        if (!held.itemId.contains("LASSO", ignoreCase = true)) return
-
-        val stand = reelStands.firstOrNull {
-            it.isAlive && it.distanceToSqr(player) <= 225.0 && isAimedAt(player, it.getEyePosition()) // 15 blocks
-        }
-        if (stand != null) {
-            lastReelTime = now
-            reelingStandId = stand.id
-            Hkim.scope.launch {
-                delay(randomDelay(150, 50))
-                rightClick()
-            }
-        }
-    }
-
     private fun tryAutoFloordrop(player: Player, now: Long) {
-        if (!autoFloordrop) return
-        if (!aimedFloordrop(player)) return
-        if (now - lastFloordropClick < 150L) return
+        if (!autoFloordrop || !aimedFloordrop(player)) return
+        if (now - lastFloordropClick < 1000L) return
         lastFloordropClick = now
         Hkim.scope.launch {
-            delay(randomDelay(150, 100))
-            rightClick()
+            delay(randomDelay(250, 100))
+            leftClick()
         }
-    }
-
-    private fun isAimedAt(player: Player, target: Vec3): Boolean {
-        val toTarget = target.subtract(player.eyePosition)
-        val dist = toTarget.length()
-        if (dist <= 0.0) return false
-        return player.lookAngle.dot(toTarget.scale(1.0 / dist)) >= 0.7
     }
 
     private fun aimedFloordrop(player: Player): Boolean {
