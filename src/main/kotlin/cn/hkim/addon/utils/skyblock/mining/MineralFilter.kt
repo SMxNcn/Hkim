@@ -20,10 +20,13 @@ object MineralFilter {
     }
 
     private fun isGlaciteZoneValid(): Boolean {
-        if (!LocationUtils.isCurrentArea(Island.DwarvenMines)) return false
+        if (!LocationUtils.isCurrentArea(Island.DwarvenMines, Island.Mineshaft)) return false
         val zone = LocationUtils.getCurrentZone()?.clean ?: return false
         return zone in GLACITE_ZONES
     }
+
+    private fun isRiftZoneValid(): Boolean =
+        LocationUtils.isCurrentArea(Island.Rift) && LocationUtils.getCurrentZone()?.clean?.contains("The Mountaintop") == true
 
     fun isMineralAllowed(
         mineralType: MineralType,
@@ -33,7 +36,7 @@ object MineralFilter {
         inDwarvenOnly: Boolean = false,
         allowedTypes: Set<MineralType> = emptySet(),
     ): Boolean {
-        // 0 -> "Gold", 1 -> "Mithril", 2 -> "Gemstones", 3 -> "Glacite"
+        // 0 -> "Gold", 1 -> "Mithril", 2 -> "Gemstones", 3 -> "Glacite", 4 -> "Timite"
         when (targetType) {
             0 -> {
                 if (mineralType.category != MineralCategory.ORE) return false
@@ -41,7 +44,7 @@ object MineralFilter {
                 if (royalDivan && !isGoldZoneValid()) return false
             }
             1 -> {
-                if (mineralType != MineralType.MITHRIL && mineralType != MineralType.TITANIUM) return false
+                if (mineralType != MineralType.MITHRIL) return false
                 if (inDwarvenOnly && !isDwarvenZoneValid()) return false
             }
             2 -> {
@@ -52,6 +55,10 @@ object MineralFilter {
                 val isGlaciteMetal = mineralType == MineralType.UMBER || mineralType == MineralType.TUNGSTEN
                 if (!isGem && !isGlaciteMetal) return false
                 if (!isGlaciteZoneValid()) return false
+            }
+            4 -> {
+                if (mineralType.category != MineralCategory.RIFT) return false
+                if (!isRiftZoneValid()) return false
             }
         }
         return true

@@ -15,6 +15,8 @@ object RotationUtils {
             abs(this.yaw - other.yaw) < epsilon && abs(this.pitch - other.pitch) < epsilon
     }
 
+    private var initialized = false
+
     @JvmStatic
     var clientYaw: Float = 0f
         private set
@@ -31,8 +33,6 @@ object RotationUtils {
     var serverPitch: Float = 0f
         private set
 
-    private var initialized = false
-
     @JvmStatic
     var isSilentAiming: Boolean = false
         private set
@@ -40,6 +40,9 @@ object RotationUtils {
     @JvmStatic
     var isStoppingAiming: Boolean = false
         private set
+
+    @JvmStatic
+    private var aimOwner: Any? = null
 
     fun wrapAngleTo180(angle: Float): Float {
         var result = angle % 360.0f
@@ -101,7 +104,7 @@ object RotationUtils {
     }
 
     @JvmStatic
-    fun aimSilent(target: Vec3, aimSpeed: Float, startSpeedMultiplier: Float = 1.5f) {
+    fun aimSilent(target: Vec3, aimSpeed: Float, startSpeedMultiplier: Float = 1.5f, owner: Any) {
         if (!initialized) return
         val targetRot = vec3ToRotation(target)
 
@@ -115,12 +118,14 @@ object RotationUtils {
         serverYaw = exponentialSmooth(serverYaw, targetRot.yaw, effectiveSpeed)
         serverPitch = exponentialSmooth(serverPitch, targetRot.pitch, effectiveSpeed)
         isSilentAiming = true
+        aimOwner = owner
 
         applyModelRotation(serverYaw)
     }
 
     @JvmStatic
-    fun tickStopAiming(stopSpeed: Float): Boolean {
+    fun tickStopAiming(stopSpeed: Float, owner: Any): Boolean {
+        if (aimOwner != null && aimOwner !== owner) return false
         val angularDiffYaw = abs(wrapAngleTo180(serverYaw - clientYaw))
         val angularDiffPitch = abs(wrapAngleTo180(serverPitch - clientPitch))
 
@@ -129,6 +134,7 @@ object RotationUtils {
             serverPitch = clientPitch
             isStoppingAiming = false
             isSilentAiming = false
+            aimOwner = null
             return false
         }
 
@@ -140,8 +146,9 @@ object RotationUtils {
     }
 
     @JvmStatic
-    fun aimVisible(target: Vec3, aimSpeed: Float) {
+    fun aimVisible(target: Vec3, aimSpeed: Float, owner: Any) {
         val player = mc.player ?: return
+        if (aimOwner != null && aimOwner !== owner) return
         val targetRot = vec3ToRotation(target)
         player.yRot = exponentialSmooth(player.yRot, targetRot.yaw, aimSpeed)
         player.xRot = exponentialSmooth(player.xRot, targetRot.pitch, aimSpeed)
@@ -149,6 +156,7 @@ object RotationUtils {
         serverPitch = player.xRot
         applyModelRotation(player.yRot)
         isSilentAiming = false
+        aimOwner = owner
     }
 
     @JvmStatic
@@ -172,6 +180,8 @@ object RotationUtils {
     fun reset() {
         initialized = false
         isSilentAiming = false
+        isStoppingAiming = false
+        aimOwner = null
         clientYaw = 0f; clientPitch = 0f
         serverYaw = 0f; serverPitch = 0f
     }

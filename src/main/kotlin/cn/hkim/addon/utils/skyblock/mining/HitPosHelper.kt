@@ -2,143 +2,81 @@ package cn.hkim.addon.utils.skyblock.mining
 
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.CrossCollisionBlock
-import net.minecraft.world.level.block.SlabBlock
-import net.minecraft.world.level.block.StairBlock
 import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.level.block.state.properties.SlabType
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
-import kotlin.math.min
-import kotlin.math.sqrt
+import net.minecraft.world.phys.shapes.CollisionContext
 import kotlin.random.Random
 
 object HitPosHelper {
-    private const val FACE_OFFSET = 0.15
-    private const val STEP_SIZE = 0.25
+    private const val JITTER = 0.08
     private val rng = Random
 
     fun pickHitPos(level: Level, pos: BlockPos, state: BlockState, eyePos: Vec3): Vec3? {
-        val block = state.block
+        val shape = state.getShape(level, pos, CollisionContext.empty())
+        if (shape.isEmpty) return null
 
-        if (block is CrossCollisionBlock) {
-            val y = (pos.y + 0.5) + (rng.nextDouble() * 0.8 - 0.4)
-            return Vec3(pos.x + 0.5, y, pos.z + 0.5)
+        val centre = Vec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
+        clipToBlock(level, eyePos, centre, pos)?.let { r ->
+            val jit = jitterOnHitPoint(r.location, r.direction)
+            return if (hasLineOfSight(level, eyePos, jit, pos)) jit else r.location
         }
 
-        if (block is StairBlock) {
-            return Vec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
-        }
-
-        val isSlab = block is SlabBlock
-        val slabMinY: Double
-        val slabMaxY: Double
-        if (isSlab) {
-            when (state.getValue(SlabBlock.TYPE)) {
-                SlabType.BOTTOM -> { slabMinY = 0.0; slabMaxY = 0.5 }
-                SlabType.TOP -> { slabMinY = 0.5; slabMaxY = 1.0 }
-                else -> { slabMinY = 0.0; slabMaxY = 1.0 }
-            }
-        } else {
-            slabMinY = 0.0
-            slabMaxY = 1.0
-        }
-
-        var bestFace: Direction? = null
-        var bestFaceDistSq = Double.MAX_VALUE
-
-        for (dir in Direction.entries) {
-            val neighborPos = pos.relative(dir)
-            if (!level.getBlockState(neighborPos).isAir) continue
-
-            val faceCenterY = when {
-                isSlab && dir.stepY > 0 -> pos.y + slabMaxY
-                isSlab && dir.stepY < 0 -> pos.y + slabMinY
-                isSlab -> pos.y + (slabMinY + slabMaxY) / 2
-                else -> pos.y + 0.5 + dir.stepY * 0.5
-            }
-
-            val fcX = pos.x + 0.5 + dir.stepX * 0.5
-            val fcZ = pos.z + 0.5 + dir.stepZ * 0.5
-            val dx = fcX - eyePos.x; val dy = faceCenterY - eyePos.y; val dz = fcZ - eyePos.z
-            val distSq = dx * dx + dy * dy + dz * dz
-            if (distSq < bestFaceDistSq) {
-                bestFaceDistSq = distSq
-                bestFace = dir
-            }
-        }
-
-        val face = bestFace ?: return null
-
-        val faceCenter = Vec3(
-            pos.x + 0.5 + face.stepX * 0.5,
-            when {
-                isSlab && face.stepY > 0 -> pos.y + slabMaxY
-                isSlab && face.stepY < 0 -> pos.y + slabMinY
-                isSlab -> pos.y + (slabMinY + slabMaxY) / 2
-                else -> pos.y + 0.5 + face.stepY * 0.5
-            },
-            pos.z + 0.5 + face.stepZ * 0.5
+        val candidates = listOf(
+            Vec3(pos.x + 0.5, pos.y + 0.85, pos.z + 0.5),   // upper segment
+            Vec3(pos.x + 0.85, pos.y + 0.5, pos.z + 0.5),   // east bias
+            Vec3(pos.x + 0.15, pos.y + 0.5, pos.z + 0.5),   // west bias
+            Vec3(pos.x + 0.5,  pos.y + 0.5, pos.z + 0.85),  // south bias
+            Vec3(pos.x + 0.5,  pos.y + 0.5, pos.z + 0.15),  // north bias
         )
-        if (!hasLineOfSight(level, eyePos, faceCenter, pos)) return null
-
-        val margin = 0.2
-        fun boundedOffset(min: Double, max: Double): Double {
-            val center = (min + max) / 2
-            val halfRange = (max - min) / 2 - margin
-            if (halfRange <= 0.0) return center
-            val offset = (rng.nextDouble() - 0.5) * 2 * minOf(FACE_OFFSET, halfRange)
-            return (center + offset).coerceIn(min + margin, max - margin)
-        }
-
-        val offsetX = if (face.stepX != 0) 0.0 else boundedOffset(pos.x.toDouble(), pos.x + 1.0) - (pos.x + 0.5)
-        val offsetZ = if (face.stepZ != 0) 0.0 else boundedOffset(pos.z.toDouble(), pos.z + 1.0) - (pos.z + 0.5)
-
-        val hitY: Double = if (face.stepY != 0) {
-            if (face.stepY > 0) pos.y + slabMaxY else pos.y + slabMinY
-        } else {
-            val yMin = pos.y + slabMinY
-            val yMax = pos.y + slabMaxY
-            val slabMargin = min(margin, (slabMaxY - slabMinY) * 0.3)
-            val centerY = (yMin + yMax) / 2
-            val halfRange = (yMax - yMin) / 2 - slabMargin
-            if (halfRange <= 0.0) centerY
-            else {
-                val offsetY = (rng.nextDouble() - 0.5) * 2 * minOf(FACE_OFFSET, halfRange)
-                (centerY + offsetY).coerceIn(yMin + slabMargin, yMax - slabMargin)
+        for (target in candidates) {
+            clipToBlock(level, eyePos, target, pos)?.let { r ->
+                val jit = jitterOnHitPoint(r.location, r.direction)
+                return if (hasLineOfSight(level, eyePos, jit, pos)) jit else r.location
             }
         }
-
-        val hitPos = Vec3(
-            pos.x + 0.5 + face.stepX * 0.5 + offsetX,
-            hitY,
-            pos.z + 0.5 + face.stepZ * 0.5 + offsetZ
-        )
-
-        return if (hasLineOfSight(level, eyePos, hitPos, pos)) hitPos else null
+        return null
     }
 
-    fun hasLineOfSight(level: Level, from: Vec3, to: Vec3, targetPos: BlockPos): Boolean {
-        val dx = to.x - from.x; val dy = to.y - from.y; val dz = to.z - from.z
-        val length = sqrt(dx * dx + dy * dy + dz * dz)
-        if (length < 0.1) return true
-
-        val invLen = 1.0 / length
-        val ndx = dx * invLen; val ndy = dy * invLen; val ndz = dz * invLen
-        val steps = (length / STEP_SIZE).toInt().coerceAtLeast(1)
-
-        for (i in 0..steps) {
-            val t = i.toDouble() / steps * length
-            val checkPos = BlockPos(
-                (from.x + ndx * t).toInt(),
-                (from.y + ndy * t).toInt(),
-                (from.z + ndz * t).toInt()
-            )
-            if (checkPos != targetPos && !level.getBlockState(checkPos).isAir) {
-                return false
+    private fun clipToBlock(level: Level, from: Vec3, to: Vec3, targetPos: BlockPos): BlockHitResult? {
+        var currentFrom = from
+        repeat(8) {
+            val ctx = ClipContext(currentFrom, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, CollisionContext.empty())
+            val result = level.clip(ctx)
+            if (result.type == HitResult.Type.MISS) return null
+            if (result.type == HitResult.Type.BLOCK) {
+                if (result.blockPos == targetPos) return result
+                if (level.getBlockState(result.blockPos).block is CrossCollisionBlock) {
+                    val dir = Vec3(to.x - currentFrom.x, to.y - currentFrom.y, to.z - currentFrom.z).normalize()
+                    currentFrom = result.location.add(dir.scale(0.01))
+                } else {
+                    return null
+                }
+            } else {
+                return null
             }
         }
-        return true
+        return null
+    }
+
+    private fun jitterOnHitPoint(hitPos: Vec3, face: Direction): Vec3 {
+        val dx = (rng.nextDouble() - 0.5) * JITTER
+        val dy = (rng.nextDouble() - 0.5) * JITTER
+        val dz = (rng.nextDouble() - 0.5) * JITTER
+        return when (face.axis) {
+            Direction.Axis.X -> Vec3(hitPos.x, hitPos.y + dy, hitPos.z + dz)
+            Direction.Axis.Y -> Vec3(hitPos.x + dx, hitPos.y, hitPos.z + dz)
+            Direction.Axis.Z -> Vec3(hitPos.x + dx, hitPos.y + dy, hitPos.z)
+        }
+    }
+
+
+    fun hasLineOfSight(level: Level, from: Vec3, to: Vec3, targetPos: BlockPos): Boolean {
+        return clipToBlock(level, from, to, targetPos) != null
     }
 
     fun matchesAnyMineral(state: BlockState): Boolean {
