@@ -173,7 +173,7 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard background & l
                 graphics.gradientText(font, cleanLines[i], x, y,
                     Color(gradStart and 0xFFFFFF, false).rgb,
                     Color(gradEnd and 0xFFFFFF, false).rgb,
-                    gradSpeed.toInt(), shadow = true)
+                    gradSpeed.toInt(), true)
             } else {
                 graphics.text(font, line, x, y, 0xFFFFFFFF.toInt(), true)
             }
