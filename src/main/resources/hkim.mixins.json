@@ -13,6 +13,7 @@
   },
   "client": [
     "AbstractContainerScreenMixin",
+    "BlockItemMixin",
     "CameraMixin",
     "ClientPacketListenerMixin",
     "ConnectionMixin",
@@ -48,6 +49,7 @@
     "accessors.CameraAccessor",
     "accessors.JoinMultiplayerScreenAccessor",
     "accessors.KeyMappingAccessor",
+    "accessors.FishingHookAccessor",
     "accessors.ScreenAccessor"
   ]
 }

@@ -131,9 +131,10 @@ object SkikoDraw {
         size: Float,
         startColor: Int,
         endColor: Int,
-        bold: Boolean = false
+        bold: Boolean = false,
+        direction: SkikoGradient = SkikoGradient.LEFT_RIGHT
     ) {
-        Hkim.runtime?.drawGradientText(this, text, x, y, size, startColor, endColor, bold, SkikoGradient.LEFT_RIGHT)
+        Hkim.runtime?.drawGradientText(this, text, x, y, size, startColor, endColor, bold, direction)
     }
 
     fun GuiGraphicsExtractor.drawSkikoRectClipped(

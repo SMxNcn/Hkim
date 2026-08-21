@@ -139,7 +139,7 @@ public abstract class CameraMixin {
     }
 
     @Inject(method = "extractRenderState", at = @At("TAIL"))
-    private void hkim$onExtractRenderStateTail(CameraRenderState cameraState, float partialTicks, CallbackInfo ci) {
+    private void hkim$onExtractRenderStateTail(CameraRenderState cameraState, float cameraEntityPartialTicks, CallbackInfo ci) {
         if (FreeCam.isFreecamActive() || CameraHelper.canCameraClip()) {
             cameraState.smartCull = false;
         }

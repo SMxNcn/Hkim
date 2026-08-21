@@ -8,7 +8,10 @@ import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.utils.cleanString
+import cn.hkim.addon.utils.containsOneOf
 import cn.hkim.addon.utils.skyblock.LocationUtils
+import cn.hkim.addon.utils.skyblock.M7Phases
+import cn.hkim.addon.utils.skyblock.getF7Phase
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.world.inventory.ChestMenu
 import net.minecraft.world.item.Items
@@ -16,15 +19,15 @@ import net.minecraft.world.item.Items
 // The name CleanView may not accurately represent the GUI features and could be changed later.
 @ModuleInfo("clean_view", Category.RENDER)
 object CleanView : Module("Clean View", "Hides unwanted renderings.") {
-    private val entity by DropdownSetting("Entity", defaultExpanded = true)
+    private val entity by DropdownSetting("Entity")
     private val hideFallingBlock by BooleanSetting("Hide Falling Block", "Stop rendering falling blocks.", false).depends { entity }
     private val hideExperienceOrbs by BooleanSetting("Hide Experience Orbs", "Hide experience orbs.", false).depends { entity }
     private val hideLightning by BooleanSetting("Hide Lightning", "Hide lightning bolts.", false).depends { entity }
 
-    private val particle by DropdownSetting("Particle", defaultExpanded = true)
+    private val particle by DropdownSetting("Particle")
     private val hideWitherImpact by BooleanSetting("Hide Wither Impact", "Hide explosion particles.", false).depends { particle }
 
-    private val effect by DropdownSetting("Others", defaultExpanded = true)
+    private val effect by DropdownSetting("Others")
     private val hideBlindness by BooleanSetting("Hide Blindness", "Remove blindness and darkness effect.", false).depends { effect }
     private val hideFireOverlay by BooleanSetting("Hide Fire Overlay", "Hide fire overlay on screen.", false).depends { effect }
     private val hideEntityFire by BooleanSetting("Hide Entity Fire", "Hide fire overlay on other entities.", false).depends { effect && hideFireOverlay }
@@ -41,7 +44,8 @@ object CleanView : Module("Clean View", "Hides unwanted renderings.") {
         val chest = mc.player?.containerMenu as? ChestMenu ?: return
         val slot = chest.slots.getOrNull(event.slotId) ?: return
 
-        if (cleanGui && slot.hasItem() && slot.item.displayName.cleanString.isBlank()) {
+        if (cleanGui && slot.hasItem() && slot.item.displayName.cleanString.isBlank() && getF7Phase() != M7Phases.P3 &&
+            !event.screen.title.cleanString.containsOneOf("Chronomatron", "Ultrasequencer")) {
             event.cancel()
             return
         }

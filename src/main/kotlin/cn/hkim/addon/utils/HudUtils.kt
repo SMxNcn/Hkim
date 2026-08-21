@@ -103,19 +103,12 @@ object HudUtils {
         startColor: Int,
         endColor: Int,
         chromaSpeed: Int = 5,
-        chromaOffset: Int = 2,
         shadow: Boolean = false,
     ) {
         if (text.isEmpty()) return
-        val start = Color(startColor)
-        val end = Color(endColor)
-        var currentX = x
-        for (i in text.indices) {
-            val ch = text[i].toString()
-            val color = getChromaColor(start, end, i, chromaSpeed, chromaOffset).rgb
-            this.text(font, ch, currentX, y, color, shadow)
-            currentX += font.width(ch)
-        }
+        val chromaText = buildGradientComponent(text, startColor, endColor, chromaSpeed)
+
+        this.text(font, chromaText, x, y, 0xFFFFFFFF.toInt(), shadow)
     }
 
     fun GuiGraphicsExtractor.drawRectWithBorder(x: Float, y: Float, width: Float, height: Float, fillColor: Int, borderColor: Int? = null, borderWidth: Float = 1f) {

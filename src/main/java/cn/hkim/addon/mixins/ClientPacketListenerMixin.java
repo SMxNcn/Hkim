@@ -23,7 +23,7 @@ public class ClientPacketListenerMixin {
 
     @Inject(method = "handleContainerSetSlot", at = @At("TAIL"))
     private void handleContainerSetSlot(ClientboundContainerSetSlotPacket packet, CallbackInfo ci) {
-        if (mc.gui.screen() instanceof AbstractContainerScreen<?> containerScreen) {
+        if (mc.gui.screen() instanceof AbstractContainerScreen<?> containerScreen && mc.gui.screen() != null) {
             GuiEvent.SlotUpdate event = new GuiEvent.SlotUpdate(mc.gui.screen(), packet, containerScreen.getMenu());
             Hkim.EVENT_BUS.post(event);
         }

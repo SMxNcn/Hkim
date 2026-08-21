@@ -43,9 +43,9 @@ object DungeonESP : Module("Dungeon ESP", "ESP for dungeon entities.") {
     private val witherESP by BooleanSetting("Wither ESP", "Highlight Wither entities.", true)
     private val mobStyle by SelectorSetting("Mob Box Style", "Style of mob esp.", listOf("Filled", "Outline", "Filled Outline"), "Outline")
 
-    private val bloodColor by ColorSetting("Blood Color", "The color of the box.", Colors.BLACK.multiplyAlpha(0.8f).rgb)
-    private val witherColor by ColorSetting("Wither Color", "The color of the box.", Colors.MINECRAFT_RED.multiplyAlpha(0.8f).rgb)
-    private val keyStyle by SelectorSetting("Mob Box Style", "Style of key esp.", listOf("Filled", "Outline", "Filled Outline"), "Filled Outline")
+    private val bloodColor by ColorSetting("Blood Color", "The color of the box.", Colors.BLACK.multiplyAlpha(0.8f).rgb).depends { highlightKeys }
+    private val witherColor by ColorSetting("Wither Color", "The color of the box.", Colors.MINECRAFT_RED.multiplyAlpha(0.8f).rgb).depends { highlightKeys }
+    private val keyStyle by SelectorSetting("Mob Box Style", "Style of key esp.", listOf("Filled", "Outline", "Filled Outline"), "Filled Outline").depends { highlightKeys }
 
     private val dungeonMobSpawns = hashSetOf("Lurker", "Dreadlord", "Souleater", "Zombie", "Skeleton", "Skeletor", "Sniper", "Super Archer", "Spider", "Fels", "Withermancer", "Lost Adventurer", "Angry Archaeologist", "Frozen Adventurer", "Shadow Assassin")
     private val starredRegex = Regex("^.*✯ .*\\d{1,3}(?:,\\d{3})*(?:\\.\\d+)?[kM]?❤$")
@@ -137,7 +137,7 @@ object DungeonESP : Module("Dungeon ESP", "ESP for dungeon entities.") {
 
     @EventHandler
     private fun onPacket(event: PacketReceiveEvent) {
-        if (!LocationUtils.inDungeons || !DungeonUtils.inClear) return
+        if (!enabled || !LocationUtils.inDungeons || !DungeonUtils.inClear) return
         if (event.packet !is ClientboundSetEntityDataPacket) return
 
         val entity = mc.level?.getEntity(event.packet.id) as? ArmorStand ?: return
@@ -151,6 +151,7 @@ object DungeonESP : Module("Dungeon ESP", "ESP for dungeon entities.") {
 
     @EventHandler
     private fun onWorldLoad(event: WorldEvent.Load) {
+        if (!enabled) return
         entities.clear()
         currentKey = null
     }

@@ -15,8 +15,8 @@ import meteordevelopment.orbit.EventHandler
 
 @ModuleInfo("auto_gfs", Category.SKYBLOCK)
 object AutoGFS : Module("Auto GFS", "Automatically refills certain items from your sacks.") {
-    private val inKuudra by BooleanSetting("In Kuudra", "Only gfs in Kuudra.", true)
-    private val inDungeon by BooleanSetting("In Dungeon", "Only gfs in Dungeons.", true)
+    private val refillInKuudra by BooleanSetting("In Kuudra", "Only gfs in Kuudra.", true)
+    private val refillInDungeon by BooleanSetting("In Dungeon", "Only gfs in Dungeons.", true)
     private val refillOnInstanceStart by BooleanSetting("Refill on Instance Start", "Refill when a dungeon starts.", true)
     private val refillOnKuudraStunned by BooleanSetting("Refill on Kuudra Stunned", "Refill when kuudra is stunned.", false)
     private val item by DropdownSetting("Items", "Items to refill from sacks.")
@@ -74,16 +74,18 @@ object AutoGFS : Module("Auto GFS", "Automatically refills certain items from yo
     }
 
     private fun isInValidLocation(): Boolean {
-        if (!inKuudra && !inDungeon) return true
-        return (inKuudra && LocationUtils.inKuudra) || (inDungeon && LocationUtils.inDungeons)
+        if (!refillInKuudra && !refillInDungeon) return true
+        return (refillInKuudra && LocationUtils.inKuudra) || (refillInDungeon && LocationUtils.inDungeons)
     }
 
     private fun refill() {
         if (!isInValidLocation()) return
 
         if (refillPearl) refillQueue.add(RefillItem(16, "ENDER_PEARL", "ender_pearl"))
-        if (refillJerry) refillQueue.add(RefillItem(64, "INFLATABLE_JERRY", "inflatable_jerry"))
-        if (refillTNT) refillQueue.add(RefillItem(64, "SUPERBOOM_TNT", "superboom_tnt"))
+        if (!LocationUtils.inKuudra) {
+            if (refillJerry) refillQueue.add(RefillItem(64, "INFLATABLE_JERRY", "inflatable_jerry"))
+            if (refillTNT) refillQueue.add(RefillItem(64, "SUPERBOOM_TNT", "superboom_tnt"))
+        }
 
         if (refillQueue.isNotEmpty() && !isProcessingQueue) processNextItem()
     }
