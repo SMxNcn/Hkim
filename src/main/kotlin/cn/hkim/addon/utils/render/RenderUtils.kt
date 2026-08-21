@@ -238,10 +238,13 @@ private fun drawTextsWithPipeline(
     pipeline: RenderPipeline,
     viewMatrix: Matrix4f
 ) {
-    val allocator = ByteBufferBuilder(65536) // 64KB for text
     val format = pipeline.getVertexFormatBinding(0) ?: DefaultVertexFormat.POSITION_TEX_COLOR
-    val buffer = BufferBuilder(allocator, PrimitiveTopology.QUADS, format)
-    var fontTexture: GpuTextureView? = null
+    val buckets = mutableMapOf<GpuTextureView, Pair<BufferBuilder, ByteBufferBuilder>>()
+
+    fun bufferFor(texture: GpuTextureView): BufferBuilder = buckets.getOrPut(texture) {
+        val allocator = ByteBufferBuilder(65536) // 64KB per atlas
+        BufferBuilder(allocator, PrimitiveTopology.QUADS, format) to allocator
+    }.first
 
     for (text in texts) {
         val posX = text.pos.x.toFloat()
@@ -264,34 +267,24 @@ private fun drawTextsWithPipeline(
 
         preparedText.visit(object : Font.GlyphVisitor {
             override fun acceptGlyph(glyph: TextRenderable.Styled) {
-                if (fontTexture == null) {
-                    fontTexture = glyph.textureView()
-                }
-                glyph.render(positionMatrix, buffer, LightCoordsUtil.FULL_BRIGHT, false)
+                glyph.render(positionMatrix, bufferFor(glyph.textureView()), LightCoordsUtil.FULL_BRIGHT, false)
             }
 
             override fun acceptEffect(effect: TextRenderable) {
-                if (fontTexture == null) {
-                    fontTexture = effect.textureView()
-                }
-                effect.render(positionMatrix, buffer, LightCoordsUtil.FULL_BRIGHT, false)
+                effect.render(positionMatrix, bufferFor(effect.textureView()), LightCoordsUtil.FULL_BRIGHT, false)
             }
 
             override fun acceptRenderable(renderable: TextRenderable) {
-                if (fontTexture == null) {
-                    fontTexture = renderable.textureView()
-                }
-                renderable.render(positionMatrix, buffer, LightCoordsUtil.FULL_BRIGHT, false)
+                renderable.render(positionMatrix, bufferFor(renderable.textureView()), LightCoordsUtil.FULL_BRIGHT, false)
             }
         })
     }
 
-    if (fontTexture == null) {
-        allocator.close()
-        return
-    }
+    if (buckets.isEmpty()) return
 
-    flushTextMesh(buffer, allocator, pipeline, fontTexture, encoder, viewMatrix)
+    buckets.forEach { (texture, pair) ->
+        flushTextMesh(pair.first, pair.second, pipeline, texture, encoder, viewMatrix)
+    }
 }
 
 private fun flushTextMesh(
