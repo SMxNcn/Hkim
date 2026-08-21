@@ -12,11 +12,9 @@ import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.utils.*
 import cn.hkim.addon.utils.HudUtils.getQuadrant
 import cn.hkim.addon.utils.HudUtils.scaledText
-import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
-import cn.hkim.addon.utils.render.nvg.NVGRenderer
+// import cn.hkim.addon.utils.render.pip.ShapeRenderer.drawRoundedRect
 import cn.hkim.addon.utils.skyblock.DungeonClass
 import cn.hkim.addon.utils.skyblock.DungeonPlayer
-import cn.hkim.addon.utils.skyblock.DungeonUtils.leapTeammates
 import cn.hkim.addon.utils.skyblock.LocationUtils
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -25,7 +23,6 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
 import org.lwjgl.glfw.GLFW
-import java.awt.Color
 
 @ModuleInfo("leap_menu", Category.SKYBLOCK)
 object LeapMenu : Module("Leap Menu", "Custom leap menu.") {
@@ -51,6 +48,13 @@ object LeapMenu : Module("Leap Menu", "Custom leap menu.") {
     private const val CARD_HEIGHT = 75
     private const val AVATAR_SIZE = 48
     private const val TEXT_PADDING = 8
+
+    private val leapTeammates: MutableList<DungeonPlayer> = mutableListOf(
+        DungeonPlayer("juju_n0n", DungeonClass.Archer, 19, null, isDead = true),
+        DungeonPlayer("Player_i78", DungeonClass.Healer, 40, null),
+        DungeonPlayer("XGY79", DungeonClass.Berserk, 31, null),
+        DungeonPlayer("N19g_3R", DungeonClass.Mage, 50, null)
+    )
 
     @EventHandler
     private fun onGuiDraw(event: GuiEvent.Draw) {
@@ -103,6 +107,8 @@ object LeapMenu : Module("Leap Menu", "Custom leap menu.") {
         val player = leapTeammates[index]
         if (player == EMPTY) return
         if (player.isDead) return modMessage("Can't leap dead player!")
+
+        println("KEY: Leaped to $player")
         leapTo(player.name, screen)
     }
 
@@ -142,14 +148,12 @@ object LeapMenu : Module("Leap Menu", "Custom leap menu.") {
     }
 
     private fun renderCard(graphics: GuiGraphicsExtractor, player: DungeonPlayer, x: Int, y: Int) {
-        NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
-            NVGRenderer.rect(x * 2f, y * 2f, CARD_WIDTH * 2f, CARD_HEIGHT * 2f, Color(0xBF262626.toInt(), true), 12f)
-        }
+        // graphics.drawRoundedRect(x.toFloat(), y.toFloat(), CARD_WIDTH.toFloat(), CARD_HEIGHT.toFloat(), 0xBF262626.toInt(), 6f)
 
         val avatarX = x + 14
         val avatarY = (y + (CARD_HEIGHT - AVATAR_SIZE) / 2)
 
-        val skinLoc = player.locationSkin ?: EMPTY.locationSkin ?: return
+        val skinLoc = player.locationSkin ?: Identifier.fromNamespaceAndPath("hkim", "mxn.png")
         graphics.blit(RenderPipelines.GUI_TEXTURED, skinLoc, avatarX, avatarY, 8f, 8f, AVATAR_SIZE, AVATAR_SIZE, 8, 8, 64, 64)
         graphics.blit(RenderPipelines.GUI_TEXTURED, skinLoc, avatarX - 2, avatarY - 2, 40f, 8f, AVATAR_SIZE + 4, AVATAR_SIZE + 4, 8, 8, 64, 64)
 
@@ -193,6 +197,6 @@ object LeapMenu : Module("Leap Menu", "Custom leap menu.") {
 
     fun isLeapMenu(screen: Screen): Boolean {
         val chest = (screen as? AbstractContainerScreen<*>) ?: return false
-        return chest.title.string.equalsOneOf("Spirit Leap", "Teleport to Player") && leapTeammates.isNotEmpty() && leapTeammates.all { it != EMPTY }
+        return chest.title.string.containsOneOf("Leap", "Teleport to Player") && leapTeammates.isNotEmpty() && leapTeammates.all { it != EMPTY }
     }
 }

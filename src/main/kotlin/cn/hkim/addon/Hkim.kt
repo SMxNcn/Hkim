@@ -1,14 +1,13 @@
 package cn.hkim.addon
 
-import cn.hkim.addon.commands.autoSellCommand
-import cn.hkim.addon.commands.highlightCommand
-import cn.hkim.addon.commands.hkimCommand
-import cn.hkim.addon.commands.hwpCommand
+import cn.hkim.addon.commands.*
 import cn.hkim.addon.config.ModuleConfig
 import cn.hkim.addon.events.CustomEventDispatcher
 import cn.hkim.addon.events.EventDispatcher
 import cn.hkim.addon.features.ModuleManager
 import cn.hkim.addon.gui.Background
+import cn.hkim.addon.runtime.BridgeLoader
+import cn.hkim.addon.runtime.SkikoRuntime
 import cn.hkim.addon.utils.ServerUtils
 import cn.hkim.addon.utils.TickTasks
 import cn.hkim.addon.utils.render.IrisCompatibility
@@ -35,12 +34,15 @@ object Hkim : ClientModInitializer {
     val mc: Minecraft = Minecraft.getInstance()
     @JvmField
     val EVENT_BUS: IEventBus = EventBus()
+    @Volatile
+    var runtime: SkikoRuntime? = null
+        private set
 
     val VERSION: String = FabricLoader.getInstance().getModContainer("hkim").get().metadata.version.friendlyString
 
     override fun onInitializeClient() {
         ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
-            arrayOf(hkimCommand, autoSellCommand, highlightCommand, hwpCommand).forEach { commodore -> commodore.register(dispatcher) }
+            arrayOf(hkimCommand, autoSellCommand, highlightCommand, hwpCommand, devCommand).forEach { commodore -> commodore.register(dispatcher) }
         }
 
         EventDispatcher.postEvents()
@@ -50,5 +52,13 @@ object Hkim : ClientModInitializer {
         ModuleManager.initModules()
         ModuleConfig.loadConfig()
         Background.getDefaultBackground()
+
+        runtime = BridgeLoader.load()
+        if (runtime != null) {
+            runtime!!.initPipRenderer()
+            logger.info("Skiko runtime loaded via bridge classloader.")
+        } else {
+            logger.error("Skiko runtime unavailable!")
+        }
     }
 }

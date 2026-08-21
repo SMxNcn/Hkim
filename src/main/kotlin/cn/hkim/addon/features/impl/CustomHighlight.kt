@@ -20,9 +20,10 @@ import com.google.gson.reflect.TypeToken
 import meteordevelopment.orbit.EventHandler
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.boss.wither.WitherBoss
 import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.entity.player.Player
+import net.minecraft.world.level.Level
+import net.minecraft.world.phys.AABB
 import java.awt.Color
 import java.io.File
 import java.nio.charset.StandardCharsets
@@ -74,13 +75,7 @@ object CustomHighlight : Module("Custom Highlight", "Highlight custom entities i
                 val name = entity.name.string.clean
                 if (!name.contains(entry.entityName, ignoreCase = true)) continue
 
-                val realEntity = level.getEntities(entity, entity.boundingBox.move(0.0, -1.0, 0.0)) {
-                    isValidHighlightEntity(it)
-                }.firstOrNull()
-
-                if (realEntity != null) {
-                    trackedEntities.add(realEntity)
-                }
+                findHighlightTarget(level, entity)?.let { trackedEntities.add(it) }
             }
         }
     }
@@ -143,9 +138,25 @@ object CustomHighlight : Module("Custom Highlight", "Highlight custom entities i
         }
     }
 
+    /**
+     * 以名字 ArmorStand 为锚点向下搜索实体。
+     * 原实现只用 ArmorStand 自身 boundingBox 向下移 1 格 + firstOrNull，导致：
+     * - 大型实体（如幽灵，高 3.5 格）身体与 1 格 box 无交集，永远命中不了；
+     * - 名字挂得高的实体（名字距头顶 > 1 格）同样漏检；
+     * - firstOrNull 的遍历顺序不确定，可能框到错误的实体。
+     * 现在改为：水平 ±2、向下 8 格的搜索范围，取距名字 ArmorStand 最近的合法实体。
+     */
+    private fun findHighlightTarget(level: Level, stand: ArmorStand): Entity? {
+        val box = AABB(
+            stand.x - 2.0, stand.y - 8.0, stand.z - 2.0,
+            stand.x + 2.0, stand.y + 0.5, stand.z + 2.0
+        )
+        return level.getEntities(null, box) { isValidHighlightEntity(it) }
+            .minByOrNull { it.distanceToSqr(stand) }
+    }
+
     private fun isValidHighlightEntity(entity: Entity): Boolean = when (entity) {
         is ArmorStand -> false
-        is WitherBoss -> false
         is Player -> {
             if (entity == mc.player) return false
             val name = entity.displayName.string.clean

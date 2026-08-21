@@ -4,12 +4,11 @@ import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.render.Easing
 import cn.hkim.addon.utils.render.GuiAnimation
-import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
-import cn.hkim.addon.utils.render.nvg.NVGRenderer
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRectWithBorder
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoCenteredText
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.Button
 import net.minecraft.network.chat.Component
-import java.awt.Color
 
 class ClientButton(
     x: Int, y: Int,
@@ -32,15 +31,21 @@ class ClientButton(
         }
 
         val progress = hoverAnim.getValue()
-        val bgColor = HudUtils.lerpColor(0x432A2A2A, 0x43AAAAAA, progress)
-        val borderColor = HudUtils.lerpColor(0x33969696, 0x43AAAAAA, progress)
-        val textColor = HudUtils.lerpColor(0xFFE0E0E0.toInt(), 0xFFFFFFFF.toInt(), progress)
+        val bgColor = HudUtils.lerpColor(0x202A2A2A, 0x20AAAAAA, progress)
+        val borderColor = HudUtils.lerpColor(0x53969696, 0x63AAAAAA, progress)
 
-        NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
-            NVGRenderer.rect(x * 2f, y * 2f, width * 2f, height * 2f, Color(bgColor, true), 6f)
-            NVGRenderer.hollowRect(x * 2f, y * 2f, width * 2f, height * 2f, 2.5f, Color(borderColor, true), 6f)
-        }
+        val textColor = component.style.color
+            ?.let { 0xFF000000.toInt() or (it.value and 0xFFFFFF) }
+            ?: HudUtils.lerpColor(0xFFE0E0E0.toInt(), 0xFFFFFFFF.toInt(), progress)
 
-        graphics.centeredText(mc.font, component, this.x + this.width / 2, this.y + (this.height - mc.font.lineHeight) / 2 + 1, textColor)
+        graphics.drawRoundedRectWithBorder(x.toFloat(), y.toFloat(), width.toFloat(), height.toFloat(), bgColor, borderColor, 1f, 4f)
+
+        graphics.drawSkikoCenteredText(// 1
+            component.string,
+            this.x + this.width / 2f,
+            this.y + 3f,
+            mc.font.lineHeight.toFloat(),
+            textColor,
+        )
     }
 }

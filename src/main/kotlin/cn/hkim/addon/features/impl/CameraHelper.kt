@@ -17,7 +17,7 @@ object CameraHelper : Module("Camera Helper", "Modify your camera") {
     private val cameraClip by BooleanSetting("Camera Clip", "Allows the camera to clip through blocks.", false)
 
     private val smoothTransition by BooleanSetting("Smooth Perspective", "Animate the camera when switching between first and third person.", false)
-    private val transitionDuration by NumberSetting("Transition Time (ms)", "Duration of the perspective switch animation.", 250f, 50f, 500f, 50f).depends { smoothTransition }
+    private val transitionDuration by NumberSetting("Transition Time", "Duration of the perspective switch animation.", 250f, 50f, 500f, 50f, "ms").depends { smoothTransition }
 
     @EventHandler
     private fun onTick(event: TickEvent.End) {

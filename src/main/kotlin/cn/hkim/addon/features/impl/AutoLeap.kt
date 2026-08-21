@@ -14,7 +14,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
 
 @ModuleInfo("auto_leap", Category.SKYBLOCK)
-object AutoLeap : Module("Auto Leap", "Auto leap to players based on predefined rules.") {
+object AutoLeap : Module("Auto Leap", "Auto leap to players in dungeons.") {
     private val m7py by BooleanSetting("Always PY", "Always doing PY in F/M7.", true)
     private val ee2Mage by BooleanSetting("Archer EE2", "Set EE2 leap target to Mage.", false)
     private val forceMageCore by BooleanSetting("Force Mage Core", "Always treat mage as core in P3 S3.", true)

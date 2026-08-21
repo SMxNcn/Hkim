@@ -18,7 +18,7 @@ import net.minecraft.network.protocol.game.ClientboundSoundPacket
 import net.minecraft.sounds.SoundEvents
 
 @ModuleInfo("ragnarock", Category.SKYBLOCK)
-object Ragnarock : Module("Ragnarock", "Alerts when you cast the Ragnarock or it gets cancelled.") {
+object Ragnarock : Module("Ragnarock", "Alerts when you cast the Ragnarock.") {
     private val castAlert by BooleanSetting("Cast Alert", "Alerts when you cast Ragnarock.", true)
     private val cancelAlert by BooleanSetting("Cancel Alert", "Alerts when Ragnarock is cancelled.", true)
     private val strengthGainedMessage by BooleanSetting("Strength Gained", "Shows Ragnarock strength gained.", true)

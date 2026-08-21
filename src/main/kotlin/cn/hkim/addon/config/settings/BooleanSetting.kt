@@ -1,19 +1,20 @@
 package cn.hkim.addon.config.settings
 
-import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.Setting
+import cn.hkim.addon.config.clickgui.Theme
 import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.HudUtils.lerp
 import cn.hkim.addon.utils.HudUtils.lerpColor
 import cn.hkim.addon.utils.playSoundAtPlayer
 import cn.hkim.addon.utils.render.Easing
 import cn.hkim.addon.utils.render.GuiAnimation
-import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
-import cn.hkim.addon.utils.render.nvg.NVGRenderer
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawCircle
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRect
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRectWithBorder
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoText
 import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
-import java.awt.Color
 
 open class BooleanSetting(name: String, desc: String, default: Boolean) : Setting<Boolean>(name, desc, default) {
     private val toggleAnim = GuiAnimation.create(if (value) 1f else 0f, if (value) 1f else 0f)
@@ -27,53 +28,46 @@ open class BooleanSetting(name: String, desc: String, default: Boolean) : Settin
         themeColor: Int,
         delta: Float, visibleTop: Float, visibleBottom: Float
     ): Float {
-        val height = 20f
-        val isHovered = (visibleTop == -1f || mouseY in visibleTop..visibleBottom) && HudUtils.isPointInRect(mouseX, mouseY, x, y, width, height)
+        val height = Theme.SETTING_HEIGHT
+        val isHovered = computeIsHovered(mouseX, mouseY, x, y, width, height, visibleTop, visibleBottom)
 
         if (isHovered) {
-            NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
-                NVGRenderer.rect(x * 2, y * 2, width * 2, height * 2, Color(0x15FFFFFF, true), 6f)
-            }
+            graphics.drawRoundedRectWithBorder(x, y, width, height, Theme.controlHover, 0, 0f, 3f)
         }
 
-        graphics.text(mc.font, name, x.toInt() + 10, y.toInt() + 6, 0xFFCCCCCC.toInt(), false)
+        graphics.drawSkikoText(name, x + 10f, y + 3f, Theme.CARD_FONT_SIZE, Theme.controlText)
 
-        val toggleX = x + width - 34f
-        val toggleY = y + 4f
-        val toggleW = 28f
+        val toggleX = x + width - 28f
+        val toggleY = y + 3f
+        val toggleW = 22f
         val toggleH = 12f
 
         val animationProgress = toggleAnim.getValue()
-        val knobStartX = toggleX + 2f
-        val knobEndX = toggleX + toggleW - 11f
+        val boxRadius = 6f
+        val knobRadius = 3.5f
+
+        val knobStartX = toggleX + boxRadius - knobRadius
+        val knobEndX = toggleX + toggleW - boxRadius - knobRadius
         val knobX = lerp(knobStartX, knobEndX, animationProgress)
 
-        NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
-            val bgColor = lerpColor(0xFF3A3A3A.toInt(), themeColor, animationProgress)
-            NVGRenderer.rect(toggleX * 2, toggleY * 2, toggleW * 2, toggleH * 2, Color(bgColor), toggleH)
-            NVGRenderer.circle(knobX * 2 + 9f, toggleY * 2 + toggleH, 9f, Color(0xFFFFFF))
-        }
+        val bgColor = lerpColor(Theme.controlButtonBg, themeColor, animationProgress)
+        graphics.drawRoundedRect(toggleX, toggleY, toggleW, toggleH, bgColor, boxRadius)
+        graphics.drawCircle(knobX + knobRadius, toggleY + toggleH / 2f, Theme.controlTextActive, knobRadius)
 
-        if (isHovered) {
-            val toggleX = x + width - 34f
-            val toggleY = y + 4f
-            val toggleW = 28f
-            val toggleH = 12f
-            if (HudUtils.isPointInRect(mouseX, mouseY, toggleX, toggleY, toggleW, toggleH)) {
-                graphics.requestCursor(CursorTypes.POINTING_HAND)
-            }
+        if (isHovered && HudUtils.isPointInRect(mouseX, mouseY, toggleX, toggleY, toggleW, toggleH)) {
+            graphics.requestCursor(CursorTypes.POINTING_HAND)
         }
 
         renderDescriptionTooltip(graphics, isHovered, mouseX, mouseY)
         return height
     }
 
-    override fun mouseClicked(mouseX: Float, mouseY: Float, button: Int, x: Float, y: Float, width: Float): Boolean {
+    override fun mouseClicked(mouseX: Float, mouseY: Float, button: Int, x: Float, y: Float, width: Float, doubleClick: Boolean): Boolean {
         if (button != 0) return false
 
-        val toggleX = x + width - 34f
-        val toggleY = y + 4f
-        val toggleW = 28f
+        val toggleX = x + width - 28f
+        val toggleY = y + 3f
+        val toggleW = 22f
         val toggleH = 12f
 
         if (HudUtils.isPointInRect(mouseX, mouseY, toggleX, toggleY, toggleW, toggleH)) {

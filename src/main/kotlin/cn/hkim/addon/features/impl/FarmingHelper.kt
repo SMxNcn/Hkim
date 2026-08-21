@@ -173,7 +173,7 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
         }
 
         if (CropNuker.enabled || ignorePests || !changeTimeOnPest) return
-        if (!title.containsOneOf("Desk", "Garden Time", "Pesthunter")) return
+        if (!title.containsOneOf("Desk", "Garden Time")) return
         containerId = mc.player?.containerMenu?.containerId ?: return
     }
 

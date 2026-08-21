@@ -25,7 +25,7 @@ object AutoGFS : Module("Auto GFS", "Automatically refills certain items from yo
     private val refillTNT by BooleanSetting("Refill TNT", "Refill superboom tnt.", false).depends { item }
     private val refillToxicArrow by BooleanSetting("Refill Toxic Arrow", "Refill toxic arrow poison.", false).depends { item }
     private val refillOnTimer by BooleanSetting("Refill on Timer", "Refill on a 5s intervals.", true)
-    private val timerIncrements by NumberSetting("Timer Increments (s)", "The interval in which to refill.", 5f, 1f, 60f, 1f)
+    private val timerIncrements by NumberSetting("Timer Increments", "The interval in which to refill.", 5f, 1f, 60f, 1f, "s")
 
     private val startRegex = Regex("\\[NPC] Mort: Here, I found this map when I first entered the dungeon\\.|\\[NPC] Mort: Right-click the Orb for spells, and Left-click \\(or Drop\\) to use your Ultimate!|\\[NPC] Elle: Okay adventurers, I will go and fish up Kuudra!")
     private val stunnedRegex = Regex("\\[NPC] Elle: That looks like it hurt! Quickly, while Kuudra is distracted shoot him with the Ballista!")

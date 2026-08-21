@@ -171,7 +171,7 @@ object HuntingHelper : Module("Hunting Helper", "Features for creature hunting."
                 if (entity.type == mob.type && mob.extra(entity)) mob.targets.add(entity)
             }
             if ((floordropEsp || autoFloordrop) && entity is Display.ItemDisplay && entity.itemStack.item == Items.STRING) {
-                floordrops.add(entity.blockPosition())
+                if (LocationUtils.isCurrentArea(Island.Safari)) floordrops.add(entity.blockPosition())
             }
         }
     }
@@ -203,7 +203,7 @@ object HuntingHelper : Module("Hunting Helper", "Features for creature hunting."
     }
 
     private fun tryAutoFloordrop(player: Player, now: Long) {
-        if (!autoFloordrop || !aimedFloordrop(player)) return
+        if (!autoFloordrop || !aimedFloordrop(player) || !LocationUtils.isCurrentArea(Island.Safari)) return
         if (now - lastFloordropClick < 1000L) return
         lastFloordropClick = now
         Hkim.scope.launch {

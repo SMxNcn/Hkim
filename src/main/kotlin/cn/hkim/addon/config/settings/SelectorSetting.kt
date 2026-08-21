@@ -1,15 +1,16 @@
 package cn.hkim.addon.config.settings
 
-import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.Setting
+import cn.hkim.addon.config.clickgui.Theme
 import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.playSoundAtPlayer
-import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
-import cn.hkim.addon.utils.render.nvg.NVGRenderer
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRectWithBorder
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoCenteredText
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoImage
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoText
 import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
-import java.awt.Color
 
 class SelectorSetting(name: String, desc: String, val options: List<String>, default: String) : Setting<Int>(name, desc, options.indexOf(default).coerceAtLeast(0)) {
     companion object {
@@ -17,7 +18,16 @@ class SelectorSetting(name: String, desc: String, val options: List<String>, def
     }
 
     private var _selected: String = options.firstOrNull() ?: ""
-    fun select(option: String) { if (option in options) { _selected = option; value = options.indexOf(option) } }
+
+    var onSelect: ((String) -> Unit)? = null
+    init { value = this.default }
+    fun select(option: String) {
+        if (option in options) {
+            _selected = option
+            value = options.indexOf(option)
+            onSelect?.invoke(option)
+        }
+    }
     fun getSelected(): String = _selected
 
     val isScrollFocused: Boolean get() = scrollFocused == this
@@ -29,39 +39,33 @@ class SelectorSetting(name: String, desc: String, val options: List<String>, def
         themeColor: Int,
         delta: Float, visibleTop: Float, visibleBottom: Float
     ): Float {
-        val height = 20f
-        val isHovered = (visibleTop == -1f || mouseY in visibleTop..visibleBottom) && HudUtils.isPointInRect(mouseX, mouseY, x, y, width, height)
+        val height = Theme.SETTING_HEIGHT
+        val isHovered = computeIsHovered(mouseX, mouseY, x, y, width, height, visibleTop, visibleBottom)
 
         if (isHovered) {
-            NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
-                NVGRenderer.rect(x * 2, y * 2, width * 2, height * 2, Color(0x15FFFFFF, true), 6f)
-            }
+            graphics.drawRoundedRectWithBorder(x, y, width, height, Theme.controlHover, 0, 0f, 3f)
         }
 
-        graphics.text(mc.font, name, x.toInt() + 10, y.toInt() + 6, 0xFFCCCCCC.toInt(), false)
+        graphics.drawSkikoText(name, x + 10f, y + 3f, Theme.CARD_FONT_SIZE, Theme.controlText)
 
         val selectorX = x + width - 100f
         val selectorW = 90f
         val selectorY = y + 2f
-        val selectorH = 16f
+        val selectorH = 14f
 
-        val scrollFocused = isScrollFocused
-        NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
-            NVGRenderer.rect(selectorX * 2, selectorY * 2, selectorW * 2, selectorH * 2, Color(0x222222), 6f)
-            val borderColor = if (scrollFocused) Color(themeColor, true) else Color(0x444444)
-            NVGRenderer.hollowRect(selectorX * 2, selectorY * 2, selectorW * 2, selectorH * 2, if (scrollFocused) 2.5f else 2f, borderColor, 6f)
-        }
+        val focused = isScrollFocused
+        graphics.drawRoundedRectWithBorder(selectorX, selectorY, selectorW, selectorH, Theme.controlBg, if (focused) themeColor else Theme.controlBorder, 1f, 3f)
 
         val leftArrowHovered = HudUtils.isPointInRect(mouseX, mouseY, selectorX, selectorY, 14f, selectorH)
         val rightArrowHovered = HudUtils.isPointInRect(mouseX, mouseY, selectorX + selectorW - 16f, selectorY, 14f, selectorH)
-        val leftArrowColor = if (leftArrowHovered) themeColor else 0xFF888888.toInt()
-        val rightArrowColor = if (rightArrowHovered) themeColor else 0xFF888888.toInt()
+        val leftArrowColor = if (leftArrowHovered) themeColor else Theme.controlTextMuted
+        val rightArrowColor = if (rightArrowHovered) themeColor else Theme.controlTextMuted
         val optionsX = (selectorX + selectorW / 2).toInt()
 
-        graphics.text(mc.font, "<", selectorX.toInt() + 6, selectorY.toInt() + 4, leftArrowColor, false)
-        graphics.text(mc.font, ">", (selectorX + selectorW - 12).toInt(), selectorY.toInt() + 4, rightArrowColor, false)
+        graphics.drawSkikoImage("assets/hkim/textures/clickgui/chevron_left.svg", selectorX + 2f, selectorY + 1f, 12f, 12f, 0f, tintColor = leftArrowColor)
+        graphics.drawSkikoImage("assets/hkim/textures/clickgui/chevron_right.svg", selectorX + selectorW - 14f, selectorY + 1f, 12f, 12f, 0f, tintColor = rightArrowColor)
 
-        graphics.centeredText(mc.font, _selected, optionsX, selectorY.toInt() + 4, 0xFFFFFFFF.toInt())
+        graphics.drawSkikoCenteredText(_selected, optionsX.toFloat(), selectorY + 1.5f, Theme.CARD_FONT_SIZE, Theme.controlTextActive)
 
         if (leftArrowHovered || rightArrowHovered) {
             graphics.requestCursor(CursorTypes.POINTING_HAND)
@@ -71,13 +75,13 @@ class SelectorSetting(name: String, desc: String, val options: List<String>, def
         return height
     }
 
-    override fun mouseClicked(mouseX: Float, mouseY: Float, button: Int, x: Float, y: Float, width: Float): Boolean {
+    override fun mouseClicked(mouseX: Float, mouseY: Float, button: Int, x: Float, y: Float, width: Float, doubleClick: Boolean): Boolean {
         if (button != 0) return false
 
         val selectorX = x + width - 100f
         val selectorW = 90f
         val selectorY = y + 2f
-        val selectorH = 16f
+        val selectorH = 14f
 
         if (HudUtils.isPointInRect(mouseX, mouseY, selectorX, selectorY, 14f, selectorH)) {
             scrollFocused = null
@@ -97,6 +101,12 @@ class SelectorSetting(name: String, desc: String, val options: List<String>, def
         return false
     }
 
+    override fun mouseScrolled(mouseX: Float, mouseY: Float, scrollX: Double, scrollY: Double, x: Float, y: Float, width: Float): Boolean {
+        if (scrollFocused != this) return false
+
+        return if (scrollY < 0) next() else previous()
+    }
+
     private fun next(): Boolean {
         val nextIndex = (value + 1) % options.size
         select(options[nextIndex])
@@ -111,15 +121,5 @@ class SelectorSetting(name: String, desc: String, val options: List<String>, def
         playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value(), 0.3f)
         settingsChanged()
         return true
-    }
-
-    override fun mouseScrolled(mouseX: Float, mouseY: Float, scrollX: Double, scrollY: Double, x: Float, y: Float, width: Float): Boolean {
-        if (scrollFocused != this) return false
-
-        return if (scrollY < 0) {
-            next()
-        } else {
-            previous()
-        }
     }
 }

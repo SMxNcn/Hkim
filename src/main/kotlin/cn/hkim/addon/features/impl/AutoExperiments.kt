@@ -18,8 +18,8 @@ import net.minecraft.world.item.Items
 import java.util.concurrent.ConcurrentHashMap
 
 @ModuleInfo("auto_experiments", category = Category.SKYBLOCK)
-object AutoExperiments : Module("Auto Experiments", "Automatically click on the Chronomatron and Ultrasequencer experiments.") {
-    private val delay by NumberSetting("Click Delay (ms)", "Time in ms between automatic test clicks.", 200f, 0f, 1000f, 10f)
+object AutoExperiments : Module("Auto Experiments", "Automatically complete Add-on experiments.") {
+    private val delay by NumberSetting("Click Delay", "Time between automatic test clicks.", 200f, 0f, 1000f, 10f, "ms")
     private val autoClose by BooleanSetting("Auto Close", "Automatically close the GUI after completing the experiment.", true)
     private val serumCount by NumberSetting("Serum Count", "Consumed Metaphysical Serum count.", 0f, 0f, 3f, 1f)
     private val getMaxXp by BooleanSetting("Get Max XP", "Solve Chronomatron to 15 and Ultrasequencer to 20 for max XP.", false)

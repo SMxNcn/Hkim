@@ -4,11 +4,12 @@ import cn.hkim.addon.Hkim
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.ModuleConfig
 import cn.hkim.addon.features.impl.MainMenuModule
-import cn.hkim.addon.utils.buildGradientComponent
 import cn.hkim.addon.utils.coloredChar
 import cn.hkim.addon.utils.mcVersion
-import cn.hkim.addon.utils.render.nvg.NVGPIPRenderer
-import cn.hkim.addon.utils.render.nvg.NVGRenderer
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRectWithBorder
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoGradientText
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoText
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.skikoTextWidth
 import com.terraformersmc.modmenu.gui.ModsScreen
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
@@ -50,14 +51,17 @@ class MainMenu : Screen(Component.literal("Main Menu")) {
         val s1 = " · Minecraft $mcVersion"
         val s2 = "Hkim v${Hkim.VERSION}"
         val s3 = "Cheaters get banned!"
-        val versionComp = buildGradientComponent(s2, Color(142, 221, 255).rgb, Color(180, 180, 180).rgb, 3)
+
+        val startColor = Color(142, 221, 255).rgb
+        val endColor = Color(180, 180, 180).rgb
+        val fontSize = 9f
 
         Background.update()
         this.updateParallax(mouseX.toDouble(), mouseY.toDouble())
         this.extractBackground(graphics, mouseX, mouseY, partialTick)
-        graphics.text(mc.font, s1, mc.font.width(s2) + 2, height - 10, 0xFFFFFFFF.toInt())
-        graphics.text(mc.font, versionComp, 2, height - 10, 0xFFFFFFFF.toInt(), true)
-        graphics.text(mc.font, s3, width - mc.font.width(s3) - 2, height - 10, 0xFFFFFFFF.toInt())
+        graphics.drawSkikoText(s1, skikoTextWidth(s2, fontSize) + 4, (height - 14).toFloat(), fontSize, 0xFFFFFFFF.toInt())
+        graphics.drawSkikoGradientText(s2, 4f, (height - 14).toFloat(), fontSize, startColor, endColor)
+        graphics.drawSkikoText(s3, (width - skikoTextWidth(s3, fontSize) - 4), (height - 14).toFloat(), fontSize, 0xFFFFFFFF.toInt())
         super.extractRenderState(graphics, mouseX, mouseY, partialTick)
     }
 
@@ -99,15 +103,16 @@ class MainMenu : Screen(Component.literal("Main Menu")) {
         currentParallaxY += (targetParallaxY - currentParallaxY) * 0.15f
         val centerX = this.width / 2
         val centerY = this.height / 2
-        val rectW = 380f
-        val rectH = 400f
 
         Background.renderBackground(this, graphics, currentParallaxX, currentParallaxY)
 
-        NVGPIPRenderer.draw(graphics, 0, 0, graphics.guiWidth(), graphics.guiHeight()) {
-            NVGRenderer.rect((centerX - rectW / 4f) * 2f, (centerY - rectH / 4f) * 2f, rectW, rectW, Color(0x0f8C8C8C, true), 16f)
-            NVGRenderer.hollowRect((centerX - rectW / 4f) * 2f, (centerY - rectH / 4f) * 2f, rectW, rectW, 2.5f, Color(0x4D969696, true), 16f)
-        }
+        val rectW = 380f
+        val rectH = 400f
+        graphics.drawRoundedRectWithBorder(
+            centerX - rectW / 4f, centerY - rectH / 4f,
+            rectW / 2f, rectW / 2f,
+            0x0f8C8C8C, 0x4D969696, 1f, 8f
+        )
 
         val logoSize = 64
         graphics.blit(

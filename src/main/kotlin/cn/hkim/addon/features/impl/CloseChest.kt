@@ -15,7 +15,7 @@ import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
 
 @ModuleInfo("close_chest", Category.SKYBLOCK)
-object CloseChest : Module("Close Chest", "Allows you to instantly close chests with any key or automatically.") {
+object CloseChest : Module("Close Chest", "Instantly close secret chests.") {
     private val mode by SelectorSetting("Mode", "The mode to use, auto will automatically close the chest, any key will make any key input close the chest.", listOf("Auto", "Any Key"), "Auto")
 
     @EventHandler

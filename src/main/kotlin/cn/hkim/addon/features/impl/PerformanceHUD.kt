@@ -14,7 +14,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 import java.awt.Color
 
 @ModuleInfo("performance_hud", Category.MISC)
-object PerformanceHUD : Module("Performance HUD", "Shows performance information on the screen.") {
+object PerformanceHUD : Module("Performance HUD", "Shows performance info on the screen.") {
     private val valueColor by ColorSetting("Value Color", "The color of the metric values.", Color(255, 255, 255).rgb)
     private val direction by SelectorSetting("Direction", "Direction the information is displayed.", listOf("Horizontal", "Vertical"), "Horizontal")
     private val showFPS by BooleanSetting("Show FPS", "Shows the FPS in the HUD.", true)

@@ -15,7 +15,7 @@ import cn.hkim.addon.utils.skyblock.RollType
 import meteordevelopment.orbit.EventHandler
 
 @ModuleInfo("chat_commands", Category.MISC, true)
-object ChatCommands : Module("Chat Commands", "Responds to chat commands in party and co-op channels.") {
+object ChatCommands : Module("Chat Commands", "Chat commands in party and co-op channels.") {
     private val partyChat by BooleanSetting("Party", "Enables party chat commands.", true)
     private val coopChat by BooleanSetting("Co-op", "Enables co-op chat commands.", true)
 

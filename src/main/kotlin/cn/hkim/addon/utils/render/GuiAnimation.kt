@@ -95,6 +95,14 @@ class GuiAnimation internal constructor(
         return start()
     }
 
+    fun snapTo(value: Float): GuiAnimation {
+        reset()
+        from = value
+        to = value
+        currentValue = value
+        return this
+    }
+
     companion object {
         private val globalManager = GuiAnimationManager()
 

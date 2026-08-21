@@ -15,7 +15,7 @@ import net.minecraft.network.chat.Component
 import java.awt.Color
 
 @ModuleInfo("custom_scoreboard", Category.MISC)
-object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard background & last-line replacement.") {
+object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard features.") {
     private const val EXAMPLE_TITLE = "§e§lSKYBLOCK"
     private val EXAMPLE_LINES = listOf(
         "§6  5,234,567",
@@ -38,7 +38,7 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard background & l
     private val gradEnd by ColorSetting("Gradient End", "", Color(85, 255, 255).rgb).depends { replaceIpLine && lastLineGradient }
     private val gradSpeed by NumberSetting("Gradient Speed", "", 5f, 1f, 10f, 1f).depends { replaceIpLine && lastLineGradient }
 
-    private val resetPosition by ActionSetting("Reset Position", "Reset scoreboard position to default (top-right corner).") {
+    private val resetPosition by ActionSetting("Reset Position", "Reset scoreboard position to default (middle-right).") {
         hud.hudAlignment = HudAlignment.MIDDLE_RIGHT
         hud.anchorX = -100f
         hud.anchorY = -25f

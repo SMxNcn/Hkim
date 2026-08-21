@@ -5,4 +5,4 @@ import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
 
 @ModuleInfo("auto_sprint", Category.MISC)
-object AutoSprint : Module("Auto Sprint", "Automatically makes you sprint.")
+object AutoSprint : Module("Auto Sprint", "Automatically sprints when pressing W.")

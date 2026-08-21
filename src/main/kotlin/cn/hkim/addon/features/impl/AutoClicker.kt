@@ -14,7 +14,7 @@ import cn.hkim.addon.utils.itemId
 import meteordevelopment.orbit.EventHandler
 
 @ModuleInfo("auto_clicker", Category.SKYBLOCK)
-object AutoClicker : Module("Auto Clicker", "Auto clicker with options for left-click, right-click, or both.") {
+object AutoClicker : Module("Auto Clicker", "Auto click your mouse.") {
     private val mode by SelectorSetting("Mode", "Click mode.", listOf("Normal", "Terminator"), "Normal")
     private val cps by NumberSetting("CPS", "Clicks per second.", 5.0f, 3.0f, 15.0f, 0.5f).depends { mode == 1 }
     private val rightClickBlock by BooleanSetting("Right Click Block", "Auto right-click when holding a block in Terminator mode.", true).depends { mode == 1 }

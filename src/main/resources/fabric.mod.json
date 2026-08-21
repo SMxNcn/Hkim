@@ -12,6 +12,12 @@
   "icon": "assets/hkim/icon.png",
   "environment": "client",
   "entrypoints": {
+    "preLaunch": [
+      {
+        "adapter": "kotlin",
+        "value": "cn.hkim.prelaunch.HkimPreLaunch"
+      }
+    ],
     "client": [
       {
         "adapter": "kotlin",

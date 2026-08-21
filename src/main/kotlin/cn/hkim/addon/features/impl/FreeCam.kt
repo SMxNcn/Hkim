@@ -101,7 +101,7 @@ object FreeCam : Module("Free Camera", "Detach your camera and fly around freely
 
         oldCameraType = mc.options.cameraType
         mc.options.cameraType = CameraType.THIRD_PERSON_BACK
-        mc.levelRenderer.needsUpdate()
+        forceTerrainUpdate()
 
         val pos = entity.position()
         camX = pos.x
@@ -124,7 +124,7 @@ object FreeCam : Module("Free Camera", "Detach your camera and fly around freely
 
         if (mc.options.cameraType != oldCameraType) CameraHelper.suppressNextTransition()
         mc.options.cameraType = oldCameraType
-        mc.levelRenderer.needsUpdate()
+        forceTerrainUpdate()
 
         val player = mc.player ?: return
         val saved = savedPlayerInput ?: return
@@ -232,5 +232,12 @@ object FreeCam : Module("Free Camera", "Detach your camera and fly around freely
     private fun calcImpulse(b1: Boolean, b2: Boolean): Float {
         if (b1 == b2) return 0f
         return if (b1) 1f else -1f
+    }
+
+    private fun forceTerrainUpdate() {
+        val renderer = mc.levelRenderer
+        renderer.getVisibleSections().clear()
+        renderer.sectionOcclusionGraph.invalidate()
+        renderer.cloudRenderer.markForRebuild()
     }
 }

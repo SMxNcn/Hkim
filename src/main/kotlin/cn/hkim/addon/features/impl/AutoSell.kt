@@ -22,8 +22,8 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 
 @ModuleInfo("auto_sell", Category.SKYBLOCK)
-object AutoSell : Module("Auto Sell", "Automatically sell items in trades and cookie menus. (/autosell)") {
-    private val delay by NumberSetting("Delay (ms)", "Delay between each sell action.", 100f, 100f, 300f, 5f)
+object AutoSell : Module("Auto Sell", "Automatically sell items in trades or cookie menus.") {
+    private val delay by NumberSetting("Delay", "Delay between each sell action.", 100f, 100f, 300f, 5f, "ms")
     private val clickType by SelectorSetting("Click Type", "Click type to use when selling.", listOf("Shift", "Middle", "Left"), "Shift")
 
     private val addDefaults by ActionSetting("Add Defaults", "Add default dungeon items to the auto sell list.") {

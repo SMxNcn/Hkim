@@ -10,6 +10,8 @@ import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.utils.cleanString
 import cn.hkim.addon.utils.containsOneOf
 import cn.hkim.addon.utils.skyblock.LocationUtils
+import cn.hkim.addon.utils.skyblock.M7Phases
+import cn.hkim.addon.utils.skyblock.getF7Phase
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.world.inventory.ChestMenu
 import net.minecraft.world.item.Items
@@ -26,7 +28,7 @@ object CleanView : Module("Clean View", "Hides unwanted renderings.") {
     private val hideWitherImpact by BooleanSetting("Hide Wither Impact", "Hide explosion particles.", false).depends { particle }
 
     private val effect by DropdownSetting("Others")
-    private val hideBlindness by BooleanSetting("Hide Blindness", "Remove blindness ans darkness effect.", false).depends { effect }
+    private val hideBlindness by BooleanSetting("Hide Blindness", "Remove blindness and darkness effect.", false).depends { effect }
     private val hideFireOverlay by BooleanSetting("Hide Fire Overlay", "Hide fire overlay on screen.", false).depends { effect }
     private val hideEntityFire by BooleanSetting("Hide Entity Fire", "Hide fire overlay on other entities.", false).depends { effect && hideFireOverlay }
     private val hideBlockStuck by BooleanSetting("See Through Blocks", "Removes the suffocation overlay when stuck in blocks.", false).depends { effect }
@@ -42,7 +44,7 @@ object CleanView : Module("Clean View", "Hides unwanted renderings.") {
         val chest = mc.player?.containerMenu as? ChestMenu ?: return
         val slot = chest.slots.getOrNull(event.slotId) ?: return
 
-        if (cleanGui && slot.hasItem() && slot.item.displayName.cleanString.isBlank() &&
+        if (cleanGui && slot.hasItem() && slot.item.displayName.cleanString.isBlank() && getF7Phase() != M7Phases.P3 &&
             !event.screen.title.cleanString.containsOneOf("Chronomatron", "Ultrasequencer")) {
             event.cancel()
             return

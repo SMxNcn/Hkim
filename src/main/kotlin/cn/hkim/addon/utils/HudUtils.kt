@@ -13,6 +13,7 @@ import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.PlayerTeam
 import java.awt.Color
 import java.net.URI
+import kotlin.math.roundToInt
 import kotlin.math.sin
 
 object HudUtils {
@@ -49,7 +50,12 @@ object HudUtils {
         )
     }
 
-    private fun GuiGraphicsExtractor.renderScaledText(renderer: (Int, Int) -> Unit, x: Int, y: Int, scale: Float) {
+    private fun GuiGraphicsExtractor.renderScaledText(
+        renderer: (Int, Int) -> Unit,
+        x: Int,
+        y: Int,
+        scale: Float
+    ) {
         if (scale == 1.0f) {
             renderer(x, y)
             return
@@ -61,13 +67,29 @@ object HudUtils {
         this.pose().popMatrix()
     }
 
-    fun GuiGraphicsExtractor.scaledText(font: Font, text: Component, x: Int, y: Int, color: Int, shadow: Boolean = false, scale: Float = 1.0f) {
+    fun GuiGraphicsExtractor.scaledText(
+        font: Font,
+        text: Component,
+        x: Int,
+        y: Int,
+        color: Int,
+        shadow: Boolean = false,
+        scale: Float = 1.0f
+    ) {
         renderScaledText({ sx, sy ->
             this.text(font, text, sx, sy, color, shadow)
         }, x, y, scale)
     }
 
-    fun GuiGraphicsExtractor.scaledText(font: Font, text: String, x: Int, y: Int, color: Int, shadow: Boolean = false, scale: Float = 1.0f) {
+    fun GuiGraphicsExtractor.scaledText(
+        font: Font,
+        text: String,
+        x: Int,
+        y: Int,
+        color: Int,
+        shadow: Boolean = false,
+        scale: Float = 1.0f
+    ) {
         renderScaledText({ sx, sy ->
             this.text(font, text, sx, sy, color, shadow)
         }, x, y, scale)
@@ -156,6 +178,54 @@ object HudUtils {
         return mergeChannel(a, 24) or mergeChannel(r, 16) or mergeChannel(g, 8) or mergeChannel(b, 0)
     }
 
+    fun hsbOf(argb: Int): FloatArray {
+        val r = ((argb shr 16) and 0xFF) / 255f
+        val g = ((argb shr 8) and 0xFF) / 255f
+        val b = (argb and 0xFF) / 255f
+        val max = maxOf(r, g, b)
+        val min = minOf(r, g, b)
+        val d = max - min
+        var h = when {
+            d == 0f -> 0f
+            max == r -> (((g - b) / d) % 6f) / 6f
+            max == g -> ((b - r) / d + 2f) / 6f
+            else -> ((r - g) / d + 4f) / 6f
+        }
+        if (h < 0f) h += 1f
+        val s = if (max == 0f) 0f else d / max
+        return floatArrayOf(h, s, max)
+    }
+
+    fun hsvToRgb(h: Float, s: Float, v: Float): Int {
+        if (s <= 0f) {
+            val gray = (v * 255f + 0.5f).toInt()
+            return rgb(gray, gray, gray)
+        }
+        val hh = (h - h.toInt()) * 6f
+        val sector = hh.toInt()
+        val f = hh - sector
+        val p = (v * (1f - s) * 255f + 0.5f).toInt()
+        val q = (v * (1f - s * f) * 255f + 0.5f).toInt()
+        val t = (v * (1f - s * (1f - f)) * 255f + 0.5f).toInt()
+        val v255 = (v * 255f + 0.5f).toInt()
+        return when (sector % 6) {
+            0 -> rgb(v255, t, p)
+            1 -> rgb(q, v255, p)
+            2 -> rgb(p, v255, t)
+            3 -> rgb(p, q, v255)
+            4 -> rgb(t, p, v255)
+            else -> rgb(v255, p, q)
+        }
+    }
+
+    fun clamp(v: Float, lo: Float, hi: Float): Float = maxOf(lo, minOf(hi, v))
+
+    fun alphaOf(argb: Int): Int = (argb shr 24) and 0xFF
+
+    fun alphaToPercent(a: Int): Int = (a * 100f / 255f).roundToInt()
+
+    fun percentToAlpha(p: Int): Int = (p * 255f / 100f).roundToInt()
+
     fun toHexString(color: Int): String {
         val a = (color shr 24) and 0xFF
         val r = (color shr 16) and 0xFF
@@ -191,6 +261,8 @@ object HudUtils {
         } catch (_: Exception) { null }
     }
 
+    private fun rgb(r: Int, g: Int, b: Int): Int = 0xFF000000.toInt() or (r shl 16) or (g shl 8) or b
+    
     fun getChromaColor(start: Color, end: Color, index: Int, speed: Int, offset: Int): Color {
         val currentTime = System.nanoTime() / 1_000_000_000.0
 
@@ -258,6 +330,7 @@ object HudUtils {
 }
 
 object Colors {
+    @JvmField val BLACK = Color(0, 0, 0)
     @JvmField val MINECRAFT_DARK_BLUE = Color(0, 0, 170)
     @JvmField val MINECRAFT_DARK_GREEN = Color(0, 170, 0)
     @JvmField val MINECRAFT_DARK_AQUA = Color(0, 170, 170)
@@ -273,5 +346,4 @@ object Colors {
     @JvmField val MINECRAFT_LIGHT_PURPLE = Color(255, 85, 255)
     @JvmField val MINECRAFT_YELLOW = Color(255, 255, 85)
     @JvmField val WHITE = Color(255, 255, 255)
-    @JvmField val BLACK = Color(0, 0, 0)
 }

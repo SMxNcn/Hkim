@@ -18,7 +18,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 @ModuleInfo("animations", Category.RENDER)
-object Animations : Module("Animations", "Changes the appearance of the first-person view model.") {
+object Animations : Module("Animations", "Customize the first-person view model.") {
     @JvmStatic val size by NumberSetting("Size", "Scales the held item. Default: 1", 1f, 0.1f, 3.0f, 0.05f)
     @JvmStatic val x by NumberSetting("X", "Moves the held item. Default: 0", 0f, -2.5f, 1.5f, 0.05f)
     @JvmStatic val y by NumberSetting("Y", "Moves the held item. Default: 0", 0f, -1.5f, 1.5f, 0.05f)

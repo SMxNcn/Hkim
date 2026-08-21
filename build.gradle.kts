@@ -19,6 +19,7 @@ repositories {
     maven("https://maven.deftu.dev/snapshots")
     maven("https://maven.deftu.dev/releases")
     maven("https://maven.nucleoid.xyz/releases")
+    maven("https://redirector.kotlinlang.org/maven/compose-dev")
     maven("https://api.modrinth.com/maven")
 }
 
@@ -39,13 +40,7 @@ dependencies {
     include("meteordevelopment:orbit:${property("orbit_version")}")
     include("com.github.stivais:Commodore:${property("commodore_version")}")
 
-    property("minecraft_lwjgl_version").let { lwjglVersion ->
-        implementation("org.lwjgl:lwjgl-nanovg:$lwjglVersion")
-        implementation("org.lwjgl:lwjgl-nanovg:$lwjglVersion:natives-windows")
-
-        include("org.lwjgl:lwjgl-nanovg:$lwjglVersion")
-        include("org.lwjgl:lwjgl-nanovg:$lwjglVersion:natives-windows")
-    }
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-windows-x64:${property("skiko_version")}")
 }
 
 loom {

@@ -10,7 +10,7 @@ import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.ItemStack
 
 @ModuleInfo("anti_place", Category.MISC)
-object AntiPlace : Module("Anti Place", "Prevent placing block-based weapons and items on the ground.") {
+object AntiPlace : Module("Anti Place", "Prevent placing block-based items on the ground.") {
 
     @JvmStatic
     fun shouldCancelPlacement(stack: ItemStack): Boolean {

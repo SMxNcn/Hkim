@@ -8,7 +8,6 @@ import cn.hkim.addon.features.impl.TitleManager;
 import cn.hkim.addon.gui.Background;
 import cn.hkim.addon.utils.RotationUtils;
 import cn.hkim.addon.utils.render.GuiAnimation;
-import cn.hkim.addon.utils.render.nvg.NVGRenderer;
 import cn.hkim.addon.utils.skyblock.farming.Plot;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.minecraft.client.Minecraft;
@@ -46,7 +45,6 @@ public abstract class MinecraftMixin {
     @Inject(method = "onGameLoadFinished", at = @At("HEAD"))
     private void onGameLoadFinished(CallbackInfo ci) {
         Background.loadBackgrounds();
-        NVGRenderer.init();
     }
 
     @Inject(method = "close", at = @At("HEAD"))
@@ -73,7 +71,7 @@ public abstract class MinecraftMixin {
     }
 
     @Inject(at = @At("HEAD"), method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;ZZ)V")
-    private void freecam$onDisconnect(Screen screen, boolean keepResourcePacks, boolean stopSounds, CallbackInfo ci) {
+    private void freecam$onDisconnect(Screen screen, boolean keepResourcePacks, boolean stopSound, CallbackInfo ci) {
         if (FreeCam.isFreecamActive()) {
             FreeCam.INSTANCE.disable();
         }

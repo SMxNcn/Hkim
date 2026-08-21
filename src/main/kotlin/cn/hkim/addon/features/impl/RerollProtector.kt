@@ -17,7 +17,7 @@ import net.minecraft.world.Container
 import net.minecraft.world.inventory.ChestMenu
 
 @ModuleInfo("reroll_protector", Category.SKYBLOCK, true)
-object RerollProtector : Module("Reroll Protector", "Prevent reroll when rare rewards appear in reward chests.") {
+object RerollProtector : Module("Reroll Protector", "Prevent reroll rare rewards.") {
     private val sendRngMessage by BooleanSetting("Send RNG Message", "Send rare item name to party.", true)
     private val message by TextSetting("RNG Message", "Use %i for rng item name, %c for chest name.", "%i in %c!")
 
