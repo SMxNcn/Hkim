@@ -1,0 +1,274 @@
+package cn.hkim.addon.features.impl
+
+import com.mojang.blaze3d.platform.InputConstants
+import cn.hkim.addon.Hkim.mc
+import cn.hkim.addon.config.settings.BooleanSetting
+import cn.hkim.addon.events.impl.GuiEvent
+import cn.hkim.addon.events.impl.MouseButtonEvent
+import cn.hkim.addon.features.Category
+import cn.hkim.addon.features.Module
+import cn.hkim.addon.features.ModuleInfo
+import cn.hkim.addon.utils.*
+import cn.hkim.addon.utils.skyblock.*
+import meteordevelopment.orbit.EventHandler
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.core.BlockPos
+
+@ModuleInfo("auto_leap", Category.SKYBLOCK)
+object AutoLeap : Module("Auto Leap", "Auto leap to players in dungeons.") {
+    private val m7py by BooleanSetting("Always PY", "Always doing PY in F/M7.", true)
+    private val ee2Mage by BooleanSetting("Archer EE2", "Set EE2 leap target to Mage.", false)
+    private val forceMageCore by BooleanSetting("Force Mage Core", "Always treat mage as core in P3 S3.", true)
+
+    private var inLeapGui = false
+    private var shouldAutoLeap = false
+    private var targetClass: DungeonClass? = null
+
+    @EventHandler
+    private fun onMouseClick(event: MouseButtonEvent) {
+        if (!enabled || event.button != InputConstants.MOUSE_BUTTON_LEFT || !LocationUtils.inDungeons) return
+
+        if (mc.player?.mainHandItem?.itemId.equalsOneOf("INFINITE_SPIRIT_LEAP", "SPIRIT_LEAP")) {
+            targetClass = selectLeapTarget()
+            shouldAutoLeap = true
+            event.cancel()
+            rightClick()
+        }
+    }
+
+    @EventHandler
+    private fun onGuiOpen(event: GuiEvent.Open) {
+        if (!enabled) return
+        val chest = (event.screen as? AbstractContainerScreen<*>) ?: return
+        inLeapGui = chest.title.string.equalsOneOf("Spirit Leap", "Teleport to Player")
+        if (!LocationUtils.inDungeons || !inLeapGui || !shouldAutoLeap) return
+        schedule(4) { performAutoLeap(chest) }
+    }
+
+    private fun performAutoLeap(screen: AbstractContainerScreen<*>) {
+        if (targetClass == null) {
+            shouldAutoLeap = false
+            return
+        }
+
+        val targetPlayer = DungeonUtils.dungeonTeammates.find {
+            it.clazz == targetClass && !it.isDead
+        }
+
+        if (targetPlayer == null) {
+            shouldAutoLeap = false
+            return
+        }
+
+        try {
+            leapTo(targetPlayer.name, screen, false)
+            modMessage("Teleporting to ${targetPlayer.name} (${targetClass})")
+        } catch (_: Exception) {} finally {
+            inLeapGui = false
+            shouldAutoLeap = false
+        }
+    }
+
+    private fun selectLeapTarget(): DungeonClass? {
+        if (!LocationUtils.inDungeons) return null
+
+        return if (DungeonUtils.inBoss) {
+            handleM7Phase()
+        } else {
+            handlePreBossPhase()
+        }
+    }
+
+    private fun handleM7Phase(): DungeonClass? {
+        val floor = DungeonUtils.floor ?: return null
+        if (floor.floorNumber != 7) return null
+
+        val myClass = DungeonUtils.currentDungeonPlayer.clazz
+        val phase = getF7Phase()
+        val p3Stage = P3Stages.getP3Stage()
+
+        if (phase == M7Phases.Unknown) return null
+
+        val isCoreNormal = p3Stage == P3Stages.S3
+        val isCore = if (forceMageCore && p3Stage == P3Stages.S3) true else isCoreNormal
+
+        return queryRule(myClass, phase, p3Stage, isCore)
+    }
+
+    private fun handlePreBossPhase(): DungeonClass? {
+        val myPlayer = DungeonUtils.currentDungeonPlayer
+        val myClass = myPlayer.clazz
+
+        if (myClass != DungeonClass.Mage && myClass != DungeonClass.Archer) return null
+
+        val doorOpenerName = DungeonUtils.doorOpener
+        if (doorOpenerName.isNotBlank()) {
+            val doorOpener = DungeonUtils.dungeonTeammates.find { it.name == doorOpenerName }
+            if (doorOpener != null && !doorOpener.name.equals(mc.player?.name)) {
+                return doorOpener.clazz
+            }
+        }
+
+        val teammateToLeap = when (myClass) {
+            DungeonClass.Archer -> DungeonUtils.dungeonTeammates.find { it.clazz == DungeonClass.Mage }
+            DungeonClass.Mage -> DungeonUtils.dungeonTeammates.find { it.clazz == DungeonClass.Archer }
+        }
+
+        return teammateToLeap?.clazz
+    }
+
+    // Dynamic leap rules in the future.
+    private fun queryRule(sourceClass: DungeonClass, phase: M7Phases, p3Stage: P3Stages, isCore: Boolean = false): DungeonClass? {
+        if (phase == M7Phases.P2) return queryP2Rule(sourceClass)
+
+        val player = mc.player!!
+        val playerPos = BlockPos(player.x.toInt(), player.y.toInt(), player.z.toInt())
+
+        return when (sourceClass) {
+            DungeonClass.Archer -> when (phase) {
+                M7Phases.P1 -> DungeonClass.Berserk
+                M7Phases.P3 -> when (p3Stage) {
+                    P3Stages.S1 -> {
+                        if (ee2Mage) DungeonClass.Mage
+                        else null
+                    }
+                    P3Stages.S2 -> DungeonClass.Healer
+                    P3Stages.S3 -> {
+                        if (isCore) DungeonClass.Mage
+                        else null
+                    }
+                    P3Stages.S4 -> DungeonClass.Mage
+                    P3Stages.Tunnel -> DungeonClass.Healer
+                    else -> null
+                }
+                M7Phases.P4 -> DungeonClass.Healer
+                M7Phases.P5 -> null
+                else -> null
+            }
+
+            DungeonClass.Berserk -> when (phase) {
+                M7Phases.P1 -> null
+                M7Phases.P3 -> when (p3Stage) {
+                    P3Stages.S1 -> {
+                        if (ee2Mage) DungeonClass.Mage
+                        else DungeonClass.Archer
+                    }
+                    P3Stages.S2 -> DungeonClass.Healer
+                    P3Stages.S3 -> {
+                        if (isCore) DungeonClass.Mage
+                        else DungeonClass.Archer
+                    }
+                    P3Stages.S4 -> {
+                        if (isPositionInArea(BlockPos(62, 126, 34), BlockPos(64, 130, 36), playerPos)) {
+                            DungeonClass.Tank
+                        } else DungeonClass.Mage
+                    }
+                    P3Stages.Tunnel -> DungeonClass.Healer
+                    else -> null
+                }
+                M7Phases.P4 -> DungeonClass.Healer
+                M7Phases.P5 -> null
+                else -> null
+            }
+
+            DungeonClass.Healer -> when (phase) {
+                M7Phases.P1 -> null
+                M7Phases.P3 -> when (p3Stage) {
+                    P3Stages.S1 -> {
+                        if (ee2Mage) DungeonClass.Mage
+                        else DungeonClass.Archer
+                    }
+                    P3Stages.S2 -> null
+                    P3Stages.S3 -> {
+                        if (isPositionInArea(BlockPos(-3, 125, 80), BlockPos(3, 118, 74), playerPos)) {
+                            DungeonClass.Berserk
+                        } else if (isCore) DungeonClass.Mage
+                        else DungeonClass.Archer
+                    }
+                    P3Stages.S4 -> DungeonClass.Mage
+                    P3Stages.Tunnel -> null
+                    else -> null
+                }
+                M7Phases.P4 -> null
+                M7Phases.P5 -> DungeonClass.Berserk
+                else -> null
+            }
+
+            DungeonClass.Mage -> when (phase) {
+                M7Phases.P1 -> DungeonClass.Berserk
+                M7Phases.P3 -> when (p3Stage) {
+                    P3Stages.S1 -> {
+                        if (ee2Mage) null
+                        else DungeonClass.Archer
+                    }
+                    P3Stages.S2 -> DungeonClass.Healer
+                    P3Stages.S3 -> null
+                    P3Stages.S4 -> null
+                    P3Stages.Tunnel -> DungeonClass.Healer
+                    else -> null
+                }
+                M7Phases.P4 -> DungeonClass.Healer
+                M7Phases.P5 -> DungeonClass.Berserk
+                else -> null
+            }
+
+            DungeonClass.Tank -> when (phase) {
+                M7Phases.P1 -> DungeonClass.Berserk
+                M7Phases.P3 -> when (p3Stage) {
+                    P3Stages.S1 -> {
+                        if (ee2Mage) DungeonClass.Mage
+                        else DungeonClass.Archer
+                    }
+                    P3Stages.S2 -> DungeonClass.Healer
+                    P3Stages.S3 -> {
+                        if (isCore) DungeonClass.Mage
+                        else DungeonClass.Archer
+                    }
+                    P3Stages.S4 -> DungeonClass.Mage
+                    P3Stages.Tunnel -> DungeonClass.Healer
+                    else -> null
+                }
+                M7Phases.P4 -> DungeonClass.Healer
+                M7Phases.P5 -> DungeonClass.Archer
+                else -> null
+            }
+
+            DungeonClass.Unknown -> null
+        }
+    }
+
+    // Dynamic leap rules in the future.
+    private fun queryP2Rule(sourceClass: DungeonClass): DungeonClass? {
+        val p2Area = P2LeapAreas.getP2Area() ?: return null
+
+        return when (sourceClass) {
+            DungeonClass.Archer -> when {
+                p2Area == P2LeapAreas.YellowPillar -> DungeonClass.Healer
+                m7py && p2Area == P2LeapAreas.PurplePillar -> DungeonClass.Healer
+                else -> null
+            }
+
+            DungeonClass.Berserk -> null
+
+            DungeonClass.Mage -> when {
+                m7py && p2Area == P2LeapAreas.PurplePillar && ee2Mage -> DungeonClass.Tank
+                m7py && p2Area == P2LeapAreas.PurpleStorm -> DungeonClass.Healer
+                m7py && p2Area == P2LeapAreas.YellowPillar -> DungeonClass.Healer
+                !m7py && p2Area == P2LeapAreas.YellowPillar -> DungeonClass.Healer
+                else -> null
+            }
+
+            DungeonClass.Tank -> when {
+                p2Area == P2LeapAreas.YellowPad -> DungeonClass.Healer
+                else -> null
+            }
+
+            DungeonClass.Healer -> when {
+                p2Area == P2LeapAreas.YellowPillar -> DungeonClass.Berserk
+                else -> null
+            }
+
+            DungeonClass.Unknown -> null
+        }
+    }
+}

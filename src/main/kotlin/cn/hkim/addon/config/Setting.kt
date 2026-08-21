@@ -1,0 +1,109 @@
+package cn.hkim.addon.config
+
+import cn.hkim.addon.features.Module
+import cn.hkim.addon.gui.SkikoTooltip.drawTooltip
+import cn.hkim.addon.utils.HudUtils
+import net.minecraft.client.gui.GuiGraphicsExtractor
+import kotlin.properties.PropertyDelegateProvider
+import kotlin.properties.ReadWriteProperty
+import kotlin.reflect.KProperty
+
+abstract class Setting<T>(
+    val name: String,
+    val desc: String,
+    val default: T
+) : ReadWriteProperty<Module, T>, PropertyDelegateProvider<Module, Setting<T>> {
+    companion object {
+        @JvmStatic var activeModalPopup: Setting<*>? = null
+    }
+
+    protected fun computeIsHovered(
+        mouseX: Float, mouseY: Float,
+        x: Float, y: Float, width: Float, height: Float,
+        visibleTop: Float, visibleBottom: Float
+    ): Boolean {
+        if (activeModalPopup != null) return false
+        return (visibleTop == -1f || mouseY in visibleTop..visibleBottom) && HudUtils.isPointInRect(mouseX, mouseY, x, y, width, height)
+    }
+    open var value: T = default
+    var configKey: String = name.replace(" ", "_").lowercase()
+    var dependsCondition: (() -> Boolean)? = null
+    var shouldSave: Boolean = true
+
+    override operator fun provideDelegate(thisRef: Module, property: KProperty<*>): Setting<T> {
+        thisRef.registerSetting(this)
+        configKey = property.name
+        return this
+    }
+
+    override operator fun getValue(thisRef: Module, property: KProperty<*>) = value
+
+    override operator fun setValue(thisRef: Module, property: KProperty<*>, value: T) {
+        this.value = value
+    }
+
+    fun get(): T = value
+    open fun set(newValue: T) { value = newValue }
+    fun depends(condition: () -> Boolean): Setting<T> {
+        this.dependsCondition = condition
+        return this
+    }
+
+    fun noSave(): Setting<T> {
+        this.shouldSave = false
+        return this
+    }
+
+    fun isVisible(): Boolean = dependsCondition?.invoke() ?: true
+
+    protected fun settingsChanged() {
+        ModuleConfig.saveConfig()
+    }
+
+    open fun reset() {
+        value = default
+    }
+
+    abstract fun render(
+        graphics: GuiGraphicsExtractor,
+        x: Float, y: Float, width: Float,
+        mouseX: Float, mouseY: Float,
+        themeColor: Int,
+        delta: Float,
+        visibleTop: Float = -1f,
+        visibleBottom: Float = -1f
+    ): Float
+
+    protected fun renderDescriptionTooltip(
+        graphics: GuiGraphicsExtractor,
+        isHovered: Boolean,
+        mouseX: Float,
+        mouseY: Float
+    ) {
+        if (isHovered && desc.isNotEmpty()) {
+            graphics.drawTooltip(desc, mouseX, mouseY, delayTicks = 8)
+        }
+    }
+
+    open fun mouseClicked(
+        mouseX: Float, mouseY: Float, button: Int,
+        x: Float, y: Float, width: Float,
+        doubleClick: Boolean = false
+    ): Boolean = false
+
+    open fun mouseReleased(
+        mouseX: Float, mouseY: Float, button: Int,
+        x: Float, y: Float, width: Float
+    ): Boolean = false
+
+    open fun mouseDragged(
+        mouseX: Float, mouseY: Float, button: Int,
+        deltaX: Float, deltaY: Float,
+        x: Float, y: Float, width: Float
+    ): Boolean = false
+
+    open fun mouseScrolled(
+        mouseX: Float, mouseY: Float, scrollX: Double, scrollY: Double,
+        x: Float, y: Float, width: Float
+    ): Boolean = false
+}
