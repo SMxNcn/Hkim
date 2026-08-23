@@ -119,6 +119,7 @@ class ColorPickerPopup(private val setting: ColorSetting) {
 
         innerX = rectX + POPUP_PAD
         val rowY = rectY + POPUP_PAD
+        hexY = rowY
         panelY = rowY + HEX_H + GAP
         hueY = panelY + PANEL_SIZE + GAP
         alphaX = innerX + HEX_W + H_GAP
