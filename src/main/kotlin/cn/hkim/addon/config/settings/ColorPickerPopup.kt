@@ -1,6 +1,5 @@
 package cn.hkim.addon.config.settings
 
-import com.mojang.blaze3d.platform.InputConstants
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.Setting
 import cn.hkim.addon.config.clickgui.ClickGUIScreen
@@ -15,6 +14,7 @@ import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoSquareClipped
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoText
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.skikoTextWidth
 import cn.hkim.addon.utils.render.skiko.SkikoGradient
+import com.mojang.blaze3d.platform.InputConstants
 import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
@@ -120,6 +120,7 @@ class ColorPickerPopup(private val setting: ColorSetting) {
 
         innerX = rectX + POPUP_PAD
         val rowY = rectY + POPUP_PAD
+        hexY = rowY
         panelY = rowY + HEX_H + GAP
         hueY = panelY + PANEL_SIZE + GAP
         alphaX = innerX + HEX_W + H_GAP
