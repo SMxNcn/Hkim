@@ -19,6 +19,12 @@ abstract class SwapHandler {
             private set
         var swapInfo: String? = null
         private var savedInput: ClientInput? = null
+        private val handlers = mutableListOf<SwapHandler>()
+
+        /** Resets every swap handler and clears the global swap state. */
+        fun resetSwap() {
+            handlers.toList().forEach { it.reset() }
+        }
 
         fun startSwap(info: String? = null) {
             isInSwap = true
@@ -61,6 +67,7 @@ abstract class SwapHandler {
     protected var callback: ((Boolean) -> Unit)? = null
 
     init {
+        handlers += this
         Hkim.EVENT_BUS.subscribe(this)
     }
 

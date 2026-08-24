@@ -3,6 +3,7 @@ package cn.hkim.addon.utils.skyblock.inventory
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.utils.clickPlayerInventorySlot
 import cn.hkim.addon.utils.findItemByID
+import cn.hkim.addon.utils.modMessage
 import cn.hkim.addon.utils.schedule
 import cn.hkim.addon.utils.sendCommand
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -20,6 +21,10 @@ object EquipmentUtils : SwapHandler() {
     suspend fun swapEquipment(itemIds: List<String>): Boolean {
         if (isActive || isProcessing) return false
         val slots = itemIds.mapNotNull { findItemByID(it).takeIf { slot -> slot != -1 } }
+        val missing = itemIds.filter { findItemByID(it) == -1 }
+        if (missing.isNotEmpty()) {
+            modMessage("§cItem(s) not found in inventory: ${missing.joinToString(", ")}")
+        }
         if (slots.isEmpty()) return false
 
         return suspendCancellableCoroutine { cont ->
@@ -41,7 +46,7 @@ object EquipmentUtils : SwapHandler() {
     }
 
     override fun handleGuiOpen(title: String) {
-        if (!title.contains("Your Equipment")) {
+        if (!title.contains("Stats & Equipment")) {
             callback?.invoke(false)
             return
         }
@@ -62,7 +67,6 @@ object EquipmentUtils : SwapHandler() {
         }
 
         isProcessing = true
-        println(currentIndex)
 
         mc.player?.clickPlayerInventorySlot(pendingSlots[currentIndex], containerId)
         currentIndex++
