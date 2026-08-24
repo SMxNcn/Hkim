@@ -5,8 +5,10 @@ import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.clickgui.ClickGUIScreen
 import cn.hkim.addon.gui.GardenPlotScreen
 import cn.hkim.addon.gui.HudEditScreen
+import cn.hkim.addon.utils.modMessage
 import cn.hkim.addon.utils.skyblock.inventory.EquipmentUtils.swapEquipment
 import cn.hkim.addon.utils.skyblock.inventory.LoadoutUtils.swapLoadoutTo
+import cn.hkim.addon.utils.skyblock.inventory.SwapHandler
 import cn.hkim.addon.utils.skyblock.inventory.WardrobeUtils.swapArmorTo
 import com.github.stivais.commodore.Commodore
 import com.github.stivais.commodore.utils.GreedyString
@@ -43,5 +45,10 @@ val hkimCommand = Commodore("hkim") {
         Hkim.scope.launch {
             swapLoadoutTo(index)
         }
+    }
+
+    literal("resetSwap").runs {
+        SwapHandler.resetSwap()
+        modMessage("§aSwap state has been reset.")
     }
 }
