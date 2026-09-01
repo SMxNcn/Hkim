@@ -2,21 +2,34 @@ package cn.hkim.addon.mixins;
 
 import cn.hkim.addon.Hkim;
 import cn.hkim.addon.events.impl.GuiEvent;
+import cn.hkim.addon.features.impl.ItemFeatures;
+import cn.hkim.addon.utils.skyblock.LocationUtils;
+import cn.hkim.addon.utils.skyblock.inventory.ItemRarity;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import static cn.hkim.addon.utils.ItemUtilsKt.getItemRarity;
+import static cn.hkim.addon.utils.ItemUtilsKt.isSkyBlockItem;
+
 @Mixin(AbstractContainerScreen.class)
 public class AbstractContainerScreenMixin {
+
+    @Shadow @Nullable protected Slot hoveredSlot;
 
     @Inject(method = "init", at = @At("HEAD"), cancellable = true)
     protected void onInit(CallbackInfo ci) {
@@ -74,4 +87,23 @@ public class AbstractContainerScreenMixin {
         if (kpEvent.isCancelled()) cir.cancel();
     }
 
+    @Inject(method = "extractSlot", at = @At("HEAD"))
+    private void onExtractSlotRarityBackground(GuiGraphicsExtractor graphics, Slot slot, int mouseX, int mouseY, CallbackInfo ci) {
+        if (slot != null && slot.hasItem()) {
+            ItemFeatures.drawRarityBackground(graphics, slot.x, slot.y, slot.getItem());
+        }
+    }
+
+    @ModifyArg(method = "extractTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;setTooltipForNextFrame(Lnet/minecraft/client/gui/Font;Ljava/util/List;Ljava/util/Optional;IILnet/minecraft/resources/Identifier;)V"), index = 5)
+    private Identifier applyRarityTooltipStyle(Identifier originalStyle) {
+        if (!ItemFeatures.INSTANCE.isRarityTooltipEnabled() || !LocationUtils.INSTANCE.getInSkyBlock()) return originalStyle;
+        if (hoveredSlot != null && hoveredSlot.hasItem()) {
+            ItemStack item = hoveredSlot.getItem();
+            if (isSkyBlockItem(item)) {
+                ItemRarity rarity = getItemRarity(item);
+                if (rarity != null) return rarity.getTooltipStyle();
+            }
+        }
+        return originalStyle;
+    }
 }

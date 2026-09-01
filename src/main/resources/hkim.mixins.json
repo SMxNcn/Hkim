@@ -45,11 +45,12 @@
     "ScreenEffectRendererMixin",
     "ScreenMixin",
     "TitleScreenMixin",
+    "TooltipRenderUtilMixin",
     "WindowMixin",
     "accessors.CameraAccessor",
+    "accessors.FishingHookAccessor",
     "accessors.JoinMultiplayerScreenAccessor",
     "accessors.KeyMappingAccessor",
-    "accessors.FishingHookAccessor",
     "accessors.ScreenAccessor"
   ]
 }
