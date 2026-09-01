@@ -45,6 +45,7 @@
     "ScreenEffectRendererMixin",
     "ScreenMixin",
     "TitleScreenMixin",
+    "TooltipRenderUtilMixin",
     "WindowMixin",
     "accessors.CameraAccessor",
     "accessors.DebugScreenEntriesAccessor",

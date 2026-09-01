@@ -1,6 +1,8 @@
 package cn.hkim.addon.utils
 
 import cn.hkim.addon.Hkim.mc
+import cn.hkim.addon.utils.skyblock.inventory.ItemRarity
+import com.google.gson.JsonParser
 import net.minecraft.core.component.DataComponents
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.chat.Component
@@ -25,6 +27,9 @@ inline val CompoundTag.itemId: String
 
 inline val ItemStack.itemUUID: String
     get() = customData.getString("uuid").orElse("")!!
+
+inline val ItemStack.petInfo: String
+    get() = customData.getString("petInfo").orElse("")!!
 
 inline val ItemStack.itemUpgradeLevel: Int
     get() = customData.getInt("upgrade_level").orElse(0)!!
@@ -57,6 +62,29 @@ fun isSkyBlockItem(stack: ItemStack): Boolean {
     if (stack.isEmpty) return false
     val customData = stack.customData
     return customData.copy().contains("id")
+}
+
+fun getItemRarity(itemStack: ItemStack): ItemRarity? {
+    if (itemStack.itemId == "PET") {
+        val petInfo = itemStack.petInfo
+        if (petInfo.isNotEmpty()) {
+            try {
+                val json = JsonParser.parseString(petInfo).asJsonObject
+                val tier = json.get("tier")?.asString
+                if (tier != null) return ItemRarity.entries.find { it.name == tier }
+            } catch (_: Exception) {}
+        }
+    }
+
+    val lore = itemStack.lore
+    for (i in lore.indices.reversed()) {
+        val match = ItemRarity.RARITY_PATTERN.find(lore[i].legacy) ?: continue
+        val rarity = match.groups["rarity"]?.value?.clean
+            ?.replace("SHINY ", "")
+            ?.let { name -> ItemRarity.entries.find { it.loreName == name } } ?: continue
+        return rarity
+    }
+    return null
 }
 
 fun findItemByID(itemID: String?, hotbar: Boolean = false): Int {

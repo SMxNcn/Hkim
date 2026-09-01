@@ -286,6 +286,11 @@ object HudUtils {
         return Color(red, green, blue, (alpha.toFloat() * factor).coerceIn(0f, 255f).toInt())
     }
 
+    fun Color.multiplyShade(shade: Float): Color {
+        val f = 1f - shade.coerceIn(0f, 1f)
+        return Color((red * f).toInt(), (green * f).toInt(), (blue * f).toInt(), alpha)
+    }
+
     val Color.rGL: Float get() = red / 255f
     val Color.gGL: Float get() = green / 255f
     val Color.bGL: Float get() = blue / 255f
