@@ -6,6 +6,7 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LightningBolt;
+import net.minecraft.world.entity.boss.wither.WitherBoss;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -15,12 +16,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class EntityRendererMixin {
 
     @Inject(method = "shouldRender", at = @At("HEAD"), cancellable = true)
-    private void onShouldRender(Entity entity, Frustum frustum, double d, double e, double f, CallbackInfoReturnable<Boolean> cir) {
+    private void onShouldRender(Entity entity, Frustum culler, double camX, double camY, double camZ, CallbackInfoReturnable<Boolean> cir) {
         if (CleanView.shouldHideLightning() && entity instanceof LightningBolt) {
             cir.setReturnValue(false);
             return;
         }
         if (CleanView.shouldHideExperienceOrbs() && entity instanceof ExperienceOrb) {
+            cir.setReturnValue(false);
+            return;
+        }
+        if (CleanView.shouldHideWitherborn() && entity instanceof WitherBoss && ((WitherBoss) entity).getInvulnerableTicks() == 800) {
             cir.setReturnValue(false);
         }
     }
