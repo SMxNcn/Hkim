@@ -13,11 +13,11 @@ public class CommonUniformsMixin {
 
     @Inject(method = "getBlindness", at = @At("HEAD"), cancellable = true)
     private static void getBlindness(CallbackInfoReturnable<Float> cir) {
-        if (CleanView.shouldHideBlindness()) cir.setReturnValue(0f);
+        if (CleanView.shouldDisableDebuffs()) cir.setReturnValue(0f);
     }
 
     @Inject(method = "getDarknessFactor", at = @At("HEAD"), cancellable = true)
     private static void getDarknessFactor(CallbackInfoReturnable<Float> cir) {
-        if (CleanView.shouldHideBlindness()) cir.setReturnValue(0f);
+        if (CleanView.shouldDisableDebuffs()) cir.setReturnValue(0f);
     }
 }

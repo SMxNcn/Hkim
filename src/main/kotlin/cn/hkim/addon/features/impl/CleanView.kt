@@ -23,12 +23,13 @@ object CleanView : Module("Clean View", "Hides unwanted renderings.") {
     private val hideFallingBlock by BooleanSetting("Hide Falling Block", "Stop rendering falling blocks.", false).depends { entity }
     private val hideExperienceOrbs by BooleanSetting("Hide Experience Orbs", "Hide experience orbs.", false).depends { entity }
     private val hideLightning by BooleanSetting("Hide Lightning", "Hide lightning bolts.", false).depends { entity }
+    private val hideWitherborn by BooleanSetting("Hide Witherborn", "Hide witherborns from full wither armor.", false).depends { entity }
 
     private val particle by DropdownSetting("Particle")
     private val hideWitherImpact by BooleanSetting("Hide Wither Impact", "Hide explosion particles.", false).depends { particle }
 
-    private val effect by DropdownSetting("Others")
-    private val hideBlindness by BooleanSetting("Hide Blindness", "Remove blindness and darkness effect.", false).depends { effect }
+    private val effect by DropdownSetting("Effects")
+    private val disableDebuffs by BooleanSetting("Anti Debuff", "Remove blindness/darkness/nausea effect.", false).depends { effect }
     private val hideFireOverlay by BooleanSetting("Hide Fire Overlay", "Hide fire overlay on screen.", false).depends { effect }
     private val hideEntityFire by BooleanSetting("Hide Entity Fire", "Hide fire overlay on other entities.", false).depends { effect && hideFireOverlay }
     private val hideBlockStuck by BooleanSetting("See Through Blocks", "Removes the suffocation overlay when stuck in blocks.", false).depends { effect }
@@ -36,7 +37,7 @@ object CleanView : Module("Clean View", "Hides unwanted renderings.") {
 
     private val gui by DropdownSetting("GUI")
     private val cleanGui by BooleanSetting("Clean Gui View", "Stop clicking on blank name items in SkyBlock menus.", true).depends { gui }
-    private val blockHoveringClose by BooleanSetting("Block Hovering Close", "Prevent clicking 'Close' button with item on cursor.", false).depends { gui }
+    private val blockHoveringClose by BooleanSetting("Block Hovering Close", "Prevent clicking 'Back' or 'Close' button with item on cursor.", false).depends { gui }
 
     @EventHandler
     private fun onGuiClick(event: GuiEvent.SlotClick) {
@@ -50,7 +51,8 @@ object CleanView : Module("Clean View", "Hides unwanted renderings.") {
             return
         }
 
-        if (blockHoveringClose && slot.hasItem() && slot.item.item == Items.BARRIER && slot.item.displayName.cleanString == "Close" && !chest.carried.isEmpty) {
+        if (blockHoveringClose && slot.hasItem() && slot.item.item == Items.BARRIER &&
+            slot.item.displayName.cleanString.containsOneOf("Back", "Close") && !chest.carried.isEmpty) {
             event.cancel()
         }
     }
@@ -65,10 +67,13 @@ object CleanView : Module("Clean View", "Hides unwanted renderings.") {
     fun shouldHideLightning(): Boolean = enabled && hideLightning
 
     @JvmStatic
+    fun shouldHideWitherborn(): Boolean = enabled && hideWitherborn
+
+    @JvmStatic
     fun shouldHideWitherImpact(): Boolean = enabled && hideWitherImpact
 
     @JvmStatic
-    fun shouldHideBlindness(): Boolean = enabled && hideBlindness
+    fun shouldDisableDebuffs(): Boolean = enabled && disableDebuffs
 
     @JvmStatic
     fun shouldHideFireOverlay(): Boolean = enabled && hideFireOverlay
