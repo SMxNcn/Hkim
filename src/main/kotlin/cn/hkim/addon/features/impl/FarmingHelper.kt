@@ -124,7 +124,7 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
             delay(randomDelay(500, 500))
             CropNuker.stop()
             sendCommand("setspawn")
-            delay(randomDelay(250, 50))
+            delay(randomDelay(200, 100))
             if (changeTimeOnPest) changeGardenTime(false)
 
             if (!swapLoadoutTo(mossyArmorSlot.toInt())) {
@@ -133,7 +133,8 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
             }
 
             delay(randomDelay(100, 50))
-            sendCommand("tptoplot ${event.plot}")
+            val tpTarget = Plot.byId(event.plot)?.displayName?.ifBlank { null } ?: event.plot.toString()
+            sendCommand("tptoplot $tpTarget")
             alert("§aKill Pest")
         }
     }
@@ -148,11 +149,12 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
             sendCommand("warp garden")
             delay(randomDelay(200, 100))
             holdKey(mc.options.keyShift, false)
+            delay(randomDelay(50, 100))
             if (changeTimeOnPest) changeGardenTime(true)
 
             delay(randomDelay(200, 100))
             player.inventory.selectedSlot = if (lastHeldSlot == -1) 0 else lastHeldSlot
-            delay(randomDelay(200, 50))
+            delay(randomDelay(200, 100))
             CropNuker.start()
         }
     }
@@ -194,15 +196,14 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
         }
 
     suspend fun changeGardenTime(toNight: Boolean) {
-        delay(randomDelay(200, 100))
         sendCommand("desk")
-        delay(randomDelay(600, 100))
+        delay(randomDelay(400, 100))
         mc.player?.clickInventorySlot(50, containerId)
-        delay(randomDelay(600, 100))
+        delay(randomDelay(400, 100))
         val slot = if (toNight) 13 else 11
         mc.player?.clickInventorySlot(slot, containerId)
-        delay(randomDelay(600, 100))
-        mc.player?.clickInventorySlot(31, containerId)
-        delay(randomDelay(250, 50))
+        delay(randomDelay(200, 100))
+        mc.player?.closeContainer()
+        delay(randomDelay(200, 100))
     }
 }
