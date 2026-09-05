@@ -18,7 +18,7 @@ import javax.imageio.ImageIO
 
 object Background {
     private const val FADE_DURATION = 1000L
-    private const val BG_URL = "https://gitee.com/mixturedg/necron-client-repo/raw/master/bg/bg0.png"
+    private const val BG_URL = "https://gitee.com/mixturedg/hkim-client-repo/raw/master/bg/bg0.png"
 
     private val cacheDir: Path by lazy {
         FabricLoader.getInstance().configDir.resolve("hkim/backgrounds").also { it.toFile().mkdirs() }
