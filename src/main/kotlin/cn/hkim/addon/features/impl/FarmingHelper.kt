@@ -34,7 +34,7 @@ import org.lwjgl.glfw.GLFW
 object FarmingHelper : Module("Farming Helper", "Features for garden farming.") {
     private val allowEdits by BooleanSetting("Allow Edits", "Right-click blocks to add/remove waypoints.", false)
     private val renderWps by BooleanSetting("Render Waypoints", "Render waypoints.", true)
-    private val renderOnFarming by BooleanSetting("Render on Farming", "Render waypoints when CropNuker is disabled.", false)
+    private val renderOnFarming by BooleanSetting("Render on Farming", "Render waypoints when CropNuker is active.", false)
 
     private val loadoutDropdown by DropdownSetting("Loadout")
     private val mossyArmorSlot by NumberSetting("Mossy Slot", "Mossy loadout slot.", 1f, 1f, 12f, 1f).depends { loadoutDropdown }
@@ -43,7 +43,7 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
     private val otherDropdown by DropdownSetting("Others")
     private val autoKick by BooleanSetting("Auto Kick", "Auto kick player who visiting your garden.", true).depends { otherDropdown }
     private val ignorePests by BooleanSetting("Ignore Pests", "CropNuker will not respond to pest ready/spawned/killed events.", false).depends { otherDropdown }
-    private val changeTimeOnPest by BooleanSetting("Change Time (Fireflies)", "Set garden time to day for Sunset's Overbloom bonus.", false).depends { otherDropdown }
+    private val moonflowerMode by BooleanSetting("Moonflower Mode", "Set garden time to day for Sunset's Overbloom bonus.", false).depends { otherDropdown }
     private val pestEsp by BooleanSetting("Pest ESP", "Render wireframe boxes on pest armor stands.", false).depends { otherDropdown }
     private val plotScale by NumberSetting("Plot GUI Scale", "Scale of Garden Plot Screen.", 1f, 1f, 2f, 0.1f).depends { otherDropdown }
 
@@ -124,8 +124,8 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
             delay(randomDelay(500, 500))
             CropNuker.stop()
             sendCommand("setspawn")
-            delay(randomDelay(200, 100))
-            if (changeTimeOnPest) changeGardenTime(false)
+            delay(randomDelay(250, 100))
+            if (moonflowerMode) changeGardenTime(false)
 
             if (!swapLoadoutTo(mossyArmorSlot.toInt())) {
                 modMessage("§cFailed to swap loadout to Mossy slot!")
@@ -150,7 +150,7 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
             delay(randomDelay(200, 100))
             holdKey(mc.options.keyShift, false)
             delay(randomDelay(50, 100))
-            if (changeTimeOnPest) changeGardenTime(true)
+            if (moonflowerMode) changeGardenTime(true)
 
             delay(randomDelay(200, 100))
             player.inventory.selectedSlot = if (lastHeldSlot == -1) 0 else lastHeldSlot
@@ -175,7 +175,7 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
             return
         }
 
-        if (CropNuker.enabled || ignorePests || !changeTimeOnPest) return
+        if (CropNuker.enabled || ignorePests || !moonflowerMode) return
         if (!title.containsOneOf("Desk", "Garden Time")) return
         containerId = mc.player?.containerMenu?.containerId ?: return
     }

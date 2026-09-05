@@ -22,7 +22,7 @@ object ModuleList : Module("Module List", "Enabled features list.") {
     private val startColor by ColorSetting("Start Color", "", Color(200, 200, 200).rgb).depends { chromaColor }
     private val endColor by ColorSetting("End Color", "", Color(131, 131, 131).rgb).depends { chromaColor }
     private val chromaSpeed by NumberSetting("Chroma Speed ", "", 5f, 1f, 10f, 1f).depends { chromaColor }
-    private val skikoRender by BooleanSetting("Skiko Render", "Render with Skiko engine (external font, rounded background) instead of vanilla font.", false)
+    private val skikoRender by BooleanSetting("Skiko Render", "Render HUD with Skiko.", false)
 
     private var timeOffset = 0L
 
