@@ -46,11 +46,16 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
     private val pestEsp by BooleanSetting("Pest ESP", "Render wireframe boxes on pest armor stands.", false).depends { otherDropdown }
     private val plotScale by NumberSetting("Plot Scale", "Scale of Garden Plot Screen.", 1f, 1f, 2f, 0.1f).depends { otherDropdown }
 
+    private val waypointsDropdown by DropdownSetting("Waypoints")
+    private val switchDelayMs by NumberSetting("Switch Delay", "Delay after arriving at a waypoint before continuing.", 200f, 0f, 500f, 10f).depends { waypointsDropdown }
+
     private val nukerKeybind by KeybindSetting("Nuker Keybind", "Keybind to toggle nuker.", GLFW.GLFW_KEY_X)
 
     private var lastHeldSlot: Int = -1
     private var containerId = -1
+
     val plotScreenScale get() = if (enabled) plotScale else 1f
+    val waypointSwitchDelay get() = randomDelay(switchDelayMs.toInt(), 50)
 
     @EventHandler
     private fun onTick(event: TickEvent.End) {

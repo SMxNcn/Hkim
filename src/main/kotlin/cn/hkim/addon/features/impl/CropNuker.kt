@@ -5,8 +5,8 @@ import cn.hkim.addon.utils.HudUtils.alert
 import cn.hkim.addon.utils.ViewLock
 import cn.hkim.addon.utils.holdKey
 import cn.hkim.addon.utils.modMessage
-import cn.hkim.addon.utils.schedule
 import cn.hkim.addon.utils.waypoints.FarmingWaypoints
+import kotlin.math.roundToInt
 
 object CropNuker {
     var enabled = false
@@ -14,8 +14,8 @@ object CropNuker {
 
     private var currentActionId: Int = -1
     private var lastActionId: Int = -1
-
-    private var hasCompleted: Boolean = false
+    private var pendingStartId: Int = -1
+    private var delayTicks = 0
 
     fun toggleNuker() {
         if (enabled) stop() else start()
@@ -25,25 +25,37 @@ object CropNuker {
     fun start() {
         if (enabled) return
         val waypoints = FarmingWaypoints.currentWaypoints
-        if (FarmingWaypoints.currentWaypoints.isEmpty()) {
+        if (waypoints.isEmpty()) {
             modMessage("§7Waypoints not loaded.")
             return
         }
+        val startId = resolveStartId(waypoints)
+        delayTicks = 0
         enabled = true
-        currentActionId = if (lastActionId != -1 && waypoints.any { it.id == lastActionId })
-            lastActionId
-        else waypoints.first().id
+        currentActionId = startId
+        pendingStartId = -1
         lastActionId = -1
-        hasCompleted = false
         ViewLock.lock(this)
     }
 
     fun stop() {
         if (!enabled) return
         enabled = false
+        delayTicks = 0
         lastActionId = currentActionId
         resetInput()
         ViewLock.unlock(this)
+    }
+
+    private fun resolveStartId(waypoints: List<FarmingWaypoints.WaypointData>): Int {
+        if (pendingStartId != -1 && waypoints.any { it.id == pendingStartId }) {
+            return pendingStartId
+        }
+        if (lastActionId != -1 && waypoints.any { it.id == lastActionId }) {
+            return lastActionId
+        }
+
+        return waypoints.first().id
     }
 
     fun onTick() {
@@ -60,13 +72,15 @@ object CropNuker {
             return FarmingWaypoints.Action()
         }
 
-        val currentActionIndex = waypoints.indexOfFirst { it.id == currentActionId }
+        var currentActionIndex = waypoints.indexOfFirst { it.id == currentActionId }
+        if (currentActionIndex == -1) {
+            currentActionId = waypoints.first().id
+            currentActionIndex = 0
+        }
         val currentWaypoint = waypoints[currentActionIndex]
 
         val nextIndex = currentActionIndex + 1
-        val hasNext = nextIndex < waypoints.size
-
-        if (!hasNext) {
+        if (nextIndex >= waypoints.size) {
             stop()
             alert("§aRoute completed")
             lastActionId = -1
@@ -78,11 +92,23 @@ object CropNuker {
         val playerPos = mc.player?.position()?.add(0.0, -0.5, 0.0) ?: return FarmingWaypoints.Action()
         val distToNext = playerPos.distanceTo(nextWaypoint.blockPos.center)
 
-        if (distToNext >= 0.6) return currentWaypoint.action
-        schedule(3 + (0..3).random()) {
-            currentActionId = nextWaypoint.id
+        if (distToNext >= 0.6) {
+            delayTicks = 0
+            return currentWaypoint.action
         }
 
+        if (delayTicks > 0) {
+            if (--delayTicks > 0) return FarmingWaypoints.Action()
+            currentActionId = nextWaypoint.id
+            return nextWaypoint.action
+        }
+
+        val ticks = (FarmingHelper.waypointSwitchDelay / 50f).roundToInt()
+        if (ticks <= 0) {
+            currentActionId = nextWaypoint.id
+            return nextWaypoint.action
+        }
+        delayTicks = ticks
         return FarmingWaypoints.Action()
     }
 
@@ -102,7 +128,21 @@ object CropNuker {
         holdKey(mc.options.keyAttack, false)
     }
 
-    fun setCurrentActionId(index: Int) {
-        currentActionId = index
+    fun setCurrentActionIndex(index: Int): Boolean {
+        val waypoints = FarmingWaypoints.currentWaypoints
+        if (waypoints.isEmpty()) return false
+        val wp = waypoints.getOrNull(index - 1) ?: return false
+
+        delayTicks = 0
+        if (enabled) currentActionId = wp.id
+        else pendingStartId = wp.id
+        return true
+    }
+
+    fun resetRoute() {
+        if (enabled) stop()
+        currentActionId = -1
+        lastActionId = -1
+        pendingStartId = -1
     }
 }
