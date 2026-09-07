@@ -89,6 +89,10 @@ object Background {
             renderShaderBackground(screen, graphics, 0f, 0f)
             return
         }
+        if (MainMenuModule.backgroundMode == 2) {
+            renderVanillaPanorama(graphics, screen)
+            return
+        }
 
         val currentBg = backgrounds.getOrNull(currentIndex)
         if (currentBg != null && currentAlpha > 0) {
@@ -115,6 +119,19 @@ object Background {
             }
         }
         return nativeImage
+    }
+
+    fun renderVanillaPanorama(graphics: GuiGraphicsExtractor, screen: Screen) {
+        val guiRenderState = mc.gameRenderer.gameRenderState.guiRenderState
+        if (guiRenderState.panoramaRenderState != null) return
+
+        mc.gameRenderer.getPanorama().extractRenderState(graphics, screen.width, screen.height, true)
+
+        if (mc.options.menuBackgroundBlurriness >= 1) {
+            graphics.blurBeforeThisStratum()
+        }
+
+        graphics.blit(RenderPipelines.GUI_TEXTURED, Screen.MENU_BACKGROUND, 0, 0, 0f, 0f, screen.width, screen.height, 32, 32)
     }
 
     fun renderShaderBackground(screen: Screen, graphics: GuiGraphicsExtractor, offsetX: Float, offsetY: Float) {
@@ -179,7 +196,7 @@ object Background {
     }
 
     fun update() {
-        if (MainMenuModule.backgroundMode == 1) {
+        if (MainMenuModule.backgroundMode != 0) {
             isFading = false
             currentAlpha = 1f
             nextAlpha = 0f
