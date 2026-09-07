@@ -12,8 +12,8 @@ import java.io.File
 
 @ModuleInfo("main_menu", Category.MISC, true)
 object MainMenuModule : Module("Main Menu", "Custom main menu.") {
-    val backgroundMode by SelectorSetting("Background Mode", "Background rendering mode.", listOf("Picture", "Shader"), "Shader")
-    val switchInterval by NumberSetting("Switch Interval", "Background image switching interval.", 10f, 3f, 60f, 1f, "s")
+    val backgroundMode by SelectorSetting("Background Mode", "Background rendering mode.", listOf("Picture", "Shader", "Panorama"), "Panorama")
+    val switchInterval by NumberSetting("Switch Interval", "Background image switching interval.", 10f, 3f, 60f, 1f, "s").depends { backgroundMode == 0 }
 
     private val openBackgroundsFolder by ActionSetting("Open Backgrounds Folder", "Open the background images folder.") {
         val bgDir = File(FabricLoader.getInstance().configDir.toFile(), "hkim/backgrounds")
