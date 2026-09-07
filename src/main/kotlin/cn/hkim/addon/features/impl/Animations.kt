@@ -12,6 +12,7 @@ import cn.hkim.addon.utils.toRadians
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.world.entity.HumanoidArm
 import net.minecraft.world.item.ItemStack
+import org.joml.Matrix4f
 import org.joml.Quaternionf
 import kotlin.math.PI
 import kotlin.math.sin
@@ -54,11 +55,11 @@ object Animations : Module("Animations", "Customize the first-person view model.
         poseStack.translate(0.56f * f, -0.52f + equipProgress * -0.6f, -0.72f)
         val f1 = sin(swingProgress * swingProgress * PI).toFloat()
         val f2 = sin(sqrt(swingProgress) * PI).toFloat()
-        poseStack.mulPose(Quaternionf().rotateY(toRadians(45.0f * f + f1 * -20f * f)))
-        poseStack.mulPose(Quaternionf().rotateZ(toRadians(f2 * -20f * f)))
-        poseStack.mulPose(Quaternionf().rotateX(toRadians(f2 * -80f)))
-        poseStack.mulPose(Quaternionf().rotateY(toRadians(-45.0f * f)))
+        poseStack.mulPose(Matrix4f().rotation(Quaternionf().rotateY(toRadians(45.0f * f + f1 * -20f * f))))
+        poseStack.mulPose(Matrix4f().rotation(Quaternionf().rotateZ(toRadians(f2 * -20f * f))))
+        poseStack.mulPose(Matrix4f().rotation(Quaternionf().rotateX(toRadians(f2 * -80f))))
+        poseStack.mulPose(Matrix4f().rotation(Quaternionf().rotateY(toRadians(-45.0f * f))))
         poseStack.translate(-0.2f * f, 0.126f, 0.2f)
-        poseStack.mulPose(Quaternionf().rotateXYZ(toRadians(-102.25f), toRadians(15.0f * f), toRadians(80.0f * f)))
+        poseStack.mulPose(Matrix4f().rotation(Quaternionf().rotateXYZ(toRadians(-102.25f), toRadians(15.0f * f), toRadians(80.0f * f))))
     }
 }
