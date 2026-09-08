@@ -58,6 +58,9 @@ inline val ItemStack.hasGlint: Boolean
 inline val ItemStack.hasEthermerge: Boolean
     get() = customData.getInt("ethermerge").orElse(0) == 1
 
+inline val ItemStack.isRecombobulated: Boolean
+    get() = customData.getInt("rarity_upgrades").orElse(0) == 1
+
 fun isSkyBlockItem(stack: ItemStack): Boolean {
     if (stack.isEmpty) return false
     val customData = stack.customData

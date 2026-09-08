@@ -8,6 +8,7 @@ import cn.hkim.addon.config.ModuleConfig
 import cn.hkim.addon.events.CustomEventDispatcher
 import cn.hkim.addon.events.EventDispatcher
 import cn.hkim.addon.features.ModuleManager
+import cn.hkim.addon.features.impl.ProtectItem
 import cn.hkim.addon.gui.Background
 import cn.hkim.addon.runtime.BridgeLoader
 import cn.hkim.addon.runtime.SkikoRuntime
@@ -55,6 +56,7 @@ object Hkim : ClientModInitializer {
         ModuleManager.initModules()
         ModuleConfig.loadConfig()
         Background.getDefaultBackground()
+        ProtectItem.loadUUID()
 
         runtime = BridgeLoader.load()
         if (runtime != null) {

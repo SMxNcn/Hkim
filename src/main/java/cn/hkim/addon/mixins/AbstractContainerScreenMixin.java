@@ -3,6 +3,8 @@ package cn.hkim.addon.mixins;
 import cn.hkim.addon.Hkim;
 import cn.hkim.addon.events.impl.GuiEvent;
 import cn.hkim.addon.features.impl.ItemFeatures;
+import cn.hkim.addon.features.impl.ProtectItem;
+import cn.hkim.addon.utils.HudUtils;
 import cn.hkim.addon.utils.skyblock.LocationUtils;
 import cn.hkim.addon.utils.skyblock.inventory.ItemRarity;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -64,6 +66,14 @@ public class AbstractContainerScreenMixin {
         if (slot != null && slot.hasItem()) {
             ItemFeatures.drawRarityBackground(graphics, slot.x, slot.y, slot.getItem());
         }
+    }
+
+    @Inject(method = "extractSlot(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/world/inventory/Slot;II)V", at = @At("TAIL"))
+    private void onExtractSlotProtectTag(GuiGraphicsExtractor graphics, Slot slot, int mouseX, int mouseY, CallbackInfo ci) {
+        if (!ProtectItem.getCanRenderTag()) return;
+        ItemStack stack = slot.getItem();
+        if (stack.isEmpty() || !ProtectItem.isProtected(stack)) return;
+        HudUtils.scaledText(graphics, Hkim.mc.font, "P", slot.x + 1, slot.y + 1, 0xFF55FF55, true, 0.75f);
     }
 
     @Inject(method = "slotClicked", at = @At("HEAD"), cancellable = true)
