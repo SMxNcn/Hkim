@@ -3,6 +3,7 @@ package cn.hkim.addon.utils
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.mixins.accessors.KeyMappingAccessor
 import cn.hkim.addon.utils.skyblock.inventory.SwapHandler
+import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.SharedConstants
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
@@ -48,6 +49,9 @@ inline val Entity.renderBoundingBox: AABB
 
 inline val mcVersion: String
     get() = SharedConstants.getCurrentVersion().name()
+
+inline val KeyMapping.boundKey : InputConstants.Key
+    get() = (this as KeyMappingAccessor).boundKey
 
 fun isPositionInArea(corner1: BlockPos, corner2: BlockPos, pos: BlockPos): Boolean {
     val minX = minOf(corner1.x, corner2.x)
@@ -120,7 +124,7 @@ fun fillItemFromSack(amount: Int, itemId: String, sackName: String) {
 
 fun rightClick() {
     val key = mc.options.keyUse
-    val actualKey = (key as KeyMappingAccessor).boundKey
+    val actualKey = key.boundKey
     KeyMapping.set(actualKey, true)
     KeyMapping.click(actualKey)
     KeyMapping.set(actualKey, false)
@@ -128,19 +132,19 @@ fun rightClick() {
 
 fun leftClick() {
     val key = mc.options.keyAttack
-    val actualKey = (key as KeyMappingAccessor).boundKey
+    val actualKey = key.boundKey
     KeyMapping.set(actualKey, true)
     KeyMapping.click(actualKey)
     KeyMapping.set(actualKey, false)
 }
 
 fun clickKey(key: KeyMapping) {
-    val actualKey = (key as KeyMappingAccessor).boundKey
+    val actualKey = key.boundKey
     KeyMapping.click(actualKey)
 }
 
 fun holdKey(key: KeyMapping, holding: Boolean) {
-    val actualKey = (key as KeyMappingAccessor).boundKey
+    val actualKey = key.boundKey
     KeyMapping.set(actualKey, holding)
 }
 
