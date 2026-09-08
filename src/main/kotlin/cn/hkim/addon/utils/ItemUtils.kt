@@ -55,6 +55,9 @@ inline val ItemStack.strength: Int
 inline val ItemStack.hasEthermerge: Boolean
     get() = customData.getInt("ethermerge").orElse(0) == 1
 
+inline val ItemStack.isRecombobulated: Boolean
+    get() = customData.getInt("rarity_upgrades").orElse(0) == 1
+
 inline val ItemStack.hasGlint: Boolean
     get() = get(DataComponents.ENCHANTMENT_GLINT_OVERRIDE) ?: false
 

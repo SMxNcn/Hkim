@@ -47,6 +47,7 @@
     "TitleScreenMixin",
     "TooltipRenderUtilMixin",
     "WindowMixin",
+    "accessors.AbstractContainerScreenAccessor",
     "accessors.CameraAccessor",
     "accessors.FishingHookAccessor",
     "accessors.JoinMultiplayerScreenAccessor",

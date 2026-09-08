@@ -67,20 +67,7 @@ object HudUtils {
         this.pose().popMatrix()
     }
 
-    fun GuiGraphicsExtractor.scaledText(
-        font: Font,
-        text: Component,
-        x: Int,
-        y: Int,
-        color: Int,
-        shadow: Boolean = false,
-        scale: Float = 1.0f
-    ) {
-        renderScaledText({ sx, sy ->
-            this.text(font, text, sx, sy, color, shadow)
-        }, x, y, scale)
-    }
-
+    @JvmStatic
     fun GuiGraphicsExtractor.scaledText(
         font: Font,
         text: String,
