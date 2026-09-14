@@ -67,20 +67,7 @@ object HudUtils {
         this.pose().popMatrix()
     }
 
-    fun GuiGraphicsExtractor.scaledText(
-        font: Font,
-        text: Component,
-        x: Int,
-        y: Int,
-        color: Int,
-        shadow: Boolean = false,
-        scale: Float = 1.0f
-    ) {
-        renderScaledText({ sx, sy ->
-            this.text(font, text, sx, sy, color, shadow)
-        }, x, y, scale)
-    }
-
+    @JvmStatic
     fun GuiGraphicsExtractor.scaledText(
         font: Font,
         text: String,
@@ -292,6 +279,11 @@ object HudUtils {
 
     fun Color.multiplyAlpha(factor: Float): Color {
         return Color(red, green, blue, (alpha.toFloat() * factor).coerceIn(0f, 255f).toInt())
+    }
+
+    fun Color.multiplyShade(shade: Float): Color {
+        val f = 1f - shade.coerceIn(0f, 1f)
+        return Color((red * f).toInt(), (green * f).toInt(), (blue * f).toInt(), alpha)
     }
 
     val Color.rGL: Float get() = red / 255f

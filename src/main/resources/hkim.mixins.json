@@ -23,9 +23,9 @@
     "EntityMixin",
     "EntityRendererMixin",
     "FallingBlockRendererMixin",
-    "GameRendererMixin",
     "FirstPersonHandsAndItemsMixin",
     "FirstPersonHandsAndItemsRendererMixin",
+    "GameRendererMixin",
     "GuiGraphicsExtractorMixin",
     "GuiMixin",
     "HudMixin",
@@ -47,11 +47,13 @@
     "ScreenEffectRendererMixin",
     "ScreenMixin",
     "TitleScreenMixin",
+    "TooltipRenderUtilMixin",
     "WindowMixin",
+    "accessors.AbstractContainerScreenAccessor",
     "accessors.CameraAccessor",
+    "accessors.FishingHookAccessor",
     "accessors.JoinMultiplayerScreenAccessor",
     "accessors.KeyMappingAccessor",
-    "accessors.FishingHookAccessor",
     "accessors.ScreenAccessor"
   ]
 }
