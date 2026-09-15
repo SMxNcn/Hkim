@@ -15,7 +15,7 @@ import net.minecraft.client.DeltaTracker
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.resources.Identifier
 
-@ModuleInfo("swap_options", Category.MISC)
+@ModuleInfo("swap_options", Category.MISC, true)
 object SwapOptions : Module("Swap Options", "Extra options for swapping.") {
     val ldTitleRegex = Regex("\\((\\d+)/(\\d+)\\) Loadouts")
     val wdTitleRegex = Regex("\\((\\d+)/(\\d+)\\) Armor Sets")
@@ -32,14 +32,14 @@ object SwapOptions : Module("Swap Options", "Extra options for swapping.") {
 
     @EventHandler
     private fun onMouseClick(event: MouseButtonEvent) {
-        if (shouldHideGui() && event.button in 0..2 && SwapHandler.isInSwap) {
+        if (noGui && event.button in 0..2 && SwapHandler.isInSwap) {
             event.cancel()
         }
     }
 
     override fun render(graphics: GuiGraphicsExtractor, tickTracker: DeltaTracker) {
         val text = SwapHandler.swapInfo ?: return
-        if (!shouldHideGui() || !showSwapInfo || mc.gui.hud.isHidden) return
+        if (!noGui || !showSwapInfo || mc.gui.hud.isHidden) return
         val width = mc.font.width(text)
         val x = (mc.window.guiScaledWidth - width) / 2
         val y = mc.window.guiScaledHeight / 2 + 12
@@ -48,5 +48,5 @@ object SwapOptions : Module("Swap Options", "Extra options for swapping.") {
         super.render(graphics, tickTracker)
     }
 
-    fun shouldHideGui(): Boolean = enabled && noGui
+    override fun toggle() {}
 }

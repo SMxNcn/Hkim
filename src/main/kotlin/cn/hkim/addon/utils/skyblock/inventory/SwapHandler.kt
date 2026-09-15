@@ -29,7 +29,7 @@ abstract class SwapHandler {
         fun startSwap(info: String? = null) {
             isInSwap = true
             swapInfo = info
-            if (SwapOptions.shouldHideGui()) ViewLock.lock(SwapOptions)
+            if (SwapOptions.noGui) ViewLock.lock(SwapOptions)
             saveAndStopInput()
         }
 
@@ -77,7 +77,7 @@ abstract class SwapHandler {
         val packet = event.packet as? ClientboundOpenScreenPacket ?: return
         val player = mc.player ?: return
         containerId = packet.containerId
-        if (SwapOptions.shouldHideGui()) {
+        if (SwapOptions.noGui) {
             mc.execute {
                 player.containerMenu = packet.type.create(packet.containerId, player.inventory)
                 consumeGuiOpen(packet.title)
