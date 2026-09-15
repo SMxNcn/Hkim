@@ -125,7 +125,8 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
         }
 
         if (preAiming && target != null) {
-            if (getDestroyProgress(target) >= 8) clearTarget()
+            val pg = DestroyProgressTracker.getDestroyProgress(target)
+            if (pg in 8..9) clearTarget()
         }
 
         if (currentTarget == null) {
@@ -266,6 +267,7 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
         hasMineralsInRange = false
         cachedAllowedTypes = null
         targetAcquiredTime = 0L
+        DestroyProgressTracker.clear()
         TimiteHelper.reset()
         modMessage("§6Nuker§c disabled.")
     }
@@ -275,10 +277,6 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
         currentHitPos = null
         currentMineral = null
         pendingSlot = -1
-    }
-
-    private fun getDestroyProgress(pos: BlockPos): Int {
-        return mc.level?.destructionProgress()?.get(pos.asLong())?.firstOrNull()?.getProgress() ?: 0
     }
 
     private data class Target(val pos: BlockPos, val hitPos: Vec3, val mineralType: MineralType)

@@ -1,5 +1,7 @@
 package cn.hkim.addon.utils.skyblock.mining
 
+import cn.hkim.addon.utils.skyblock.Island
+import cn.hkim.addon.utils.skyblock.LocationUtils
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 
@@ -147,11 +149,24 @@ enum class MineralType(
     );
 
     companion object {
+        private val RIFT_VARIANTS: Map<Block, MineralType> = mapOf(
+            Blocks.STAINED_GLASS_PANE.lightBlue to YOUNGITE,
+            Blocks.STAINED_GLASS_PANE.blue to TIMITE,
+            Blocks.STAINED_GLASS_PANE.purple to OBSOLITE,
+        )
+
         private val blockLookup: Map<Block, MineralType> by lazy {
-            entries.flatMap { type -> type.blocks.map { it to type } }.toMap()
+            val pairs = entries.flatMap { type -> type.blocks.map { it to type } }
+                .filterNot { (block, type) -> type.category == MineralCategory.RIFT && block in RIFT_VARIANTS }
+            val conflicts = pairs.groupBy { it.first }.filterValues { it.size > 1 }.keys
+            check(conflicts.isEmpty()) { "Ambiguous mineral blocks: $conflicts" }
+            pairs.toMap()
         }
 
-        fun fromBlock(block: Block): MineralType? = blockLookup[block]
+        fun fromBlock(block: Block): MineralType? {
+            if (LocationUtils.currentArea == Island.Rift) RIFT_VARIANTS[block]?.let { return it }
+            return blockLookup[block]
+        }
 
         fun MineralType.isHighPriorityBlock(block: Block): Boolean = block in priorityBlocks
 
