@@ -33,14 +33,14 @@ object SwapOptions : Module("Swap Options", "Extra options for swapping.") {
 
     @EventHandler
     private fun onMouseClick(event: MouseButtonEvent) {
-        if (shouldHideGui() && event.button in InputConstants.MOUSE_BUTTON_LEFT..InputConstants.MOUSE_BUTTON_MIDDLE && SwapHandler.isInSwap) {
+        if (noGui && event.button in InputConstants.MOUSE_BUTTON_LEFT..InputConstants.MOUSE_BUTTON_MIDDLE && SwapHandler.isInSwap) {
             event.cancel()
         }
     }
 
     override fun render(graphics: GuiGraphicsExtractor, tickTracker: DeltaTracker) {
         val text = SwapHandler.swapInfo ?: return
-        if (!shouldHideGui() || !showSwapInfo || mc.gui.hud.isHidden) return
+        if (!noGui || !showSwapInfo || mc.gui.hud.isHidden) return
         val width = mc.font.width(text)
         val x = (mc.window.guiScaledWidth - width) / 2
         val y = mc.window.guiScaledHeight / 2 + 12
@@ -48,6 +48,4 @@ object SwapOptions : Module("Swap Options", "Extra options for swapping.") {
         graphics.text(mc.font, text, x, y, 0xFFFFFFFF.toInt(), true)
         super.render(graphics, tickTracker)
     }
-
-    fun shouldHideGui(): Boolean = enabled && noGui
 }
