@@ -61,6 +61,13 @@ public class AbstractContainerScreenMixin {
         if (event.isCancelled()) ci.cancel();
     }
 
+    @Inject(method = "extractSlot", at = @At("HEAD"))
+    private void onExtractSlotRarityBackground(GuiGraphicsExtractor graphics, Slot slot, int mouseX, int mouseY, CallbackInfo ci) {
+        if (slot != null && slot.hasItem()) {
+            ItemFeatures.drawRarityBackground(graphics, slot.x, slot.y, slot.getItem());
+        }
+    }
+
     @Inject(method = "extractSlot(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/world/inventory/Slot;II)V", at = @At("TAIL"))
     private void onExtractSlotProtectTag(GuiGraphicsExtractor graphics, Slot slot, int mouseX, int mouseY, CallbackInfo ci) {
         if (!ProtectItem.getCanRenderTag()) return;

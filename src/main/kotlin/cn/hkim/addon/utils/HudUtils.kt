@@ -2,13 +2,13 @@ package cn.hkim.addon.utils
 
 import cn.hkim.addon.Hkim
 import cn.hkim.addon.Hkim.mc
+import com.mojang.blaze3d.Blaze3D
 import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
-import net.minecraft.util.Util
 import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.PlayerTeam
 import java.awt.Color
@@ -305,7 +305,7 @@ object HudUtils {
 
     fun openUrl(url: String) {
         try {
-            Util.getPlatform().openUri(URI.create(url))
+            Blaze3D.openUri(URI.create(url))
         } catch (e: Exception) {
             Hkim.logger.error("Failed to open URL: $url", e)
         }
