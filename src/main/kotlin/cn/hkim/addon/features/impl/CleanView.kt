@@ -21,6 +21,7 @@ object CleanView : Module("Clean View", "Hides unwanted renderings.") {
     private val hideFallingBlock by BooleanSetting("Hide Falling Block", "Stop rendering falling blocks.", false).depends { entity }
     private val hideExperienceOrbs by BooleanSetting("Hide Experience Orbs", "Hide experience orbs.", false).depends { entity }
     private val hideLightning by BooleanSetting("Hide Lightning", "Hide lightning bolts.", false).depends { entity }
+    private val hideWitherborn by BooleanSetting("Hide Witherborn", "Hide witherborns from full wither armor.", false).depends { entity }
 
     private val particle by DropdownSetting("Particle")
     private val hideWitherImpact by BooleanSetting("Hide Wither Impact", "Hide explosion particles.", false).depends { particle }
@@ -48,7 +49,8 @@ object CleanView : Module("Clean View", "Hides unwanted renderings.") {
             return
         }
 
-        if (blockHoveringClose && slot.hasItem() && slot.item.item == Items.BARRIER && slot.item.displayName.cleanString == "Close" && !chest.carried.isEmpty) {
+        if (blockHoveringClose && slot.hasItem() && slot.item.item == Items.BARRIER &&
+            slot.item.displayName.cleanString.containsOneOf("Back", "Close") && !chest.carried.isEmpty) {
             event.cancel()
         }
     }
@@ -61,6 +63,9 @@ object CleanView : Module("Clean View", "Hides unwanted renderings.") {
 
     @JvmStatic
     fun shouldHideLightning(): Boolean = enabled && hideLightning
+
+    @JvmStatic
+    fun shouldHideWitherborn(): Boolean = enabled && hideWitherborn
 
     @JvmStatic
     fun shouldHideWitherImpact(): Boolean = enabled && hideWitherImpact

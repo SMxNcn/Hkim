@@ -6,6 +6,7 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LightningBolt;
+import net.minecraft.world.entity.boss.wither.WitherBoss;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -21,6 +22,10 @@ public class EntityRendererMixin {
             return;
         }
         if (CleanView.shouldHideExperienceOrbs() && entity instanceof ExperienceOrb) {
+            cir.setReturnValue(false);
+            return;
+        }
+        if (CleanView.shouldHideWitherborn() && entity instanceof WitherBoss && ((WitherBoss) entity).getInvulnerableTicks() == 800) {
             cir.setReturnValue(false);
         }
     }
