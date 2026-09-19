@@ -3,7 +3,6 @@ package cn.hkim.addon.utils.render
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
-import java.lang.ref.WeakReference
 
 class GuiAnimation internal constructor(
     private var from: Float = 0f,
@@ -12,65 +11,41 @@ class GuiAnimation internal constructor(
     private var easing: Easing = Easing.LINEAR
 ) {
     private var startTime = -1L
-    private var running = false
-    private var completed = false
 
-    private var currentValue = from
-    private var currentProgress = 0f
-
-    internal fun update() {
-        if (!running || completed) return
-
-        val elapsed = System.currentTimeMillis() - startTime
-
-        if (elapsed >= duration) {
-            currentValue = to
-            currentProgress = 1f
-            running = false
-            completed = true
-            return
-        }
-
-        currentProgress = applyEasing(elapsed.toFloat() / duration, easing)
-        currentValue = from + (to - from) * currentProgress
+    private fun easedProgress(now: Long): Float {
+        if (startTime < 0L) return 0f
+        val linear = ((now - startTime).toFloat() / duration).coerceIn(0f, 1f)
+        return applyEasing(linear, easing)
     }
 
-    fun getValue(): Float =
-        if (running || completed) currentValue else from
+    fun getValue(): Float {
+        if (startTime < 0L) return from
+        return from + (to - from) * easedProgress(System.currentTimeMillis())
+    }
 
-    fun getProgress(): Float =
-        if (running || completed) currentProgress else 0f
+    fun getProgress(): Float = easedProgress(System.currentTimeMillis())
 
     fun start(): GuiAnimation {
         startTime = System.currentTimeMillis()
-        running = true
-        completed = false
-        currentValue = from
-        currentProgress = 0f
         return this
     }
 
     fun reset() {
         startTime = -1L
-        running = false
-        completed = false
-        currentValue = from
-        currentProgress = 0f
     }
 
     fun reverse(): GuiAnimation {
-        val temp = from
+        val swap = from
         from = to
-        to = temp
+        to = swap
         return start()
     }
 
-    fun isRunning() = running
-    fun isCompleted() = completed
+    fun isRunning() = startTime >= 0L && System.currentTimeMillis() - startTime < duration
+    fun isCompleted() = startTime >= 0L && System.currentTimeMillis() - startTime >= duration
 
     fun from(value: Float): GuiAnimation {
         from = value
-        if (!running && !completed) currentValue = value
         return this
     }
 
@@ -90,7 +65,7 @@ class GuiAnimation internal constructor(
     }
 
     fun animateTo(target: Float): GuiAnimation {
-        from = currentValue
+        from = getValue()
         to = target
         return start()
     }
@@ -99,20 +74,12 @@ class GuiAnimation internal constructor(
         reset()
         from = value
         to = value
-        currentValue = value
         return this
     }
 
     companion object {
-        private val globalManager = GuiAnimationManager()
-
         fun create(from: Float = 0f, to: Float = 1f): GuiAnimation {
-            return globalManager.create(from, to)
-        }
-
-        @JvmStatic
-        fun shutdown() {
-            globalManager.shutdown()
+            return GuiAnimation(from, to, 300L, Easing.LINEAR)
         }
 
         fun applyEasing(t: Float, easing: Easing): Float {
@@ -135,80 +102,6 @@ class GuiAnimation internal constructor(
                 Easing.CUBIC_IN_OUT -> if (t < 0.5f) 4f * t * t * t
                 else (t - 1f).let { it * it * (2f * it - 2f) + 1f }
             }
-        }
-    }
-}
-
-class GuiAnimationManager {
-    private val animations = mutableListOf<WeakReference<GuiAnimation>>()
-    private val updateInterval = 1000L / 150
-
-    @Volatile
-    private var running = false
-    private var updateThread: Thread? = null
-
-    private fun createUpdateThread() = Thread {
-        while (running) {
-            val start = System.currentTimeMillis()
-
-            synchronized(animations) {
-                animations.removeAll { it.get() == null }
-
-                for (ref in animations) {
-                    ref.get()?.update()
-                }
-            }
-
-            val elapsed = System.currentTimeMillis() - start
-            val sleepTime = updateInterval - elapsed
-            if (sleepTime > 0) {
-                try { Thread.sleep(sleepTime) } catch (_: InterruptedException) { break }
-            }
-        }
-    }.apply { isDaemon = true }
-
-    fun add(animation: GuiAnimation): GuiAnimation {
-        synchronized(animations) {
-            if (animations.none { it.get() === animation }) {
-                animations.add(WeakReference(animation))
-            }
-        }
-        startIfNeeded()
-        return animation
-    }
-
-    fun create(from: Float = 0f, to: Float = 1f): GuiAnimation {
-        val anim = GuiAnimation(from, to, 300L, Easing.LINEAR)
-        add(anim)
-        return anim
-    }
-
-    fun remove(animation: GuiAnimation) {
-        synchronized(animations) {
-            animations.removeAll { it.get() === animation }
-        }
-    }
-
-    fun clear() {
-        running = false
-        synchronized(animations) {
-            animations.clear()
-        }
-    }
-
-    fun shutdown() {
-        running = false
-        updateThread?.interrupt()
-        updateThread = null
-        synchronized(animations) {
-            animations.clear()
-        }
-    }
-
-    private fun startIfNeeded() {
-        if (!running) {
-            running = true
-            updateThread = createUpdateThread().apply { start() }
         }
     }
 }

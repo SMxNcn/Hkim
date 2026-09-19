@@ -7,7 +7,6 @@ import cn.hkim.addon.features.impl.FreeCam;
 import cn.hkim.addon.features.impl.TitleManager;
 import cn.hkim.addon.gui.Background;
 import cn.hkim.addon.utils.RotationUtils;
-import cn.hkim.addon.utils.render.GuiAnimation;
 import cn.hkim.addon.utils.skyblock.farming.Plot;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.minecraft.client.Minecraft;
@@ -45,11 +44,6 @@ public abstract class MinecraftMixin {
     @Inject(method = "onGameLoadFinished", at = @At("HEAD"))
     private void onGameLoadFinished(CallbackInfo ci) {
         Background.loadBackgrounds();
-    }
-
-    @Inject(method = "close", at = @At("HEAD"))
-    private void onClose(CallbackInfo ci) {
-        GuiAnimation.shutdown();
     }
 
     @Inject(method = "stop", at = @At("HEAD"))
