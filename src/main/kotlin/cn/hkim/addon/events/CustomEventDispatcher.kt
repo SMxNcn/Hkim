@@ -18,7 +18,7 @@ import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
 
 object CustomEventDispatcher {
     private val visitRegex = Regex("\\[SkyBlock] (?:\\[.*?] )?(.*?) is visiting Your Garden!")
-    private val pestSpawnRegex = Regex("(?:A \uE018 Pest has appeared|\\d+ \uE018 Pest have spawned) in Plot - ([^!]+)!")
+    private val pestSpawnRegex = Regex("(?:A [\uE000-\uF8FF] Pest has appeared|\\d+ [\uE000-\uF8FF] Pest have spawned) in Plot - ([^!]+)!")
     private val aliveRegex = Regex("Alive: (\\d+)")
     private val plotsRegex = Regex("Plots:\\s*([\\d, ]+)")
     private var lastAliveCount = -1
