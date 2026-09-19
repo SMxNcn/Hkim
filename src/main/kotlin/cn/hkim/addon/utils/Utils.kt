@@ -4,6 +4,7 @@ import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.mixins.accessors.KeyMappingAccessor
 import cn.hkim.addon.utils.skyblock.inventory.SwapHandler
 import com.mojang.blaze3d.platform.InputConstants
+import org.lwjgl.glfw.GLFW
 import net.minecraft.SharedConstants
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
@@ -152,3 +153,20 @@ fun holdKey(key: KeyMapping, holding: Boolean) {
 
 fun randomDelay(base: Int, variance: Int): Long =
     base + (0..variance).random().toLong()
+fun keyDisplayName(keyCode: Int): String {
+    if (keyCode == GLFW.GLFW_KEY_UNKNOWN) return "None"
+
+    if (keyCode in 0..7) {
+        return try {
+            InputConstants.Type.MOUSE.getOrCreate(keyCode).displayName.string
+        } catch (_: Exception) {
+            if (keyCode == 2) "Mouse Middle" else "Mouse ${keyCode + 1}"
+        }
+    }
+
+    return try {
+        InputConstants.Type.KEYSYM.getOrCreate(keyCode).displayName.string
+    } catch (_: Exception) {
+        "Key $keyCode"
+    }
+}
