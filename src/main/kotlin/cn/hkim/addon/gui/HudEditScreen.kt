@@ -17,7 +17,7 @@ import net.minecraft.network.chat.Component
 import org.lwjgl.glfw.GLFW
 import kotlin.math.abs
 
-class HudEditScreen(private val parent: Screen?) : Screen(Component.literal("HUD Editor")) {
+class HudEditScreen(private val parent: Screen? = null) : Screen(Component.literal("HUD Editor")) {
 
     private var draggingElement: HudElement? = null
     private var dragStartMouseX = 0f
@@ -216,6 +216,8 @@ class HudEditScreen(private val parent: Screen?) : Screen(Component.literal("HUD
         ModuleConfig.saveConfig()
         return true
     }
+
+    override fun isPauseScreen() = false
 
     private fun isShiftDown(): Boolean {
         val handle = mc.window.handle()

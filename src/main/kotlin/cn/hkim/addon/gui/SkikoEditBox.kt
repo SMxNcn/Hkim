@@ -4,9 +4,11 @@ import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.clickgui.Theme
 import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRectWithBorder
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoImage
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoRectClipped
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoText
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoTextClipped
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.skikoBatch
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.skikoTextWidth
 import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -40,6 +42,8 @@ class SkikoEditBox(
     var focusedBorderColor: Int? = null
     var backgroundColor: Int? = null
 
+    var showClearButton: Boolean = false
+
     var textInsetX: Float = 6f
     var textInsetY: Float = 3f
 
@@ -54,6 +58,10 @@ class SkikoEditBox(
         private set
 
     private val hasSelection: Boolean get() = selectionAnchor >= 0 && selectionAnchor != cursor
+
+    private val isClearShown: Boolean get() = showClearButton && text.isNotEmpty()
+
+    private val clearReserve: Float get() = if (isClearShown) CLEAR_SIZE + CLEAR_GAP * 2f else 0f
 
     fun render(
         graphics: GuiGraphicsExtractor,
@@ -71,7 +79,6 @@ class SkikoEditBox(
 
         val border = if (isFocused) focusedBorderColor ?: borderColor ?: themeColor
                      else borderColor ?: Theme.controlBorder
-        graphics.drawRoundedRectWithBorder(x, y, w, h, backgroundColor ?: Theme.controlBg, border, 1f, 3f)
 
         if (HudUtils.isPointInRect(mouseX, mouseY, x, y, w, h)) {
             graphics.requestCursor(CursorTypes.IBEAM)
@@ -81,46 +88,60 @@ class SkikoEditBox(
         val textTop = y + textInsetY
         val clipX = x + 2f
         val clipY = y + 2f
-        val clipW = w - 4f
+        val clipW = w - 4f - clearReserve
         val clipH = h - 4f
 
-        if (text.isEmpty() && preeditText.isEmpty()) {
-            val hintText = hint
-            if (hintText != null) {
-                graphics.drawSkikoText(hintText, x + textInsetX, y + textInsetY, textSize, hintColor)
+        graphics.skikoBatch(x, y, w, h, clipRadius = BOX_RADIUS) {
+            graphics.drawRoundedRectWithBorder(x, y, w, h, backgroundColor ?: Theme.controlBg, border, 1f, BOX_RADIUS)
+
+            if (text.isEmpty() && preeditText.isEmpty()) {
+                val hintText = hint
+                if (hintText != null) {
+                    graphics.drawSkikoText(hintText, x + textInsetX, y + textInsetY, textSize, hintColor)
+                }
+                if (isFocused) {
+                    drawCaret(graphics, innerX - scrollOffset + prefixWidth(cursor), y, h, clipX, clipY, clipW, clipH)
+                }
+            } else {
+                if (isFocused) ensureCursorVisible()
+
+                if (isFocused && hasSelection) {
+                    val selStart = min(cursor, selectionAnchor)
+                    val selEnd = max(cursor, selectionAnchor)
+                    val sx = innerX - scrollOffset + prefixWidth(selStart)
+                    val ex = innerX - scrollOffset + prefixWidth(selEnd)
+                    val selColor = (0x40 shl 24) or (themeColor and 0x00FFFFFF)
+                    graphics.drawSkikoRectClipped(sx, y + 1.5f, (ex - sx).coerceAtLeast(0.5f), h - 3f, selColor, clipX, clipY, clipW, clipH)
+                }
+
+                if (text.isNotEmpty()) {
+                    graphics.drawSkikoTextClipped(text, innerX - scrollOffset, textTop, textSize, Theme.controlTextActive, clipX, clipY, clipW, clipH)
+                }
+
+                if (preeditText.isNotEmpty()) {
+                    val preeditX = innerX - scrollOffset + prefixWidth(cursor)
+                    graphics.drawSkikoTextClipped(preeditText, preeditX, textTop, textSize, Theme.controlTextActive, clipX, clipY, clipW, clipH)
+                    graphics.drawSkikoRectClipped(preeditX, textTop + textSize + 1f, textWidthOf(preeditText), 1f, themeColor, clipX, clipY, clipW, clipH)
+                    if (isFocused) {
+                        val caretX = preeditX + textWidthOf(preeditText.substring(0, min(preeditCaret, preeditText.length)))
+                        drawCaret(graphics, caretX, y, h, clipX, clipY, clipW, clipH)
+                    }
+                } else if (isFocused) {
+                    val caretX = innerX - scrollOffset + prefixWidth(cursor)
+                    drawCaret(graphics, caretX, y, h, clipX, clipY, clipW, clipH)
+                }
             }
-            if (isFocused) {
-                drawCaret(graphics, innerX - scrollOffset + prefixWidth(cursor), y, h, clipX, clipY, clipW, clipH)
+
+            if (isClearShown) {
+                val clearX = x + w - CLEAR_GAP - CLEAR_SIZE
+                val clearY = y + (h - CLEAR_SIZE) / 2f
+                val clearHovered = HudUtils.isPointInRect(mouseX, mouseY, clearX, clearY, CLEAR_SIZE, CLEAR_SIZE)
+                graphics.drawSkikoImage(
+                    "assets/hkim/textures/clickgui/close.svg", clearX, clearY, CLEAR_SIZE, CLEAR_SIZE, 0f,
+                    tintColor = if (clearHovered) Theme.controlTextActive else Theme.controlTextMuted,
+                )
+                if (clearHovered) graphics.requestCursor(CursorTypes.POINTING_HAND)
             }
-            return
-        }
-
-        if (isFocused) ensureCursorVisible()
-
-        if (isFocused && hasSelection) {
-            val selStart = min(cursor, selectionAnchor)
-            val selEnd = max(cursor, selectionAnchor)
-            val sx = innerX - scrollOffset + prefixWidth(selStart)
-            val ex = innerX - scrollOffset + prefixWidth(selEnd)
-            val selColor = (0x40 shl 24) or (themeColor and 0x00FFFFFF)
-            graphics.drawSkikoRectClipped(sx, y + 1.5f, (ex - sx).coerceAtLeast(0.5f), h - 3f, selColor, clipX, clipY, clipW, clipH)
-        }
-
-        if (text.isNotEmpty()) {
-            graphics.drawSkikoTextClipped(text, innerX - scrollOffset, textTop, textSize, Theme.controlTextActive, clipX, clipY, clipW, clipH)
-        }
-
-        if (preeditText.isNotEmpty()) {
-            val preeditX = innerX - scrollOffset + prefixWidth(cursor)
-            graphics.drawSkikoTextClipped(preeditText, preeditX, textTop, textSize, Theme.controlTextActive, clipX, clipY, clipW, clipH)
-            graphics.drawSkikoRectClipped(preeditX, textTop + textSize + 1f, textWidthOf(preeditText), 1f, themeColor, clipX, clipY, clipW, clipH)
-            if (isFocused) {
-                val caretX = preeditX + textWidthOf(preeditText.substring(0, min(preeditCaret, preeditText.length)))
-                drawCaret(graphics, caretX, y, h, clipX, clipY, clipW, clipH)
-            }
-        } else if (isFocused) {
-            val caretX = innerX - scrollOffset + prefixWidth(cursor)
-            drawCaret(graphics, caretX, y, h, clipX, clipY, clipW, clipH)
         }
     }
 
@@ -140,7 +161,7 @@ class SkikoEditBox(
             scrollOffset = 0f
             return
         }
-        val visibleW = lastW - 8f
+        val visibleW = lastW - 8f - clearReserve
         if (visibleW <= 0f) return
 
         val caretX = if (preeditText.isNotEmpty()) {
@@ -156,16 +177,28 @@ class SkikoEditBox(
 
     private fun textFitsInBox(): Boolean {
         if (lastW <= 0f) return false
-        val visibleW = lastW - 8f
+        val visibleW = lastW - 8f - clearReserve
         if (visibleW <= 0f) return false
         val contentW = textWidthOf(text) + if (preeditText.isNotEmpty()) textWidthOf(preeditText) else 0f
         return contentW <= visibleW
     }
 
+    private var prefixSource: String? = null
+    private var prefixSize = 0f
+    private var prefixIndex = -1
+    private var prefixWidth = 0f
+
     private fun prefixWidth(index: Int): Float {
         val idx = index.coerceIn(0, text.length)
         if (idx <= 0) return 0f
-        return skikoTextWidth(text.substring(0, idx), textSize)
+        if (idx == prefixIndex && text == prefixSource && textSize == prefixSize) return prefixWidth
+
+        val width = skikoTextWidth(text.substring(0, idx), textSize)
+        prefixSource = text
+        prefixSize = textSize
+        prefixIndex = idx
+        prefixWidth = width
+        return width
     }
 
     private fun textWidthOf(s: String): Float = skikoTextWidth(s, textSize)
@@ -225,6 +258,15 @@ class SkikoEditBox(
     }
 
     fun handleMouseClicked(mouseX: Float, mouseY: Float, x: Float, y: Float, w: Float, h: Float, doubleClick: Boolean): Boolean {
+        if (isClearShown) {
+            val clearX = x + w - CLEAR_GAP - CLEAR_SIZE
+            val clearY = y + (h - CLEAR_SIZE) / 2f
+            if (HudUtils.isPointInRect(mouseX, mouseY, clearX, clearY, CLEAR_SIZE, CLEAR_SIZE)) {
+                setText("")
+                return true
+            }
+        }
+
         if (!HudUtils.isPointInRect(mouseX, mouseY, x, y, w, h)) return false
 
         focus()
@@ -234,11 +276,10 @@ class SkikoEditBox(
         selectionAnchor = cursor
 
         if (doubleClick) {
-            val s = wordStartAt(cursor)
-            val e = wordEndAt(cursor)
-            if (s != e) {
-                selectionAnchor = s
-                cursor = e
+            val (start, end) = wordRangeAt(cursor)
+            if (start != end) {
+                selectionAnchor = start
+                cursor = end
                 dragWordMode = true
             }
         }
@@ -318,8 +359,9 @@ class SkikoEditBox(
 
     private fun copySelection() {
         if (!hasSelection) return
-        val s = min(cursor, selectionAnchor)
-        val e = max(cursor, selectionAnchor)
+        val s = min(cursor, selectionAnchor).coerceIn(0, text.length)
+        val e = max(cursor, selectionAnchor).coerceIn(0, text.length)
+        if (e <= s) return
         GLFW.glfwSetClipboardString(mc.window.handle(), text.substring(s, e))
     }
 
@@ -341,8 +383,8 @@ class SkikoEditBox(
         val filtered = filter?.invoke(str) ?: str
         if (filtered.isEmpty()) return
 
-        val selStart = if (hasSelection) min(cursor, selectionAnchor) else cursor
-        val selEnd = if (hasSelection) max(cursor, selectionAnchor) else cursor
+        val selStart = (if (hasSelection) min(cursor, selectionAnchor) else cursor).coerceIn(0, text.length)
+        val selEnd = (if (hasSelection) max(cursor, selectionAnchor) else cursor).coerceIn(0, text.length)
         val available = maxLength - (text.length - (selEnd - selStart))
         if (available <= 0) return
 
@@ -372,6 +414,7 @@ class SkikoEditBox(
         val start = if (cursor >= 2 && text[cursor - 1].isLowSurrogate() && text[cursor - 2].isHighSurrogate()) cursor - 2 else cursor - 1
         text = text.substring(0, start) + text.substring(cursor)
         cursor = start
+        selectionAnchor = -1
         ensureCursorVisible()
         onChanged()
     }
@@ -381,6 +424,7 @@ class SkikoEditBox(
         if (cursor >= text.length) return
         val end = if (cursor + 1 < text.length && text[cursor].isHighSurrogate() && text[cursor + 1].isLowSurrogate()) cursor + 2 else cursor + 1
         text = text.substring(0, cursor) + text.substring(end)
+        selectionAnchor = -1
         ensureCursorVisible()
         onChanged()
     }
@@ -391,6 +435,7 @@ class SkikoEditBox(
         if (start == cursor) return
         text = text.substring(0, start) + text.substring(cursor)
         cursor = start
+        selectionAnchor = -1
         ensureCursorVisible()
         onChanged()
     }
@@ -400,15 +445,16 @@ class SkikoEditBox(
         val end = wordBoundary(cursor, forward = true)
         if (end == cursor) return
         text = text.substring(0, cursor) + text.substring(end)
+        selectionAnchor = -1
         ensureCursorVisible()
         onChanged()
     }
 
     private fun deleteSelection() {
         if (!hasSelection) return
-        val s = min(cursor, selectionAnchor)
-        val e = max(cursor, selectionAnchor)
-        text = text.substring(0, s) + text.substring(e)
+        val s = min(cursor, selectionAnchor).coerceIn(0, text.length)
+        val e = max(cursor, selectionAnchor).coerceIn(0, text.length)
+        if (e > s) text = text.substring(0, s) + text.substring(e)
         cursor = s
         selectionAnchor = -1
         ensureCursorVisible()
@@ -453,6 +499,32 @@ class SkikoEditBox(
         return cursor + 1
     }
 
+    private fun wordRangeAt(index: Int): Pair<Int, Int> {
+        val i = index.coerceIn(0, text.length)
+
+        var start = i
+        while (start < text.length && !isWordChar(text[start])) start++
+        if (start < text.length) {
+            var end = start
+            while (end < text.length && isWordChar(text[end])) end++
+            return start to end
+        }
+
+        var before = i
+        while (before > 0 && !isWordChar(text[before - 1])) before--
+        if (before > 0) {
+            var begin = before
+            while (begin > 0 && isWordChar(text[begin - 1])) begin--
+            return begin to before
+        }
+
+        var from = i
+        var to = i
+        while (from > 0 && !isWordChar(text[from - 1])) from--
+        while (to < text.length && !isWordChar(text[to])) to++
+        return from to to
+    }
+
     private fun wordStartAt(from: Int): Int {
         var i = from.coerceIn(0, text.length)
         while (i > 0 && !isWordChar(text[i - 1])) i--
@@ -471,4 +543,10 @@ class SkikoEditBox(
         if (forward) wordEndAt(from) else wordStartAt(from)
 
     private fun isWordChar(c: Char): Boolean = c.isLetterOrDigit() || c == '_'
+
+    private companion object {
+        const val CLEAR_SIZE = 8f
+        const val CLEAR_GAP = 5f
+        const val BOX_RADIUS = 3f
+    }
 }

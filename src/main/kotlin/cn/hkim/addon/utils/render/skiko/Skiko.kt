@@ -8,12 +8,11 @@ import org.joml.Matrix3x2fc
 import java.awt.Color
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.math.max
-import kotlin.math.round
+import kotlin.math.*
 
 object Skiko {
     private val typefaces = HashMap<SkikoFont, Typeface>()
-    private val imageCache = HashMap<SkikoImage, CachedImage>()
+    private val imageCache = HashMap<String, CachedImage>()
     private var canvas: Canvas? = null
     private var frameSaveCount = 0
     private var alphaFactor = 1f
@@ -22,6 +21,7 @@ object Skiko {
 
     private const val SVG_RASTER_SCALE = 8f
     private const val SVG_MAX_RASTER = 2048
+    private const val FONT_CACHE_LIMIT = 64
 
     private fun currentCanvas(): Canvas {
         return canvas ?: throw IllegalStateException("Skiko frame has not started.")
@@ -89,7 +89,7 @@ object Skiko {
     }
 
     fun line(x1: Number, y1: Number, x2: Number, y2: Number, thickness: Number, color: Color) {
-        paint(color, PaintMode.STROKE).use {
+        withPaint(color, PaintMode.STROKE) {
             it.strokeWidth = thickness.toFloat()
             currentCanvas().drawLine(x1.toFloat(), y1.toFloat(), x2.toFloat(), y2.toFloat(), it)
         }
@@ -108,25 +108,25 @@ object Skiko {
             SkikoRoundEdge.RIGHT -> floatArrayOf(0f, 0f, fr, fr, fr, fr, 0f, 0f)
         }
 
-        paint(color).use {
+        withPaint(color) {
             currentCanvas().drawRRect(RRect.makeComplexLTRB(fx, fy, fx + fw, fy + fh, radii), it)
         }
     }
 
     fun rect(x: Number, y: Number, w: Number, h: Number, color: Color, radius: Number) {
-        paint(color).use {
+        withPaint(color) {
             currentCanvas().drawRRect(RRect.makeLTRB(x.toFloat(), y.toFloat(), x.toFloat() + w.toFloat(), y.toFloat() + h.toFloat(), radius.toFloat()), it)
         }
     }
 
     fun rect(x: Number, y: Number, w: Number, h: Number, color: Color) {
-        paint(color).use {
+        withPaint(color) {
             currentCanvas().drawRect(Rect.makeXYWH(x.toFloat(), y.toFloat(), w.toFloat(), h.toFloat()), it)
         }
     }
 
     fun hollowRect(x: Number, y: Number, w: Number, h: Number, thickness: Number, color: Color, radius: Number) {
-        paint(color, PaintMode.STROKE).use {
+        withPaint(color, PaintMode.STROKE) {
             it.strokeWidth = thickness.toFloat()
             currentCanvas().drawRRect(RRect.makeLTRB(x.toFloat(), y.toFloat(), x.toFloat() + w.toFloat(), y.toFloat() + h.toFloat(), radius.toFloat()), it)
         }
@@ -142,7 +142,7 @@ object Skiko {
         gradient: SkikoGradient,
         radius: Float
     ) {
-        paint(Color.WHITE).use { fill ->
+        withPaint(Color.WHITE) { fill ->
             fill.shader = linearGradient(x.toFloat(), y.toFloat(), w.toFloat(), h.toFloat(), color1, color2, gradient)
             currentCanvas().drawRRect(RRect.makeLTRB(x.toFloat(), y.toFloat(), x.toFloat() + w.toFloat(), y.toFloat() + h.toFloat(), radius), fill)
         }
@@ -159,7 +159,7 @@ object Skiko {
         radius: Float
     ) {
         if (colors.size < 2) return
-        paint(Color.WHITE).use { fill ->
+        withPaint(Color.WHITE) { fill ->
             fill.shader = multiLinearGradient(x.toFloat(), y.toFloat(), w.toFloat(), h.toFloat(), colors, positions, gradient)
             currentCanvas().drawRRect(RRect.makeLTRB(x.toFloat(), y.toFloat(), x.toFloat() + w.toFloat(), y.toFloat() + h.toFloat(), radius), fill)
         }
@@ -170,7 +170,7 @@ object Skiko {
         blur: Number, spread: Number, radius: Number,
         color: Color = Color(0, 0, 0, 125)
     ) {
-        paint(color).use { p ->
+        withPaint(color) { p ->
             p.maskFilter = MaskFilter.makeBlur(FilterBlurMode.NORMAL, blur.toFloat(), true)
             val spreadF = spread.toFloat()
             currentCanvas().drawRRect(
@@ -187,13 +187,101 @@ object Skiko {
     }
 
     fun circle(x: Number, y: Number, radius: Number, color: Color) {
-        paint(color).use {
+        withPaint(color) {
             currentCanvas().drawCircle(x.toFloat(), y.toFloat(), radius.toFloat(), it)
         }
     }
 
+    fun arc(cx: Number, cy: Number, radius: Number, startAngle: Float, sweepAngle: Float, thickness: Number, color: Color) {
+        val r = radius.toFloat()
+        val stroke = thickness.toFloat()
+        if (r <= 0f || sweepAngle == 0f || stroke <= 0f) return
+        PathBuilder().use { builder ->
+            builder.arcTo(oval(cx.toFloat(), cy.toFloat(), r), degrees(startAngle), degrees(sweepAngle), true)
+            builder.detach().use { path ->
+                withPaint(color, PaintMode.STROKE) {
+                    it.strokeWidth = stroke
+                    currentCanvas().drawPath(path, it)
+                }
+            }
+        }
+    }
+
+    fun sector(cx: Number, cy: Number, innerRadius: Number, outerRadius: Number, startAngle: Float, sweepAngle: Float, color: Color) {
+        val outer = outerRadius.toFloat()
+        val centerX = cx.toFloat()
+        val centerY = cy.toFloat()
+        val inner = innerRadius.toFloat().coerceIn(0f, outer)
+        if (outer <= 0f || sweepAngle == 0f) return
+        PathBuilder().use { builder ->
+            if (inner > 0f) {
+                builder.arcTo(oval(centerX, centerY, outer), degrees(startAngle), degrees(sweepAngle), true)
+                builder.arcTo(oval(centerX, centerY, inner), degrees(startAngle + sweepAngle), degrees(-sweepAngle), false)
+            } else {
+                builder.moveTo(centerX, centerY)
+                builder.arcTo(oval(centerX, centerY, outer), degrees(startAngle), degrees(sweepAngle), false)
+            }
+            builder.closePath()
+            builder.detach().use { path ->
+                withPaint(color) {
+                    currentCanvas().drawPath(path, it)
+                }
+            }
+        }
+    }
+
+    fun parallelSector(
+        cx: Number, cy: Number,
+        innerRadius: Number, outerRadius: Number,
+        startAngle: Float, endAngle: Float,
+        gap: Number,
+        color: Color
+    ) {
+        val outer = outerRadius.toFloat()
+        val inner = innerRadius.toFloat().coerceIn(0f, outer)
+        val offset = (gap.toFloat() / 2f).coerceIn(0f, inner * 0.9f)
+        val centerX = cx.toFloat()
+        val centerY = cy.toFloat()
+        if (outer <= 0f || endAngle <= startAngle) return
+
+        PathBuilder().use { builder ->
+            if (inner > 0f) {
+                val outerStart = edgeAngle(startAngle, offset, outer)
+                val outerEnd = edgeAngle(endAngle, -offset, outer)
+                val innerEnd = edgeAngle(endAngle, -offset, inner)
+                val innerStart = edgeAngle(startAngle, offset, inner)
+                builder.arcTo(oval(centerX, centerY, outer), degrees(outerStart), degrees(outerEnd - outerStart), true)
+                builder.arcTo(oval(centerX, centerY, inner), degrees(innerEnd), degrees(innerStart - innerEnd), false)
+            } else {
+                val outerStart = edgeAngle(startAngle, offset, outer)
+                val outerEnd = edgeAngle(endAngle, -offset, outer)
+                builder.moveTo(centerX, centerY)
+                builder.lineTo(centerX + cos(outerStart) * outer, centerY + sin(outerStart) * outer)
+                builder.arcTo(oval(centerX, centerY, outer), degrees(outerStart), degrees(outerEnd - outerStart), false)
+            }
+            builder.closePath()
+            builder.detach().use { path ->
+                withPaint(color) {
+                    currentCanvas().drawPath(path, it)
+                }
+            }
+        }
+    }
+
+    fun edgeAngle(angle: Float, offset: Float, radius: Number): Float {
+        val r = radius.toFloat()
+        val along = sqrt((r * r - offset * offset).coerceAtLeast(0f))
+        if (along == 0f) return angle
+        return angle + atan2(offset, along)
+    }
+
+    private fun oval(cx: Float, cy: Float, radius: Float) =
+        Rect.makeXYWH(cx - radius, cy - radius, radius * 2f, radius * 2f)
+
+    private fun degrees(radians: Float) = Math.toDegrees(radians.toDouble()).toFloat()
+
     fun text(text: String, x: Number, y: Number, size: Number, color: Color, font: SkikoFont = defaultFont) {
-        paint(color).use { fill ->
+        withPaint(color) { fill ->
             val skiaFont = skikoFont(font, size.toFloat())
             currentCanvas().drawString(text, x.toFloat(), y.toFloat() - skiaFont.metrics.ascent, skiaFont, fill)
         }
@@ -212,7 +300,7 @@ object Skiko {
     ) {
         if (text.isEmpty()) return
 
-        paint(Color.WHITE).use { fill ->
+        withPaint(Color.WHITE) { fill ->
             val sizeF = size.toFloat()
             fill.shader = linearGradient(x.toFloat(), y.toFloat() - sizeF, width.toFloat(), sizeF, color1, color2, direction)
             val skiaFont = skikoFont(font, sizeF)
@@ -253,19 +341,10 @@ object Skiko {
     }
 
     fun createImage(resourcePath: String): SkikoImage {
-        val image = imageCache.keys.find { it.location == resourcePath } ?: SkikoImage(resourcePath)
-        val cached = imageCache.getOrPut(image) { CachedImage(0, loadImage(image)) }
-        cached.count++
-        return image
-    }
-
-    fun deleteImage(image: SkikoImage) {
-        val cached = imageCache[image] ?: return
-        cached.count--
-        if (cached.count > 0) return
-
-        cached.image.close()
-        imageCache.remove(image)
+        imageCache[resourcePath]?.let { return it.handle }
+        val handle = SkikoImage(resourcePath)
+        imageCache[resourcePath] = CachedImage(handle, loadImage(handle))
+        return handle
     }
 
     fun image(image: SkikoImage, x: Number, y: Number, w: Number, h: Number, radius: Number, tint: Int? = null) {
@@ -277,7 +356,7 @@ object Skiko {
             ClipMode.INTERSECT
         )
         if (tint != null) {
-            paint(Color.WHITE).use { p ->
+            withPaint(Color.WHITE) { p ->
                 p.colorFilter = ColorFilter.makeBlend(tint, BlendMode.SRC_IN)
                 canvas.drawImageRect(getImage(image), rect, p)
             }
@@ -289,16 +368,11 @@ object Skiko {
     }
 
     fun image(path: String, x: Number, y: Number, w: Number, h: Number, radius: Number, tint: Int? = null) {
-        val existing = imageCache.keys.find { it.location == path }
-        image(existing ?: createImage(path), x, y, w, h, radius, tint)
-    }
-
-    fun image(image: SkikoImage, x: Number, y: Number, w: Number, h: Number) {
-        currentCanvas().drawImageRect(getImage(image), Rect.makeXYWH(x.toFloat(), y.toFloat(), w.toFloat(), h.toFloat()))
+        image(createImage(path), x, y, w, h, radius, tint)
     }
 
     private fun getImage(image: SkikoImage): Image {
-        return imageCache[image]?.image ?: throw IllegalStateException("Image (${image.location}) doesn't exist")
+        return imageCache[image.location]?.image ?: throw IllegalStateException("Image (${image.location}) doesn't exist")
     }
 
     private fun loadImage(image: SkikoImage): Image {
@@ -333,10 +407,20 @@ object Skiko {
         return snapshot
     }
 
+    private val fonts = HashMap<FontKey, Font>()
+
     fun skikoFont(font: SkikoFont, size: Float): Font {
+        val key = FontKey(font, size)
+        fonts[key]?.let { return it }
+
         val typeface = typefaces.getOrPut(font) { resolveTypeface(font) }
-        return Font(typeface, size).apply { edging = FontEdging.SUBPIXEL_ANTI_ALIAS }
+        val created = Font(typeface, size).apply { edging = FontEdging.SUBPIXEL_ANTI_ALIAS }
+        if (fonts.size >= FONT_CACHE_LIMIT) fonts.clear()
+        fonts[key] = created
+        return created
     }
+
+    private data class FontKey(val font: SkikoFont, val size: Float)
 
     private fun resolveTypeface(font: SkikoFont): Typeface {
         val manager = FontMgr.default
@@ -380,14 +464,17 @@ object Skiko {
         return if (bold) boldFonts + regularFonts else regularFonts + boldFonts
     }
 
-    private fun paint(color: Color, mode: PaintMode = PaintMode.FILL): Paint {
-        return Paint()
+    private val scratchPaint = Paint()
+
+    private inline fun withPaint(color: Color, mode: PaintMode = PaintMode.FILL, block: (Paint) -> Unit) {
+        val paint = scratchPaint.reset()
             .setARGB(color.alpha, color.red, color.green, color.blue)
             .setAlphaf((color.alpha / 255f) * alphaFactor)
             .also {
                 it.mode = mode
                 it.isAntiAlias = true
             }
+        block(paint)
     }
 
     private fun linearGradient(
@@ -470,5 +557,5 @@ object Skiko {
         )
     }
 
-    private data class CachedImage(var count: Int, val image: Image)
+    private data class CachedImage(val handle: SkikoImage, val image: Image)
 }

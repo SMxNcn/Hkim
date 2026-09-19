@@ -7,6 +7,14 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 interface SkikoRuntime : AutoCloseable {
     fun initPipRenderer()
 
+    fun beginBatch(
+        graphics: GuiGraphicsExtractor,
+        x: Float, y: Float, width: Float, height: Float,
+        clipRadius: Float = 0f
+    )
+
+    fun endBatch()
+
     fun drawRoundedRect(
         graphics: GuiGraphicsExtractor,
         x: Float, y: Float, w: Float, h: Float,
@@ -16,7 +24,9 @@ interface SkikoRuntime : AutoCloseable {
         radius: Float = 0f,
         shadowColor: Int = 0,
         blur: Float = 0f,
-        spread: Float = 0f
+        spread: Float = 0f,
+        cacheKey: Any? = null,
+        cacheToken: Int? = null
     )
 
     fun drawEdgeRoundedRect(
@@ -24,7 +34,9 @@ interface SkikoRuntime : AutoCloseable {
         x: Float, y: Float, w: Float, h: Float,
         fillColor: Int,
         radius: Float,
-        edge: SkikoRoundEdge
+        edge: SkikoRoundEdge,
+        cacheKey: Any? = null,
+        cacheToken: Int? = null
     )
 
     fun drawCircle(
@@ -33,14 +45,55 @@ interface SkikoRuntime : AutoCloseable {
         fillColor: Int,
         borderColor: Int = 0,
         borderWidth: Float = 0f,
-        radius: Float
+        radius: Float,
+        cacheKey: Any? = null,
+        cacheToken: Int? = null
+    )
+
+    fun drawArc(
+        graphics: GuiGraphicsExtractor,
+        cx: Float, cy: Float,
+        radius: Float,
+        startAngle: Float,
+        sweepAngle: Float,
+        thickness: Float,
+        color: Int,
+        cacheKey: Any? = null,
+        cacheToken: Int? = null
+    )
+
+    fun drawSector(
+        graphics: GuiGraphicsExtractor,
+        cx: Float, cy: Float,
+        innerRadius: Float,
+        outerRadius: Float,
+        startAngle: Float,
+        sweepAngle: Float,
+        color: Int,
+        cacheKey: Any? = null,
+        cacheToken: Int? = null
+    )
+
+    fun drawParallelSector(
+        graphics: GuiGraphicsExtractor,
+        cx: Float, cy: Float,
+        innerRadius: Float,
+        outerRadius: Float,
+        startAngle: Float,
+        endAngle: Float,
+        gap: Float,
+        color: Int,
+        cacheKey: Any? = null,
+        cacheToken: Int? = null
     )
 
     fun drawLine(
         graphics: GuiGraphicsExtractor,
         x1: Float, y1: Float, x2: Float, y2: Float,
         color: Int,
-        thickness: Float = 1f
+        thickness: Float = 1f,
+        cacheKey: Any? = null,
+        cacheToken: Int? = null
     )
 
     fun drawGradientRectMulti(
@@ -49,7 +102,9 @@ interface SkikoRuntime : AutoCloseable {
         colors: List<Int>,
         positions: FloatArray? = null,
         direction: SkikoGradient = SkikoGradient.LEFT_RIGHT,
-        radius: Float = 0f
+        radius: Float = 0f,
+        cacheKey: Any? = null,
+        cacheToken: Int? = null
     )
 
     fun drawSquareClipped(
@@ -59,7 +114,9 @@ interface SkikoRuntime : AutoCloseable {
         borderColor: Int,
         borderWidth: Float,
         clipX: Float, clipY: Float, clipW: Float, clipH: Float,
-        clipRadius: Float = 0f
+        clipRadius: Float = 0f,
+        cacheKey: Any? = null,
+        cacheToken: Int? = null
     )
 
     fun textWidth(text: String, size: Float, bold: Boolean = false): Float
@@ -73,7 +130,9 @@ interface SkikoRuntime : AutoCloseable {
         size: Float,
         color: Int,
         bold: Boolean = false,
-        shadow: Boolean = false
+        shadow: Boolean = false,
+        cacheKey: Any? = null,
+        cacheToken: Int? = null
     )
 
     fun drawClippedText(
@@ -83,7 +142,10 @@ interface SkikoRuntime : AutoCloseable {
         size: Float,
         color: Int,
         clipX: Float, clipY: Float, clipW: Float, clipH: Float,
-        bold: Boolean = false
+        bold: Boolean = false,
+        clipRadius: Float = 0f,
+        cacheKey: Any? = null,
+        cacheToken: Int? = null
     )
 
     fun drawGradientText(
@@ -94,14 +156,18 @@ interface SkikoRuntime : AutoCloseable {
         startColor: Int,
         endColor: Int,
         bold: Boolean = false,
-        direction: SkikoGradient = SkikoGradient.LEFT_RIGHT
+        direction: SkikoGradient = SkikoGradient.LEFT_RIGHT,
+        cacheKey: Any? = null,
+        cacheToken: Int? = null
     )
 
     fun drawClippedRect(
         graphics: GuiGraphicsExtractor,
         x: Float, y: Float, w: Float, h: Float,
         color: Int,
-        clipX: Float, clipY: Float, clipW: Float, clipH: Float
+        clipX: Float, clipY: Float, clipW: Float, clipH: Float,
+        cacheKey: Any? = null,
+        cacheToken: Int? = null
     )
 
     fun drawImage(
@@ -111,7 +177,9 @@ interface SkikoRuntime : AutoCloseable {
         w: Float, h: Float,
         radius: Float,
         tintColor: Int = 0,
-        rotationDegrees: Float = 0f
+        rotationDegrees: Float = 0f,
+        cacheKey: Any? = null,
+        cacheToken: Int? = null
     )
 
     fun status(): String

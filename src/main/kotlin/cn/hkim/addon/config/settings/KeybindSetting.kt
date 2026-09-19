@@ -3,12 +3,12 @@ package cn.hkim.addon.config.settings
 import cn.hkim.addon.config.Setting
 import cn.hkim.addon.config.clickgui.Theme
 import cn.hkim.addon.utils.HudUtils
+import cn.hkim.addon.utils.keyDisplayName
 import cn.hkim.addon.utils.playSoundAtPlayer
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRectWithBorder
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoCenteredText
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoText
 import cn.hkim.addon.utils.startsWithOneOf
-import com.mojang.blaze3d.platform.InputConstants
 import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
@@ -42,7 +42,7 @@ class KeybindSetting(name: String, desc: String, defaultKey: Int = GLFW.GLFW_KEY
         val displayText = when {
             isBinding -> "Press..."
             value == GLFW.GLFW_KEY_UNKNOWN -> "None"
-            else -> getKeyDisplayName(value)
+            else -> keyDisplayName(value)
         }
 
         val btnColor = if (isBinding || isBtnHovered) themeColor else Theme.controlBorderHover
@@ -107,33 +107,6 @@ class KeybindSetting(name: String, desc: String, defaultKey: Int = GLFW.GLFW_KEY
         settingsChanged()
         playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value(), 0.3f)
         return true
-    }
-
-    private fun getKeyDisplayName(keyCode: Int): String {
-        if (keyCode == GLFW.GLFW_KEY_UNKNOWN) return "None"
-
-        if (keyCode in 0..7) {
-            return try {
-                val key = InputConstants.Type.MOUSE.getOrCreate(keyCode)
-                key.displayName.string
-            } catch (_: Exception) {
-                getMouseButtonFallbackName(keyCode)
-            }
-        }
-
-        return try {
-            val key = InputConstants.Type.KEYSYM.getOrCreate(keyCode)
-            key.displayName.string
-        } catch (_: Exception) {
-            "Key $keyCode"
-        }
-    }
-
-    private fun getMouseButtonFallbackName(button: Int): String {
-        return when (button) {
-            2 -> "Mouse Middle"
-            else -> "Mouse ${button + 1}"
-        }
     }
 
     companion object {

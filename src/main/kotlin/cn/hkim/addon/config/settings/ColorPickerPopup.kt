@@ -12,6 +12,7 @@ import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRectWithBorder
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRectWithShadow
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoSquareClipped
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoText
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.skikoCacheToken
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.skikoTextWidth
 import cn.hkim.addon.utils.render.skiko.SkikoGradient
 import com.mojang.blaze3d.platform.cursor.CursorTypes
@@ -127,7 +128,9 @@ class ColorPickerPopup(private val setting: ColorSetting) {
         graphics.drawRoundedRectWithShadow(
             rectX, rectY, rectW, rectH,
             Theme.controlBgTranslucent, Theme.controlBorder, 1f, 6f,
-            0x80000000.toInt(), 3f, 1f
+            0x80000000.toInt(), 3f, 1f,
+            cacheKey = "color-picker-popup",
+            cacheToken = skikoCacheToken(rectW, rectH, Theme.controlBgTranslucent, Theme.controlBorder, 0x80000000.toInt()),
         )
 
         val screen = mc.screen
@@ -147,9 +150,21 @@ class ColorPickerPopup(private val setting: ColorSetting) {
         graphics.drawSkikoText("%", percentX + (PERCENT_W - percentW) / 2f, hexY + TEXT_INSET_Y, fontSize, Theme.controlTextMuted)
 
         val pure = HudUtils.hsvToRgb(cachedH, 1f, 1f)
-        graphics.drawGradientRectMulti(innerX, panelY, PANEL_SIZE, PANEL_SIZE, listOf(0xFFFFFFFF.toInt(), pure), null, SkikoGradient.LEFT_RIGHT, RADIUS)
-        graphics.drawGradientRectMulti(innerX, panelY, PANEL_SIZE, PANEL_SIZE, listOf(0x00FFFFFF, 0xFF000000.toInt()), null, SkikoGradient.TOP_BOTTOM, RADIUS)
-        graphics.drawRoundedRectWithBorder(innerX, panelY, PANEL_SIZE, PANEL_SIZE, 0, Theme.controlBorder, 1f, RADIUS)
+        graphics.drawGradientRectMulti(
+            innerX, panelY, PANEL_SIZE, PANEL_SIZE, listOf(0xFFFFFFFF.toInt(), pure), null, SkikoGradient.LEFT_RIGHT, RADIUS,
+            cacheKey = "color-picker-sv-hue",
+            cacheToken = skikoCacheToken(pure, RADIUS),
+        )
+        graphics.drawGradientRectMulti(
+            innerX, panelY, PANEL_SIZE, PANEL_SIZE, listOf(0x00FFFFFF, 0xFF000000.toInt()), null, SkikoGradient.TOP_BOTTOM, RADIUS,
+            cacheKey = "color-picker-sv-shade",
+            cacheToken = skikoCacheToken(0x00FFFFFF, 0xFF000000.toInt(), RADIUS),
+        )
+        graphics.drawRoundedRectWithBorder(
+            innerX, panelY, PANEL_SIZE, PANEL_SIZE, 0, Theme.controlBorder, 1f, RADIUS,
+            cacheKey = "color-picker-sv-border",
+            cacheToken = skikoCacheToken(Theme.controlBorder, 1f, RADIUS),
+        )
 
         if (HudUtils.isPointInRect(mouseX, mouseY, innerX, panelY, PANEL_SIZE, PANEL_SIZE + GAP + HUE_BAR_H)) {
             graphics.requestCursor(CursorTypes.POINTING_HAND)
@@ -159,8 +174,16 @@ class ColorPickerPopup(private val setting: ColorSetting) {
         val sy = panelY + PANEL_SIZE * (1f - cachedB)
         graphics.drawSkikoSquareClipped(sx, sy, 5f, 5f, 0xFFFFFFFF.toInt(), 1f, innerX, panelY, PANEL_SIZE, PANEL_SIZE, RADIUS)
 
-        graphics.drawGradientRectMulti(innerX, hueY, PANEL_SIZE, HUE_BAR_H, HUE_COLORS, null, SkikoGradient.LEFT_RIGHT, RADIUS)
-        graphics.drawRoundedRectWithBorder(innerX, hueY, PANEL_SIZE, HUE_BAR_H, 0, Theme.controlBorder, 1f, RADIUS)
+        graphics.drawGradientRectMulti(
+            innerX, hueY, PANEL_SIZE, HUE_BAR_H, HUE_COLORS, null, SkikoGradient.LEFT_RIGHT, RADIUS,
+            cacheKey = "color-picker-hue-bar",
+            cacheToken = skikoCacheToken(HUE_COLORS, HUE_BAR_H, RADIUS),
+        )
+        graphics.drawRoundedRectWithBorder(
+            innerX, hueY, PANEL_SIZE, HUE_BAR_H, 0, Theme.controlBorder, 1f, RADIUS,
+            cacheKey = "color-picker-hue-border",
+            cacheToken = skikoCacheToken(Theme.controlBorder, 1f, RADIUS, HUE_BAR_H),
+        )
 
         val hx = innerX + PANEL_SIZE * cachedH
         val hy = hueY + HUE_BAR_H / 2f

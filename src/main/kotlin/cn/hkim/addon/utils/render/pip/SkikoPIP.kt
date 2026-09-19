@@ -20,7 +20,6 @@ import net.minecraft.client.renderer.state.gui.GuiRenderState
 import net.minecraft.client.renderer.state.gui.pip.PictureInPictureRenderState
 import org.jetbrains.skia.*
 import org.joml.Matrix3x2f
-import org.joml.Matrix3x2fc
 import java.util.*
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -245,7 +244,7 @@ class SkikoPIP(vertexConsumers: MultiBufferSource.BufferSource) : PictureInPictu
     companion object {
         private const val PAD = 2
         private const val RASTER_MAX_PIXELS = 4_000_000f
-        private const val RASTER_MAX_TARGETS = 12
+        private const val RASTER_MAX_TARGETS = 24
         private const val RASTER_TARGET_IDLE_NANOS = 1_000_000_000L
         private const val RASTER_ANIMATED_SCALE = 2.25f
         private val drawSlotCounters = WeakHashMap<GuiGraphicsExtractor, DrawSlotCounter>()
@@ -253,6 +252,21 @@ class SkikoPIP(vertexConsumers: MultiBufferSource.BufferSource) : PictureInPictu
         @JvmStatic
         fun drawSkikoTo(graphics: GuiGraphicsExtractor, x: Number, y: Number, width: Number, height: Number, callback: Runnable) {
             graphics.drawSkiko(x, y, width, height, callback)
+        }
+
+        @JvmStatic
+        fun drawSkikoTo(
+            graphics: GuiGraphicsExtractor,
+            x: Number, y: Number, width: Number, height: Number,
+            cacheKey: Any?,
+            cacheToken: Int?,
+            callback: Runnable
+        ) {
+            if (cacheKey != null && cacheToken != null) {
+                graphics.drawSkikoCached(cacheKey, x, y, width, height, cacheToken, callback)
+            } else {
+                graphics.drawSkiko(x, y, width, height, callback)
+            }
         }
 
         @JvmStatic

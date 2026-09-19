@@ -15,6 +15,7 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.inventory.ContainerInput
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import org.lwjgl.glfw.GLFW
 import kotlin.math.PI
 
 fun String.containsOneOf(vararg options: String, ignoreCase: Boolean = false): Boolean =
@@ -52,6 +53,24 @@ inline val mcVersion: String
 
 inline val KeyMapping.boundKey : InputConstants.Key
     get() = (this as KeyMappingAccessor).boundKey
+
+fun keyDisplayName(keyCode: Int): String {
+    if (keyCode == GLFW.GLFW_KEY_UNKNOWN) return "None"
+
+    if (keyCode in 0..7) {
+        return try {
+            InputConstants.Type.MOUSE.getOrCreate(keyCode).displayName.string
+        } catch (_: Exception) {
+            if (keyCode == 2) "Mouse Middle" else "Mouse ${keyCode + 1}"
+        }
+    }
+
+    return try {
+        InputConstants.Type.KEYSYM.getOrCreate(keyCode).displayName.string
+    } catch (_: Exception) {
+        "Key $keyCode"
+    }
+}
 
 fun isPositionInArea(corner1: BlockPos, corner2: BlockPos, pos: BlockPos): Boolean {
     val minX = minOf(corner1.x, corner2.x)

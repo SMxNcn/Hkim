@@ -4,6 +4,7 @@ import cn.hkim.addon.config.clickgui.Theme
 import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.render.Easing
 import cn.hkim.addon.utils.render.GuiAnimation
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRect
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoImage
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoText
 import com.mojang.blaze3d.platform.cursor.CursorTypes
@@ -26,22 +27,19 @@ class DropdownSetting(name: String, desc: String = "", defaultExpanded: Boolean 
         val height = Theme.SETTING_HEIGHT
         val isHovered = computeIsHovered(mouseX, mouseY, x, y, width, height, visibleTop, visibleBottom)
 
-        graphics.fill(x.toInt(), y.toInt(), (x + width).toInt(), (y + height).toInt(), Theme.controlRowBg)
+        // Skiko draws keep the row inside the card's batch (a vanilla fill would drop underneath it).
+        graphics.drawRoundedRect(x, y, width, height, Theme.controlRowBg, 0f)
 
-        graphics.fill(x.toInt(), y.toInt(), x.toInt() + 1, (y + height).toInt(), Theme.controlBorder)
+        graphics.drawRoundedRect(x, y, 1f, height, Theme.controlBorder, 0f)
 
         val animationProgress = expandAnim.getValue()
         val centerY = y + height / 2
         val halfHeight = (height / 2) * animationProgress
-        val lineTopY = (centerY - halfHeight).toInt()
-        val lineBottomY = (centerY + halfHeight).toInt()
+        val lineTopY = centerY - halfHeight
+        val lineBottomY = centerY + halfHeight
 
         if (lineBottomY > lineTopY) {
-            graphics.fill(
-                x.toInt(), lineTopY,
-                x.toInt() + 1, lineBottomY,
-                themeColor
-            )
+            graphics.drawRoundedRect(x, lineTopY, 1f, lineBottomY - lineTopY, themeColor, 0f)
         }
 
         graphics.drawSkikoText(name, x + 12f, y + 3f, Theme.CARD_FONT_SIZE, Theme.controlTextActive)
