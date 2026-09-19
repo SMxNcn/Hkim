@@ -25,9 +25,10 @@ import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRectWithShadow
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoEdgeRoundedRect
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoImage
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoText
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.skikoBatch
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.skikoCacheToken
 import cn.hkim.addon.utils.render.skiko.SkikoGradient
 import cn.hkim.addon.utils.render.skiko.SkikoRoundEdge
-import com.mojang.blaze3d.platform.InputConstants
 import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
@@ -37,9 +38,10 @@ import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.client.input.PreeditEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.sounds.SoundEvents
+import com.mojang.blaze3d.platform.InputConstants
 import kotlin.math.max
 
-class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Click GUI")) {
+class ClickGUIScreen(private val parent: Screen? = null) : Screen(Component.literal("Click GUI")) {
     private var guiX = 0f
     private var guiY = 0f
     private val guiW = 520f
@@ -72,6 +74,16 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         .duration(200L)
         .easing(Easing.CUBIC_OUT)
 
+    private val openAnim = GuiAnimation.create(0f, 0f)
+        .duration(150L)
+        .easing(Easing.CUBIC_OUT)
+
+    private var closing = false
+
+    private fun withAlpha(color: Int, alpha: Float): Int =
+        (color and 0x00FFFFFF) or ((((color ushr 24) * alpha).toInt().coerceIn(0, 255)) shl 24)
+
+
     var activeSkikoEditBox: SkikoEditBox? = null
     var activeEditBoxSetting: Setting<*>? = null
     private var searchSkikoBox: SkikoEditBox? = null
@@ -79,6 +91,9 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
     companion object {
         private var lastSelectedCategory: Category? = null
         private const val CARD_GAP = 8f
+        private const val PANEL_RADIUS = 10f
+        private const val SHADOW_BLUR = 6f
+        private const val SHADOW_SPREAD = 1f
     }
 
     private class CardLayout(val module: Module, val x: Float, val w: Float) {
@@ -136,6 +151,8 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         guiX = (mc.window.guiScaledWidth - guiW) / 2f
         guiY = (mc.window.guiScaledHeight - guiH) / 2f
 
+        openAnim.snapTo(1f)
+
         cardStates.clear()
         for (module in ModuleManager.getAll()) {
             cardStates[module.id] = ModuleCardState(module)
@@ -191,17 +208,28 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
     override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float) {
         graphics.fill(0, 0, width, height, 0x80000000.toInt())
 
-        graphics.drawRoundedRectWithShadow(guiX, guiY, guiW, guiH, Theme.bg, 0, 0f, 10f, Theme.bgShadow, 6f, 1f)
+        graphics.drawRoundedRectWithShadow(
+            guiX, guiY, guiW, guiH, Theme.bg, 0, 0f, PANEL_RADIUS,
+            Theme.bgShadow, SHADOW_BLUR, SHADOW_SPREAD,
+            cacheKey = "clickgui-panel",
+            cacheToken = skikoCacheToken(guiX, guiY, guiW, guiH, PANEL_RADIUS, Theme.bg, Theme.bgShadow, SHADOW_BLUR, SHADOW_SPREAD),
+        )
 
+        renderContent(graphics, mouseX, mouseY, delta, 1f)
+    }
+
+    private fun renderContent(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float, progress: Float) {
         renderSidebar(graphics, mouseX, mouseY, delta)
         renderHeader(graphics, mouseX, mouseY, delta)
-        renderContentArea(graphics, mouseX, mouseY, delta)
+        renderContentArea(graphics, mouseX, mouseY, delta, progress)
 
         val colorPopup = Setting.activeModalPopup as? ColorSetting
         colorPopup?.renderPopup(graphics, width.toFloat(), height.toFloat(), mouseX.toFloat(), mouseY.toFloat(), themeColor, Theme.CARD_FONT_SIZE)
     }
 
     override fun mouseClicked(event: MouseButtonEvent, doubleClick: Boolean): Boolean {
+        if (closing) return true
+
         val mouseX = event.x.toFloat()
         val mouseY = event.y.toFloat()
         val button = event.button()
@@ -260,6 +288,8 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
+        if (closing) return true
+
         val mX = mouseX.toFloat()
         val mY = mouseY.toFloat()
 
@@ -393,13 +423,21 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         return super.preeditUpdated(event)
     }
 
-    override fun extractMenuBackground(graphics: GuiGraphicsExtractor) {}
-
-    override fun isPauseScreen(): Boolean {
-        return false
+    override fun extractBackground(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, a: Float) {
+        if (mc.level != null) return
+        super.extractBackground(graphics, mouseX, mouseY, a)
     }
 
+    override fun extractMenuBackground(graphics: GuiGraphicsExtractor) {}
+    override fun isPauseScreen() = false
+
     override fun onClose() {
+        if (closing) return
+        closing = true
+        finishClose()
+    }
+
+    private fun finishClose() {
         lastSelectedCategory = selectedCategory
 
         deactivateSearchBox()
@@ -420,45 +458,47 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         val w = sidebarW
         val h = guiH
 
-        graphics.drawSkikoEdgeRoundedRect(x, y, w, h, Theme.sidebar, 10f, SkikoRoundEdge.LEFT)
+        val iconSize = 16f
+        val bottomY = y + h - 70f
 
-        val logoSize = 16f
-        val logoX = x + (w - logoSize) / 2f
-        val logoY = y + 12f
-        graphics.drawSkikoImage("assets/hkim/textures/clickgui/icon.svg", logoX, logoY, logoSize, logoSize, 0f, tintColor = Theme.iconPrimary)
+        graphics.skikoBatch(x, y, w, h) {
+            graphics.drawSkikoEdgeRoundedRect(x, y, w, h, Theme.sidebar, 10f, SkikoRoundEdge.LEFT)
 
-        val hlAlpha = highlightAlphaAnim.getValue()
-        if (hlAlpha > 0.001f) {
-            val hlX = x + 4f
-            val hlW = w - 8f
-            val hlH = 28f
-            val hlY = highlightYAnim.getValue()
-            val alphaInt = (0xFF * Theme.categoryHighlightAlpha * hlAlpha).toInt().coerceIn(0, 0xFF)
-            val hlColor = (alphaInt shl 24) or (this.themeColor and 0x00FFFFFF)
-            graphics.drawRoundedRectWithBorder(hlX, hlY, hlW, hlH, hlColor, 0, 0f, 4f)
-        }
+            val logoSize = 16f
+            val logoX = x + (w - logoSize) / 2f
+            val logoY = y + 12f
+            graphics.drawSkikoImage("assets/hkim/textures/clickgui/icon.svg", logoX, logoY, logoSize, logoSize, 0f, tintColor = Theme.iconPrimary)
 
-        val iconSize = 20f
-        val iconPadding = 14f
-        val iconX = x + (w - iconSize) / 2f
-        var iconY = y + 50f
-
-        for (category in Category.entries) {
-            graphics.drawSkikoImage("assets/hkim/textures/clickgui/${category.name.lowercase()}.svg", iconX, iconY, iconSize, iconSize, 0f, tintColor = Theme.iconPrimary)
-
-            if (HudUtils.isPointInRect(mouseX.toFloat(), mouseY.toFloat(), iconX, iconY, iconSize, iconSize)) {
-                graphics.requestCursor(CursorTypes.POINTING_HAND)
-                graphics.drawTooltip(category.name.lowercase().replaceFirstChar { it.uppercase() }, mouseX.toFloat(), mouseY.toFloat(), delayTicks = 4)
+            val hlAlpha = highlightAlphaAnim.getValue()
+            if (hlAlpha > 0.001f) {
+                val hlX = x + 4f
+                val hlW = w - 8f
+                val hlH = 28f
+                val hlY = highlightYAnim.getValue()
+                val alphaInt = (0xFF * Theme.categoryHighlightAlpha * hlAlpha).toInt().coerceIn(0, 0xFF)
+                val hlColor = (alphaInt shl 24) or (this.themeColor and 0x00FFFFFF)
+                graphics.drawRoundedRectWithBorder(hlX, hlY, hlW, hlH, hlColor, 0, 0f, 4f)
             }
 
-            iconY += iconSize + iconPadding
+            val iconX = x + (w - iconSize) / 2f
+            var iconY = y + 52f
+
+            for (category in Category.entries) {
+                graphics.drawSkikoImage("assets/hkim/textures/clickgui/${category.name.lowercase()}.svg", iconX, iconY, iconSize, iconSize, 0f, tintColor = Theme.iconPrimary)
+
+                if (HudUtils.isPointInRect(mouseX.toFloat(), mouseY.toFloat(), iconX, iconY, iconSize, iconSize)) {
+                    graphics.requestCursor(CursorTypes.POINTING_HAND)
+                    graphics.drawTooltip(category.name.lowercase().replaceFirstChar { it.uppercase() }, mouseX.toFloat(), mouseY.toFloat(), delayTicks = 4)
+                }
+
+                iconY += 34f
+            }
+
+            graphics.drawSkikoText("v${Hkim.VERSION}", guiX + 5f, guiY + guiH - mc.font.lineHeight - 6f, mc.font.lineHeight.toFloat(), Theme.textMuted)
+
+            graphics.drawSkikoImage("assets/hkim/textures/clickgui/edit.svg", iconX, bottomY + 30f, iconSize, iconSize, 0f, tintColor = Theme.iconPrimary)
         }
-
-        val bottomY = y + h - 70f
-        graphics.drawSkikoText("v${Hkim.VERSION}", guiX + 5f, guiY + guiH - mc.font.lineHeight - 6f, mc.font.lineHeight.toFloat(), Theme.textMuted)
-
-        graphics.drawSkikoImage("assets/hkim/textures/clickgui/edit.svg", iconX, bottomY + 30f, 20f, 20f, 0f, tintColor = Theme.iconMuted)
-        if (HudUtils.isPointInRect(mouseX.toFloat(), mouseY.toFloat(), x + 10f, bottomY + 30f, 20f, 20f)) {
+        if (HudUtils.isPointInRect(mouseX.toFloat(), mouseY.toFloat(), x + 10f, bottomY + 30f, iconSize, iconSize)) {
             graphics.requestCursor(CursorTypes.POINTING_HAND)
             graphics.drawTooltip("Edit HUD", mouseX.toFloat(), mouseY.toFloat(), delayTicks = 4)
         }
@@ -503,7 +543,7 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
         graphics.drawSkikoImage("assets/hkim/textures/clickgui/close.svg", closeX + 4f, closeY + 4f, 12f, 12f, 0f, hover)
     }
 
-    private fun renderContentArea(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float) {
+    private fun renderContentArea(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float, progress: Float) {
         val baseX = guiX + sidebarW + contentPadding
         val baseY = cardsTop
         val availW = guiW - sidebarW - contentPadding * 2
@@ -529,19 +569,21 @@ class ClickGUIScreen(private val parent: Screen?) : Screen(Component.literal("Cl
             state.render(graphics, layout.x, currentModuleY, layout.w, mouseX.toFloat(), mouseY.toFloat(), contentTop, contentBottom, themeColor, delta)
         }
 
-        graphics.drawGradientRectMulti(
-            baseX - 1, baseY - contentPadding,
-            availW + 1, 8f,
-            listOf(Theme.bg, Theme.bg and 0x00FFFFFF),
-            null, SkikoGradient.TOP_BOTTOM, 0f
-        )
+        if (progress >= 0.98f) {
+            graphics.drawGradientRectMulti(
+                baseX - 1, baseY - contentPadding,
+                availW + 1, 8f,
+                listOf(Theme.bg, Theme.bg and 0x00FFFFFF),
+                null, SkikoGradient.TOP_BOTTOM, 0f
+            )
 
-        graphics.drawGradientRectMulti(
-            baseX - 1, baseY + availH + contentPadding - 8f,
-            availW + 1, 8f,
-            listOf(Theme.bg and 0x00FFFFFF, Theme.bg),
-            null, SkikoGradient.TOP_BOTTOM, 0f
-        )
+            graphics.drawGradientRectMulti(
+                baseX - 1, baseY + availH + contentPadding - 8f,
+                availW + 1, 8f,
+                listOf(Theme.bg and 0x00FFFFFF, Theme.bg),
+                null, SkikoGradient.TOP_BOTTOM, 0f
+            )
+        }
 
         graphics.disableScissor()
     }

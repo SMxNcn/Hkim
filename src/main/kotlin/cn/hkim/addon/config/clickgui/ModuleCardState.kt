@@ -10,6 +10,7 @@ import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRect
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRectWithBorder
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoLine
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoText
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.skikoBatch
 import com.mojang.blaze3d.platform.InputConstants
 import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -83,49 +84,45 @@ class ModuleCardState(val module: Module) {
         val nameColor = HudUtils.lerpColor(Theme.textNameMuted, themeColor, lerpEnabled)
         val fillColor = if (isHovered) Theme.cardFillHover else Theme.cardFill
 
-        graphics.drawRoundedRectWithBorder(x + 1f, y + 1f, width, totalHeight, edgeColor, 0, 0f, 4f)
-        graphics.drawRoundedRect(x, y, width, totalHeight, fillColor, 4f)
+        val batchTop = max(y - 1f, visibleTop)
+        val batchBottom = min(y + totalHeight + 1f, visibleBottom)
+        if (batchBottom <= batchTop) return totalHeight
 
-        val openProgress = openAnim.getValue()
-        if (openProgress > 0.01f) {
-            val halfLen = ((width - 24f) * openProgress) / 2f
-            if (halfLen > 0f) {
-                val lineY = y + cardH + 0.5f
-                graphics.drawSkikoLine(x + width / 2f - halfLen, lineY, x + width / 2f + halfLen, lineY, Color(0x30FFFFFF, true).rgb, 1f)
+        graphics.skikoBatch(x - 1f, batchTop, width + 2f, batchBottom - batchTop) {
+            graphics.drawRoundedRectWithBorder(x + 1f, y + 1f, width, totalHeight, edgeColor, 0, 0f, 4f)
+            graphics.drawRoundedRect(x, y, width, totalHeight, fillColor, 4f)
+
+            val openProgress = openAnim.getValue()
+            if (openProgress > 0.01f) {
+                val halfLen = ((width - 24f) * openProgress) / 2f
+                if (halfLen > 0f) {
+                    val lineY = y + cardH + 0.5f
+                    graphics.drawSkikoLine(x + width / 2f - halfLen, lineY, x + width / 2f + halfLen, lineY, Color(0x30FFFFFF, true).rgb, 1f)
+                }
             }
-        }
 
-        graphics.drawSkikoText(module.name, x + 14f, y + 8f, Theme.CARD_FONT_SIZE, nameColor, bold = true)
-        graphics.drawSkikoText(module.description, x + 14f, y + 23f, Theme.CARD_FONT_SIZE, Theme.textMuted)
+            graphics.drawSkikoText(module.name, x + 14f, y + 8f, Theme.CARD_FONT_SIZE, nameColor, bold = true)
+            graphics.drawSkikoText(module.description, x + 14f, y + 23f, Theme.CARD_FONT_SIZE, Theme.textMuted)
 
-        if (isHovered) {
-            graphics.requestCursor(CursorTypes.POINTING_HAND)
-        }
+            if (isHovered) {
+                graphics.requestCursor(CursorTypes.POINTING_HAND)
+            }
 
-        if (currentExpandedH > 0.01f) {
-            val scissorTop = y + cardH
-            val scissorBottom = y + totalHeight
+            if (currentExpandedH > 0.01f) {
+                val contentTop = y + cardH
+                val contentBottom = y + totalHeight
 
-            if (scissorBottom > visibleTop && scissorTop < visibleBottom) {
-                val sX1 = (x - 4f).toInt()
-                val sY1 = max(scissorTop, visibleTop).toInt()
-                val sX2 = (x + width + 4f).toInt()
-                val sY2 = min(scissorBottom, visibleBottom).toInt()
-                if (sX2 > sX1 && sY2 > sY1) {
-                    graphics.enableScissor(sX1, sY1, sX2, sY2)
-
+                if (contentBottom > visibleTop && contentTop < visibleBottom) {
                     var sy = y + cardH + 6f
                     for (setting in visibleSettings) {
                         val settingTop = sy
                         val settingBottom = sy + settingHeight + settingGap
-                        if (settingBottom >= scissorTop && settingTop <= scissorBottom) {
+                        if (settingBottom >= contentTop && settingTop <= contentBottom) {
                             val indent = 12f
                             setting.render(graphics, x + indent, sy, width - indent * 2, mouseX, mouseY, themeColor, delta, visibleTop, visibleBottom)
                         }
                         sy += settingHeight + settingGap
                     }
-
-                    graphics.disableScissor()
                 }
             }
         }

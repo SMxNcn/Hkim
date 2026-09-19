@@ -4,6 +4,8 @@ import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.mixins.accessors.KeyMappingAccessor
 import cn.hkim.addon.utils.skyblock.inventory.SwapHandler
 import com.mojang.blaze3d.platform.InputConstants
+import org.lwjgl.sdl.SDLMouse
+import org.lwjgl.sdl.SDLScancode
 import net.minecraft.SharedConstants
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
@@ -52,6 +54,24 @@ inline val mcVersion: String
 
 inline val KeyMapping.boundKey : InputConstants.Key
     get() = (this as KeyMappingAccessor).boundKey
+
+fun keyDisplayName(keyCode: Int): String {
+    if (keyCode == SDLScancode.SDL_SCANCODE_UNKNOWN) return "None"
+
+    if (keyCode in 1..8) {
+        return try {
+            InputConstants.Type.MOUSE.getOrCreate(keyCode).displayName.string
+        } catch (_: Exception) {
+            if (keyCode == SDLMouse.SDL_BUTTON_MIDDLE) "Mouse Middle" else "Mouse $keyCode"
+        }
+    }
+
+    return try {
+        InputConstants.Type.KEYBOARD.getOrCreate(keyCode).displayName.string
+    } catch (_: Exception) {
+        "Key $keyCode"
+    }
+}
 
 fun isPositionInArea(corner1: BlockPos, corner2: BlockPos, pos: BlockPos): Boolean {
     val minX = minOf(corner1.x, corner2.x)

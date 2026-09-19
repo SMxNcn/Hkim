@@ -27,14 +27,11 @@ object Theme {
     val controlButtonBg = 0xFF3A3A50.toInt()
     val controlRowBg = 0x80181826.toInt()
     val iconPrimary = 0xFFFFFFFF.toInt()
-    val iconMuted = 0xFFAAAAAA.toInt()
 
     val cardEdgeEnabledFactor = 0.5f
 
     val categoryHighlightAlpha = 0.2f
 
-    val dangerBorder = 0xFFAA4444.toInt()
-    val dangerBg = 0xFF3A2A2A.toInt()
     val dangerIcon = 0xFFAA4444.toInt()
 
     val tooltipBg = 0xC8101010.toInt()

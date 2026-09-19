@@ -8,16 +8,16 @@ import cn.hkim.addon.hud.HudAlignment
 import cn.hkim.addon.hud.HudElement
 import cn.hkim.addon.utils.HudUtils.drawHorizontalLine
 import cn.hkim.addon.utils.HudUtils.drawVerticalLine
-import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.network.chat.Component
+import com.mojang.blaze3d.platform.InputConstants
 import kotlin.math.abs
 
-class HudEditScreen(private val parent: Screen?) : Screen(Component.literal("HUD Editor")) {
+class HudEditScreen(private val parent: Screen? = null) : Screen(Component.literal("HUD Editor")) {
     private var draggingElement: HudElement? = null
     private var dragStartMouseX = 0f
     private var dragStartMouseY = 0f
@@ -215,6 +215,8 @@ class HudEditScreen(private val parent: Screen?) : Screen(Component.literal("HUD
         ModuleConfig.saveConfig()
         return true
     }
+
+    override fun isPauseScreen() = false
 
     private fun isShiftDown(): Boolean =
         InputConstants.isKeyDown(InputConstants.KEY_LSHIFT) || InputConstants.isKeyDown(InputConstants.KEY_RSHIFT)

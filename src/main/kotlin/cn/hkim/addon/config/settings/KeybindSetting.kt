@@ -3,14 +3,15 @@ package cn.hkim.addon.config.settings
 import cn.hkim.addon.config.Setting
 import cn.hkim.addon.config.clickgui.Theme
 import cn.hkim.addon.utils.HudUtils
+import cn.hkim.addon.utils.keyDisplayName
 import cn.hkim.addon.utils.playSoundAtPlayer
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRectWithBorder
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoCenteredText
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoText
-import com.mojang.blaze3d.platform.InputConstants
 import com.mojang.blaze3d.platform.cursor.CursorTypes
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.sounds.SoundEvents
+import com.mojang.blaze3d.platform.InputConstants
 import org.lwjgl.sdl.SDLMouse
 import org.lwjgl.sdl.SDLScancode
 
@@ -42,7 +43,7 @@ class KeybindSetting(name: String, desc: String, defaultKey: Int = SDLScancode.S
         val displayText = when {
             isBinding -> "Press..."
             value == SDLScancode.SDL_SCANCODE_UNKNOWN -> "None"
-            else -> getKeyDisplayName(value)
+            else -> keyDisplayName(value)
         }
 
         val btnColor = if (isBinding || isBtnHovered) themeColor else Theme.controlBorderHover
@@ -109,33 +110,6 @@ class KeybindSetting(name: String, desc: String, defaultKey: Int = SDLScancode.S
         return true
     }
 
-    private fun getKeyDisplayName(keyCode: Int): String {
-        if (keyCode == SDLScancode.SDL_SCANCODE_UNKNOWN) return "None"
-
-        if (keyCode in 1..8) {
-            return try {
-                val key = InputConstants.Type.MOUSE.getOrCreate(keyCode)
-                key.displayName.string
-            } catch (_: Exception) {
-                getMouseButtonFallbackName(keyCode)
-            }
-        }
-
-        return try {
-            val key = InputConstants.Type.KEYBOARD.getOrCreate(keyCode)
-            key.displayName.string
-        } catch (_: Exception) {
-            "Key $keyCode"
-        }
-    }
-
-    private fun getMouseButtonFallbackName(button: Int): String {
-        return when (button) {
-            SDLMouse.SDL_BUTTON_MIDDLE -> "Mouse Middle"
-            else -> "Mouse $button"
-        }
-    }
-
     companion object {
         private val keyCodeToName: Map<Int, String> by lazy {
             buildMap {
@@ -173,16 +147,7 @@ class KeybindSetting(name: String, desc: String, defaultKey: Int = SDLScancode.S
 
         @JvmStatic
         fun sdlNameToKeyCode(name: String): Int {
-            return nameToKeyCode[name]
-                ?: run {
-                    val legacyName = when {
-                        name.startsWith("GLFW_KEY_") -> "SDL_SCANCODE_" + name.removePrefix("GLFW_KEY_")
-                        name.startsWith("GLFW_MOUSE_BUTTON_") -> "SDL_BUTTON_" + name.removePrefix("GLFW_MOUSE_BUTTON_")
-                        else -> null
-                    }
-                    legacyName?.let { nameToKeyCode[it] }
-                }
-                ?: SDLScancode.SDL_SCANCODE_UNKNOWN
+            return nameToKeyCode[name] ?: SDLScancode.SDL_SCANCODE_UNKNOWN
         }
     }
 }
