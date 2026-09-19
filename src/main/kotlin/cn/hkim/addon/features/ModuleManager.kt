@@ -2,8 +2,8 @@ package cn.hkim.addon.features
 
 import cn.hkim.addon.Hkim
 import cn.hkim.addon.Hkim.mc
+import cn.hkim.addon.features.impl.*
 import cn.hkim.addon.gui.HudEditScreen
-import cn.hkim.addon.utils.containsOneOf
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements
 import net.minecraft.resources.Identifier
@@ -13,6 +13,7 @@ object ModuleManager {
     private val modules = mutableListOf<Module>()
     private var isInitialized = false
     private var hudHookRegistered = false
+    private val hideModules = listOf(ClickGUI, MainMenuModule, ModuleList, ProtectItem, SwapOptions, Test, TitleManager)
 
     fun initOrbit() {
         Hkim.EVENT_BUS.registerLambdaFactory("cn.hkim.addon") { lookupInMethod, klass ->
@@ -65,5 +66,5 @@ object ModuleManager {
     fun getByCategory(cat: Category): List<Module> = modules.filter { it.category == cat }
     fun getEnabled(): List<Module> = modules.filter { it.enabled }
     fun getById(id: String): Module? = modules.find { it.id == id }
-    fun getEnabledToName(): List<String> = modules.filter { it.enabled && !it.name.containsOneOf("Test", "Click GUI") }.map { it.name.replace(" ", "") }
+    fun getEnabledToName(): List<String> = modules.filter { it.enabled && it !in hideModules }.map { it.name.replace(" ", "") }
 }
