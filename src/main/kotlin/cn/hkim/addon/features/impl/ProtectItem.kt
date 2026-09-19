@@ -11,6 +11,7 @@ import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.mixins.accessors.AbstractContainerScreenAccessor
 import cn.hkim.addon.utils.*
+import cn.hkim.addon.utils.skyblock.LocationUtils
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import meteordevelopment.orbit.EventHandler
@@ -38,6 +39,7 @@ object ProtectItem : Module("Protect Item", "Protect your item.") {
     private fun onKeyPress(event: InputEvent) {
         val dropKey = mc.options.keyDrop.boundKey
         if (!enabled || event.key != dropKey) return
+        if (LocationUtils.inDungeons) return
         val player = mc.player ?: return
         val item = player.mainHandItem
         if (containsUUID(item.itemUUID)) {
