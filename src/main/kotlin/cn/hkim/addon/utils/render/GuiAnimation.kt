@@ -12,79 +12,41 @@ class GuiAnimation internal constructor(
     private var easing: Easing = Easing.LINEAR
 ) {
     private var startTime = -1L
-    private var running = false
-    private var completed = false
 
-    private var currentValue = from
-    private var currentProgress = 0f
-
-    private var lastEvalTime = -1L
-
-    private fun eval() {
-        if (!running || completed) return
-        val now = System.currentTimeMillis()
-        if (now == lastEvalTime) return
-        lastEvalTime = now
-
-        val elapsed = now - startTime
-        if (elapsed >= duration) {
-            currentValue = to
-            currentProgress = 1f
-            running = false
-            completed = true
-            return
-        }
-
-        currentProgress = applyEasing(elapsed.toFloat() / duration, easing)
-        currentValue = from + (to - from) * currentProgress
+    private fun easedProgress(now: Long): Float {
+        if (startTime < 0L) return 0f
+        val linear = ((now - startTime).toFloat() / duration).coerceIn(0f, 1f)
+        return applyEasing(linear, easing)
     }
 
     fun getValue(): Float {
-        eval()
-        return if (running || completed) currentValue else from
+        if (startTime < 0L) return from
+        return from + (to - from) * easedProgress(System.currentTimeMillis())
     }
 
-    fun getProgress(): Float {
-        eval()
-        return if (running || completed) currentProgress else 0f
-    }
-
-    internal fun update() {
-        eval()
-    }
+    fun getProgress(): Float = easedProgress(System.currentTimeMillis())
 
     fun start(): GuiAnimation {
         startTime = System.currentTimeMillis()
-        lastEvalTime = startTime
-        running = true
-        completed = false
-        currentValue = from
-        currentProgress = 0f
         return this
     }
 
     fun reset() {
         startTime = -1L
-        lastEvalTime = -1L
-        running = false
-        completed = false
-        currentValue = from
-        currentProgress = 0f
     }
 
     fun reverse(): GuiAnimation {
-        val temp = from
+        val swap = from
         from = to
-        to = temp
+        to = swap
         return start()
     }
 
-    fun isRunning() = running
-    fun isCompleted() = completed
+    fun isRunning() = startTime >= 0L && System.currentTimeMillis() - startTime < duration
+    fun isCompleted() = startTime >= 0L && System.currentTimeMillis() - startTime >= duration
 
     fun from(value: Float): GuiAnimation {
         from = value
-        if (!running && !completed) currentValue = value
         return this
     }
 
@@ -104,8 +66,7 @@ class GuiAnimation internal constructor(
     }
 
     fun animateTo(target: Float): GuiAnimation {
-        eval()
-        from = currentValue
+        from = getValue()
         to = target
         return start()
     }
@@ -114,7 +75,6 @@ class GuiAnimation internal constructor(
         reset()
         from = value
         to = value
-        currentValue = value
         return this
     }
 
