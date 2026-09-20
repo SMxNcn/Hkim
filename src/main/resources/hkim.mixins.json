@@ -17,6 +17,7 @@
     "CameraMixin",
     "ClientPacketListenerMixin",
     "ConnectionMixin",
+    "CommonUniformsMixin",
     "ConnectScreenMixin",
     "ContainerScreenMixin",
     "DisconnectedScreenMixin",

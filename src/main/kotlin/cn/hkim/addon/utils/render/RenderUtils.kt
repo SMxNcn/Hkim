@@ -351,12 +351,13 @@ private val COLOR_MODULATOR = Vector4f(1f, 1f, 1f, 1f)
 private val MODEL_OFFSET = Vector3f()
 private val TEXTURE_MATRIX = Matrix4f()
 
-private fun ensureNoFogBuffer() {
-    if (noFogBuffer != null) return
+private fun ensureNoFogBuffer(): GpuBuffer {
+    noFogBuffer?.let { return it }
     val device = RenderSystem.getDevice()
-    noFogBuffer = device.createBuffer({ "hkim_no_fog" }, GpuBuffer.USAGE_UNIFORM or GpuBuffer.USAGE_COPY_DST, RenderBatchManager.NO_FOG_SIZE.toLong())
-    val uploadEncoder = device.createCommandEncoder()
-    uploadEncoder.writeToBuffer(noFogBuffer!!.slice(0, RenderBatchManager.NO_FOG_SIZE.toLong()), RenderBatchManager.noFogBytes)
+    val buffer = device.createBuffer({ "hkim_no_fog" }, GpuBuffer.USAGE_UNIFORM or GpuBuffer.USAGE_COPY_DST, RenderBatchManager.NO_FOG_SIZE.toLong())
+    device.createCommandEncoder().writeToBuffer(buffer.slice(0, RenderBatchManager.NO_FOG_SIZE.toLong()), RenderBatchManager.noFogBytes)
+    noFogBuffer = buffer
+    return buffer
 }
 
 private fun drawPipeline(ctx: RenderBatchManager.PipelineContext, viewMatrix: Matrix4f, encoder: CommandEncoder) {
@@ -389,6 +390,9 @@ private fun drawPipeline(ctx: RenderBatchManager.PipelineContext, viewMatrix: Ma
     val dynamicTransforms = RenderSystem.getDynamicUniforms()
         .writeTransform(viewMatrix, COLOR_MODULATOR, MODEL_OFFSET, TEXTURE_MATRIX)
 
+    // Creating/uploading a buffer issues commands through the shared encoder, so it must happen before the pass opens.
+    val fogBuffer = ensureNoFogBuffer()
+
     val renderPass = encoder.createRenderPass(
         { "hkim_${ctx.pipeline.location}" },
         mc.gameRenderer.mainRenderTarget().colorTextureView!!,
@@ -400,8 +404,7 @@ private fun drawPipeline(ctx: RenderBatchManager.PipelineContext, viewMatrix: Ma
         rp.setPipeline(RenderSystem.getCompiledPipeline(ctx.pipeline))
         RenderSystem.bindDefaultUniforms(rp)
         rp.setUniform("DynamicTransforms", dynamicTransforms)
-        ensureNoFogBuffer()
-        rp.setUniform("Fog", noFogBuffer!!)
+        rp.setUniform("Fog", fogBuffer)
         rp.setVertexBuffer(0, ctx.vertexBuffer!!.slice())
         rp.setIndexBuffer(indices, indexType)
 

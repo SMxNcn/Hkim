@@ -27,7 +27,7 @@ object CleanView : Module("Clean View", "Hides unwanted renderings.") {
     private val hideWitherImpact by BooleanSetting("Hide Wither Impact", "Hide explosion particles.", false).depends { particle }
 
     private val effect by DropdownSetting("Others")
-    private val hideBlindness by BooleanSetting("Hide Blindness", "Remove blindness and darkness effect.", false).depends { effect }
+    private val disableDebuffs by BooleanSetting("Anti Debuff", "Remove blindness/darkness/nausea effect.", false).depends { effect }
     private val hideFireOverlay by BooleanSetting("Hide Fire Overlay", "Hide fire overlay on screen.", false).depends { effect }
     private val hideEntityFire by BooleanSetting("Hide Entity Fire", "Hide fire overlay on other entities.", false).depends { effect && hideFireOverlay }
     private val hideBlockStuck by BooleanSetting("See Through Blocks", "Removes the suffocation overlay when stuck in blocks.", false).depends { effect }
@@ -71,7 +71,7 @@ object CleanView : Module("Clean View", "Hides unwanted renderings.") {
     fun shouldHideWitherImpact(): Boolean = enabled && hideWitherImpact
 
     @JvmStatic
-    fun shouldHideBlindness(): Boolean = enabled && hideBlindness
+    fun shouldDisableDebuffs(): Boolean = enabled && disableDebuffs
 
     @JvmStatic
     fun shouldHideFireOverlay(): Boolean = enabled && hideFireOverlay

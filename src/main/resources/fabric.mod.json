@@ -36,8 +36,5 @@
     "fabric-api": ">=${fabric_api_version}",
     "minecraft": ">=26.3-alpha",
     "fabric-language-kotlin": ">=${fabric_kotlin_version}"
-  },
-  "breaks": {
-    "iris": "*"
   }
 }

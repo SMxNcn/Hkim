@@ -20,7 +20,7 @@ public class MobEffectFogEnvironmentMixin {
     @Inject(method = "isApplicable", at = @At("HEAD"), cancellable = true)
     private void onIsApplicable(FogType fogType, Entity entity, CallbackInfoReturnable<Boolean> cir) {
         if (!(entity instanceof LivingEntity)) return;
-        if (!CleanView.shouldHideBlindness()) return;
+        if (!CleanView.shouldDisableDebuffs()) return;
 
         MobEffectFogEnvironment self = (MobEffectFogEnvironment) (Object) this;
         Holder<MobEffect> effect = self.getMobEffect();

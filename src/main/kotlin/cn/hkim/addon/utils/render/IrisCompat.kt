@@ -1,6 +1,6 @@
 package cn.hkim.addon.utils.render
 
-/*import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import net.fabricmc.loader.api.FabricLoader
 import net.irisshaders.iris.api.v0.IrisApi
 import net.irisshaders.iris.api.v0.IrisProgram
@@ -40,4 +40,4 @@ internal object IrisCompatImpl : IrisCompatibility {
 
 internal object IrisCompatNoOp : IrisCompatibility
 
-internal fun resolve(): IrisCompatibility = if (FabricLoader.getInstance().isModLoaded("iris")) IrisCompatImpl else IrisCompatNoOp*/
+internal fun resolve(): IrisCompatibility = if (FabricLoader.getInstance().isModLoaded("iris")) IrisCompatImpl else IrisCompatNoOp

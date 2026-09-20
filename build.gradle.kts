@@ -20,7 +20,7 @@ repositories {
     maven("https://maven.deftu.dev/releases")
     maven("https://maven.nucleoid.xyz/releases")
     maven("https://redirector.kotlinlang.org/maven/compose-dev")
-    // maven("https://api.modrinth.com/maven")
+    maven("https://api.modrinth.com/maven")
 }
 
 dependencies {
@@ -35,12 +35,12 @@ dependencies {
     runtimeOnly("me.djtheredstoner:DevAuth-fabric:${property("devauth_version")}")
     compileOnly("com.terraformersmc:modmenu:${property("modmenu_version")}")
     compileOnly("eu.pb4:placeholder-api:${property("placeholder_api_version")}")
-
-    // compileOnly("maven.modrinth:iris:${property("iris_version")}")
-   implementation("org.jetbrains.skiko:skiko-awt-runtime-windows-x64:${property("skiko_version")}")
+    compileOnly("maven.modrinth:iris:${property("iris_version")}")
 
     include("meteordevelopment:orbit:${property("orbit_version")}")
     include("com.github.stivais:Commodore:${property("commodore_version")}")
+
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-windows-x64:${property("skiko_version")}")
 }
 
 loom {

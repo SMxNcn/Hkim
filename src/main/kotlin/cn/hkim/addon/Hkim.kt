@@ -14,6 +14,7 @@ import cn.hkim.addon.runtime.BridgeLoader
 import cn.hkim.addon.runtime.SkikoRuntime
 import cn.hkim.addon.utils.ServerUtils
 import cn.hkim.addon.utils.TickTasks
+import cn.hkim.addon.utils.render.IrisCompatibility
 import cn.hkim.addon.utils.render.RenderBatchManager
 import cn.hkim.addon.utils.skyblock.DungeonUtils
 import cn.hkim.addon.utils.skyblock.FailSafeUtils
@@ -51,7 +52,7 @@ object Hkim : ClientModInitializer {
 
         EventDispatcher.postEvents()
         RenderBatchManager.init()
-        EventDispatcher.registerListeners(CustomEventDispatcher, DungeonUtils, FailSafeUtils, LocationUtils, ServerUtils, TickTasks)
+        EventDispatcher.registerListeners(CustomEventDispatcher, DungeonUtils, FailSafeUtils, IrisCompatibility, LocationUtils, ServerUtils, TickTasks)
         ModuleManager.initModules()
         ModuleConfig.loadConfig()
         Background.getDefaultBackground()
