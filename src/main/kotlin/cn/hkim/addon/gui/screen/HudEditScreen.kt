@@ -1,6 +1,6 @@
-package cn.hkim.addon.gui
+package cn.hkim.addon.gui.screen
 
-import cn.hkim.addon.Hkim.mc
+import cn.hkim.addon.Hkim
 import cn.hkim.addon.config.ModuleConfig
 import cn.hkim.addon.features.ModuleManager
 import cn.hkim.addon.hud.Bounds
@@ -68,8 +68,8 @@ class HudEditScreen(private val parent: Screen? = null) : Screen(Component.liter
             )
             var iy = 4f
             for (line in lines) {
-                graphics.text(mc.font, line, 4, iy.toInt(), -1, false)
-                iy += mc.font.lineHeight + 1f
+                graphics.text(Hkim.mc.font, line, 4, iy.toInt(), -1, false)
+                iy += Hkim.mc.font.lineHeight + 1f
             }
         }
     }
@@ -219,13 +219,13 @@ class HudEditScreen(private val parent: Screen? = null) : Screen(Component.liter
     override fun isPauseScreen() = false
 
     private fun isShiftDown(): Boolean {
-        val handle = mc.window.handle()
+        val handle = Hkim.mc.window.handle()
         return GLFW.glfwGetKey(handle, GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS ||
                GLFW.glfwGetKey(handle, GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS
     }
 
     override fun onClose() {
         ModuleConfig.saveConfig()
-        mc.gui.setScreen(parent)
+        Hkim.mc.gui.setScreen(parent)
     }
 }
