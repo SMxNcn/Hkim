@@ -7,7 +7,7 @@ import cn.hkim.addon.events.impl.*
 import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
-import cn.hkim.addon.gui.ActionInputScreen
+import cn.hkim.addon.gui.screen.ActionInputScreen
 import cn.hkim.addon.utils.*
 import cn.hkim.addon.utils.HudUtils.alert
 import cn.hkim.addon.utils.render.drawStyledBox

@@ -3,7 +3,7 @@ package cn.hkim.addon.features
 import cn.hkim.addon.Hkim
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.features.impl.*
-import cn.hkim.addon.gui.HudEditScreen
+import cn.hkim.addon.gui.screen.HudEditScreen
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements
 import net.minecraft.resources.Identifier

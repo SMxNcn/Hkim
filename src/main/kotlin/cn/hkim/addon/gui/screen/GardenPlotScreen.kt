@@ -1,4 +1,4 @@
-package cn.hkim.addon.gui
+package cn.hkim.addon.gui.screen
 
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.features.impl.FarmingHelper

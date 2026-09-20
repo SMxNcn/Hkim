@@ -1,9 +1,11 @@
-package cn.hkim.addon.gui
+package cn.hkim.addon.gui.screen
 
 import cn.hkim.addon.Hkim
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.ModuleConfig
 import cn.hkim.addon.features.impl.MainMenuModule
+import cn.hkim.addon.gui.Background
+import cn.hkim.addon.gui.ClientButton
 import cn.hkim.addon.utils.coloredChar
 import cn.hkim.addon.utils.mcVersion
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRectWithBorder
@@ -71,17 +73,38 @@ class MainMenu : Screen(Component.literal("Main Menu")) {
         val btnW = 180
         val btnH = 18
 
-        addRenderableWidget(ClientButton(centerX - 90, centerY + 1, btnW, btnH, Component.translatable("menu.singleplayer")) {
-            mc.setScreen(SelectWorldScreen(this))
-        })
+        addRenderableWidget(
+            ClientButton(
+                centerX - 90,
+                centerY + 1,
+                btnW,
+                btnH,
+                Component.translatable("menu.singleplayer")
+            ) {
+                mc.setScreen(SelectWorldScreen(this))
+            })
 
-        addRenderableWidget(ClientButton(centerX - 90, centerY + 23, btnW, btnH, Component.translatable("menu.multiplayer")) {
-            mc.setScreen(JoinMultiplayerScreen(this))
-        })
+        addRenderableWidget(
+            ClientButton(
+                centerX - 90,
+                centerY + 23,
+                btnW,
+                btnH,
+                Component.translatable("menu.multiplayer")
+            ) {
+                mc.setScreen(JoinMultiplayerScreen(this))
+            })
 
-        addRenderableWidget(ClientButton(centerX - 90, centerY + 45, btnW, btnH, Component.translatable("modmenu.title")) {
-            mc.setScreen(ModsScreen(this))
-        })
+        addRenderableWidget(
+            ClientButton(
+                centerX - 90,
+                centerY + 45,
+                btnW,
+                btnH,
+                Component.translatable("modmenu.title")
+            ) {
+                mc.setScreen(ModsScreen(this))
+            })
 
         addRenderableWidget(ClientButton(centerX - 90, centerY + 67, 88, btnH, Component.translatable("menu.options")) {
             mc.setScreen(OptionsScreen(this, mc.options, false))

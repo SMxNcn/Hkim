@@ -3,7 +3,7 @@ package cn.hkim.addon.mixins;
 import cn.hkim.addon.config.ModuleConfig;
 import cn.hkim.addon.features.impl.MainMenuModule;
 import cn.hkim.addon.gui.ClientButton;
-import cn.hkim.addon.gui.MainMenu;
+import cn.hkim.addon.gui.screen.MainMenu;
 import cn.hkim.addon.mixins.accessors.ScreenAccessor;
 import net.minecraft.client.gui.screens.TitleScreen;
 import org.spongepowered.asm.mixin.Mixin;
