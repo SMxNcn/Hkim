@@ -1,4 +1,4 @@
-package cn.hkim.addon.gui
+package cn.hkim.addon.gui.screen
 
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.utils.Colors
@@ -10,6 +10,7 @@ import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.network.chat.Component
 import com.mojang.blaze3d.platform.InputConstants
+import java.awt.Color
 
 class ActionInputScreen(
     initialAction: FarmingWaypoints.Action,
@@ -81,7 +82,7 @@ class ActionInputScreen(
     }
 
     private fun drawKey(graphics: GuiGraphicsExtractor, label: String, x: Int, y: Int, active: Boolean) {
-        val bgColor = if (active) java.awt.Color(0, 170, 0, 180).rgb else java.awt.Color(85, 85, 85, 120).rgb
+        val bgColor = if (active) Color(0, 170, 0, 180).rgb else Color(85, 85, 85, 120).rgb
         val borderColor = if (active) Colors.MINECRAFT_GREEN.rgb else Colors.MINECRAFT_DARK_GRAY.rgb
 
         graphics.fill(x, y, x + btnSize, y + btnSize, bgColor)

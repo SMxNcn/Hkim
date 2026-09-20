@@ -12,7 +12,7 @@ import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleManager
 import cn.hkim.addon.features.impl.ClickGUI
-import cn.hkim.addon.gui.HudEditScreen
+import cn.hkim.addon.gui.screen.HudEditScreen
 import cn.hkim.addon.gui.SkikoEditBox
 import cn.hkim.addon.gui.SkikoTooltip.drawTooltip
 import cn.hkim.addon.utils.HudUtils
