@@ -4,6 +4,7 @@ import cn.hkim.addon.commands.autoSellCommand
 import cn.hkim.addon.commands.highlightCommand
 import cn.hkim.addon.commands.hkimCommand
 import cn.hkim.addon.commands.hwpCommand
+import cn.hkim.addon.compat.iris.IrisCompatibility
 import cn.hkim.addon.config.ModuleConfig
 import cn.hkim.addon.events.CustomEventDispatcher
 import cn.hkim.addon.events.EventDispatcher
@@ -51,7 +52,7 @@ object Hkim : ClientModInitializer {
 
         EventDispatcher.postEvents()
         RenderBatchManager.init()
-        EventDispatcher.registerListeners(CustomEventDispatcher, DungeonUtils, FailSafeUtils, LocationUtils, ServerUtils, TickTasks)
+        EventDispatcher.registerListeners(CustomEventDispatcher, DungeonUtils, FailSafeUtils, IrisCompatibility, LocationUtils, ServerUtils, TickTasks)
         ModuleManager.initModules()
         ModuleConfig.loadConfig()
         Background.getDefaultBackground()
