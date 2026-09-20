@@ -4,6 +4,7 @@ import cn.hkim.addon.commands.autoSellCommand
 import cn.hkim.addon.commands.highlightCommand
 import cn.hkim.addon.commands.hkimCommand
 import cn.hkim.addon.commands.hwpCommand
+import cn.hkim.addon.compat.iris.IrisCompatibility
 import cn.hkim.addon.config.ModuleConfig
 import cn.hkim.addon.events.CustomEventDispatcher
 import cn.hkim.addon.events.EventDispatcher
@@ -14,7 +15,6 @@ import cn.hkim.addon.runtime.BridgeLoader
 import cn.hkim.addon.runtime.SkikoRuntime
 import cn.hkim.addon.utils.ServerUtils
 import cn.hkim.addon.utils.TickTasks
-import cn.hkim.addon.utils.render.IrisCompatibility
 import cn.hkim.addon.utils.render.RenderBatchManager
 import cn.hkim.addon.utils.skyblock.DungeonUtils
 import cn.hkim.addon.utils.skyblock.FailSafeUtils

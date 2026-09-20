@@ -1,5 +1,6 @@
-package cn.hkim.addon.utils.render
+package cn.hkim.addon.compat.iris
 
+import cn.hkim.addon.utils.render.CustomRenderType
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import net.fabricmc.loader.api.FabricLoader
 import net.irisshaders.iris.api.v0.IrisApi
