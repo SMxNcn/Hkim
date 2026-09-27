@@ -22,7 +22,7 @@ float map(vec3 p) {
 }
 
 void main() {
-    vec2 a = gl_FragCoord.xy / Resolution.y - vec2(0.9, 0.5);
+    vec2 a = gl_FragCoord.xy / Resolution.y - vec2(0.5 * Resolution.x / Resolution.y, 0.5);
     vec3 cl = vec3(0.0);
     float d = 2.5;
 
