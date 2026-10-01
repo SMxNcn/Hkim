@@ -21,7 +21,7 @@ import cn.hkim.addon.utils.render.Easing
 import cn.hkim.addon.utils.render.GuiAnimation
 import cn.hkim.addon.utils.render.island.IslandQueue
 import cn.hkim.addon.utils.render.island.IslandRenderer
-import cn.hkim.addon.utils.render.skiko.Skiko
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.edgeAngle
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawCircleWithBorder
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoArc
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoCenteredText
@@ -294,8 +294,8 @@ object RadialMenu : Module("Radial Menu", "Easier to access menu/commands.") {
 
         graphics.drawSkikoParallelSector(centerX, centerY, innerRadius, radius, start, end, gap, background)
 
-        val outlineStart = Skiko.edgeAngle(start, gap / 2f, radius)
-        val outlineEnd = Skiko.edgeAngle(end, -gap / 2f, radius)
+        val outlineStart = edgeAngle(start, gap / 2f, radius)
+        val outlineEnd = edgeAngle(end, -gap / 2f, radius)
         graphics.drawSkikoArc(
             centerX, centerY, radius,
             outlineStart, outlineEnd - outlineStart,
