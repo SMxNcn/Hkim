@@ -1,9 +1,12 @@
 package cn.hkim.addon.mixins;
 
+import cn.hkim.addon.compat.tab.TabAnimation;
 import cn.hkim.addon.features.impl.CleanView;
 import cn.hkim.addon.features.impl.CustomScoreboard;
 import cn.hkim.addon.features.impl.ItemFeatures;
 import cn.hkim.addon.features.impl.ModuleList;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -41,5 +44,17 @@ public class GuiMixin {
     @Inject(method = "extractSlot(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IILnet/minecraft/client/DeltaTracker;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/item/ItemStack;I)V", at = @At("HEAD"))
     private void onExtractSlotRarityBackground(GuiGraphicsExtractor graphics, int x, int y, DeltaTracker delta, Player player, ItemStack item, int slot, CallbackInfo ci) {
         ItemFeatures.drawRarityBackground(graphics, x, y, item);
+    }
+
+    @WrapMethod(method = "extractTabList")
+    private void hkim$tabList(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, Operation<Void> original) {
+        boolean drawCollapsingList = TabAnimation.begin(graphics);
+        TabAnimation.INSTANCE.setForcingListKey(drawCollapsingList);
+        try {
+            original.call(graphics, deltaTracker);
+        } finally {
+            TabAnimation.INSTANCE.setForcingListKey(false);
+            TabAnimation.end(graphics);
+        }
     }
 }

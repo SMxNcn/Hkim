@@ -1,6 +1,7 @@
 package cn.hkim.addon.utils.skyblock.inventory
 
 import cn.hkim.addon.Hkim.mc
+import cn.hkim.addon.features.impl.SwapOptions
 import cn.hkim.addon.utils.*
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
@@ -29,7 +30,7 @@ object EquipmentUtils : SwapHandler() {
             currentIndex = 0
             isProcessing = false
             isActive = true
-            startSwap("Swapping ${slots.size} equipment(s)")
+            startSwap(SwapInfo("Equipment", "Swapping ${slots.size} equipment(s)"))
             sendCommand("stats")
 
             schedule(200) {
@@ -54,7 +55,7 @@ object EquipmentUtils : SwapHandler() {
 
     private fun processNextItem() {
         if (currentIndex >= pendingSlots.size) {
-            schedule((4..6).random()) {
+            schedule(SwapOptions.closeTicks.toInt()) {
                 mc.player?.closeContainer()
                 callback?.invoke(true)
                 reset()

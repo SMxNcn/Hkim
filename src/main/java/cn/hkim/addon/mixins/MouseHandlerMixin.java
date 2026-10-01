@@ -3,6 +3,7 @@ package cn.hkim.addon.mixins;
 import cn.hkim.addon.Hkim;
 import cn.hkim.addon.events.impl.MouseButtonEvent;
 import cn.hkim.addon.features.impl.FreeCam;
+import cn.hkim.addon.features.impl.RadialMenu;
 import cn.hkim.addon.utils.KeyAction;
 import cn.hkim.addon.utils.RotationUtils;
 import cn.hkim.addon.utils.ViewLock;
@@ -32,6 +33,12 @@ public class MouseHandlerMixin {
         Hkim.EVENT_BUS.post(event);
 
         if (event.isCancelled()) ci.cancel();
+    }
+
+    @Inject(method = "onScroll", at = @At("HEAD"), cancellable = true)
+    private void onRadialMenuScroll(long handle, double amountX, double amountY, CallbackInfo ci) {
+        if (Hkim.mc.screen != null) return;
+        if (RadialMenu.onScroll(amountY)) ci.cancel();
     }
 
     @Redirect(method = "turnPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;turn(DD)V"))

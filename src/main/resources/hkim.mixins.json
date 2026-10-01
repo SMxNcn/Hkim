@@ -26,6 +26,7 @@
     "GameRendererMixin",
     "GuiGraphicsExtractorMixin",
     "GuiMixin",
+    "GuiRenderStateMixin",
     "ItemInHandRendererMixin",
     "KeyMappingMixin",
     "LavaFogEnvironmentMixin",
@@ -48,11 +49,13 @@
     "TooltipRenderUtilMixin",
     "WindowMixin",
     "accessors.AbstractContainerScreenAccessor",
+    "accessors.BossHealthOverlayAccessor",
     "accessors.CameraAccessor",
     "accessors.DebugScreenEntriesAccessor",
     "accessors.FishingHookAccessor",
     "accessors.JoinMultiplayerScreenAccessor",
     "accessors.KeyMappingAccessor",
-    "accessors.ScreenAccessor"
+    "accessors.ScreenAccessor",
+    "compat.SkyHanniTabListRendererMixin"
   ]
 }

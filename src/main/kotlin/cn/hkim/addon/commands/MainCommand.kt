@@ -5,6 +5,7 @@ import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.clickgui.ClickGUIScreen
 import cn.hkim.addon.gui.screen.GardenPlotScreen
 import cn.hkim.addon.gui.screen.HudEditScreen
+import cn.hkim.addon.gui.screen.RadialMenuEditorScreen
 import cn.hkim.addon.utils.modMessage
 import cn.hkim.addon.utils.skyblock.inventory.EquipmentUtils.swapEquipment
 import cn.hkim.addon.utils.skyblock.inventory.LoadoutUtils.swapLoadoutTo
@@ -16,11 +17,15 @@ import kotlinx.coroutines.launch
 
 val hkimCommand = Commodore("hkim") {
     runs {
-        mc.execute { mc.setScreen(ClickGUIScreen(null)) }
+        mc.execute { mc.setScreen(ClickGUIScreen()) }
     }
 
-    literal("hud").runs {
-        mc.execute { mc.setScreen(HudEditScreen(null)) }
+    literal("editHud").runs {
+        mc.execute { mc.setScreen(HudEditScreen()) }
+    }
+
+    literal("editRadial").runs {
+        mc.execute { mc.setScreen(RadialMenuEditorScreen()) }
     }
 
     literal("plot").runs {

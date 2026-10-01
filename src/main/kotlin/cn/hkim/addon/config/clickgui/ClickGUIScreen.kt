@@ -12,6 +12,7 @@ import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleManager
 import cn.hkim.addon.features.impl.ClickGUI
+import cn.hkim.addon.features.impl.DynamicIsland
 import cn.hkim.addon.gui.SkikoEditBox
 import cn.hkim.addon.gui.SkikoTooltip.drawTooltip
 import cn.hkim.addon.gui.screen.HudEditScreen
@@ -20,6 +21,7 @@ import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.playSoundAtPlayer
 import cn.hkim.addon.utils.render.Easing
 import cn.hkim.addon.utils.render.GuiAnimation
+import cn.hkim.addon.utils.render.island.*
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawGradientRectMulti
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRectWithBorder
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRectWithShadow
@@ -79,7 +81,12 @@ class ClickGUIScreen(private val parent: Screen? = null) : Screen(Component.lite
         .duration(150L)
         .easing(Easing.CUBIC_OUT)
 
+    private var hasOpened = false
     private var closing = false
+
+    private var islandAnchor: IslandAnchor? = null
+
+    private var animateFromIsland = false
 
     private fun withAlpha(color: Int, alpha: Float): Int =
         (color and 0x00FFFFFF) or ((((color ushr 24) * alpha).toInt().coerceIn(0, 255)) shl 24)
@@ -152,7 +159,19 @@ class ClickGUIScreen(private val parent: Screen? = null) : Screen(Component.lite
         guiX = (mc.window.guiScaledWidth - guiW) / 2f
         guiY = (mc.window.guiScaledHeight - guiH) / 2f
 
-        openAnim.snapTo(1f)
+        if (!hasOpened) {
+            hasOpened = true
+            animateFromIsland = canAnimateFromIsland()
+            if (animateFromIsland) {
+                islandAnchor = IslandHost.currentAnchor()
+                openAnim.snapTo(0f)
+                openAnim.duration(DynamicIsland.animationDurationMs)
+                openAnim.animateTo(1f)
+            } else {
+                islandAnchor = IslandAnchor(Bounds(guiX, guiY, guiW, guiH), PANEL_RADIUS, Theme.bg)
+                openAnim.snapTo(1f)
+            }
+        }
 
         cardStates.clear()
         for (module in ModuleManager.getAll()) {
@@ -175,6 +194,9 @@ class ClickGUIScreen(private val parent: Screen? = null) : Screen(Component.lite
 
     override fun removed() {
         lastSelectedCategory = selectedCategory
+
+        IslandHost.clearShape(IslandUser.CLICK_GUI)
+        IslandHost.release(IslandUser.CLICK_GUI)
 
         (Setting.activeModalPopup as? ColorSetting)?.closePopup()
         deactivateSearchBox()
@@ -203,20 +225,67 @@ class ClickGUIScreen(private val parent: Screen? = null) : Screen(Component.lite
 
     override fun tick() {
         cardStates.values.forEach { it.update(0.07f) }
+        if (closing && openAnim.getValue() <= 0.001f) finishClose()
         super.tick()
     }
 
-    override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float) {
-        graphics.fill(0, 0, width, height, 0x80000000.toInt())
+    private fun canAnimateFromIsland(): Boolean =
+        DynamicIsland.enabled && parent == null && (mc.screen == null || mc.screen === this)
 
+    override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float) {
+        val progress = if (animateFromIsland) openAnim.getValue() else if (closing) 0f else 1f
+        if (progress <= 0f && !closing) return
+
+        if (animateFromIsland) IslandHost.acquire(IslandUser.CLICK_GUI)
+
+        graphics.fill(0, 0, width, height, withAlpha(0x80000000.toInt(), progress))
+
+        val island = if (closing) IslandRenderer.anchor() else islandAnchor ?: IslandHost.currentAnchor()
+        val panel = island.towards(Bounds(guiX, guiY, guiW, guiH), PANEL_RADIUS, Theme.bg, progress)
+        val rectX = panel.bounds.x
+        val rectY = panel.bounds.y
+        val rectW = panel.bounds.w
+        val rectH = panel.bounds.h
+
+        val panelRadius = panel.radius
+        val panelColor = panel.background
+        val shadowColor = withAlpha(Theme.bgShadow, progress)
+        val shadowBlur = SHADOW_BLUR * progress
+        val shadowSpread = SHADOW_SPREAD * progress
+        val settled = progress >= 1f
         graphics.drawRoundedRectWithShadow(
-            guiX, guiY, guiW, guiH, Theme.bg, 0, 0f, PANEL_RADIUS,
-            Theme.bgShadow, SHADOW_BLUR, SHADOW_SPREAD,
-            cacheKey = "clickgui-panel",
-            cacheToken = skikoCacheToken(guiX, guiY, guiW, guiH, PANEL_RADIUS, Theme.bg, Theme.bgShadow, SHADOW_BLUR, SHADOW_SPREAD),
+            rectX, rectY, rectW, rectH, panelColor, 0, 0f, panelRadius,
+            shadowColor, shadowBlur, shadowSpread,
+            cacheKey = if (settled) "clickgui-panel" else null,
+            cacheToken = if (settled) skikoCacheToken(rectW, rectH, panelRadius, panelColor, shadowColor, shadowBlur, shadowSpread) else null,
         )
 
-        renderContent(graphics, mouseX, mouseY, delta, 1f)
+        if (animateFromIsland) {
+            if (progress < 1f) {
+                IslandHost.publishShape(
+                    IslandUser.CLICK_GUI,
+                    IslandAnchor(Bounds(rectX, rectY, rectW, rectH), panelRadius, panelColor),
+                )
+            } else {
+                IslandHost.clearShape(IslandUser.CLICK_GUI)
+            }
+        }
+
+        val inset = panelRadius * (1f - progress)
+        if (progress < 1f) {
+            val clipLeft = (rectX + inset).toInt()
+            val clipTop = (rectY + inset).toInt()
+            val clipRight = (rectX + rectW - inset).toInt()
+            val clipBottom = (rectY + rectH - inset).toInt()
+
+            if (clipRight <= clipLeft || clipBottom <= clipTop) return
+
+            graphics.enableScissor(clipLeft, clipTop, clipRight, clipBottom)
+            renderContent(graphics, mouseX, mouseY, delta, progress)
+            graphics.disableScissor()
+        } else {
+            renderContent(graphics, mouseX, mouseY, delta, progress)
+        }
     }
 
     private fun renderContent(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float, progress: Float) {
@@ -436,7 +505,17 @@ class ClickGUIScreen(private val parent: Screen? = null) : Screen(Component.lite
     override fun onClose() {
         if (closing) return
         closing = true
-        finishClose()
+
+        val animate = canAnimateFromIsland()
+        if (animate && !animateFromIsland) islandAnchor = IslandHost.currentAnchor()
+        animateFromIsland = animate
+
+        if (animate) {
+            openAnim.duration(DynamicIsland.animationDurationMs)
+            openAnim.animateTo(0f)
+        } else {
+            finishClose()
+        }
     }
 
     private fun finishClose() {

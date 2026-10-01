@@ -7,13 +7,12 @@ import cn.hkim.addon.events.impl.MouseButtonEvent
 import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
+import cn.hkim.addon.utils.render.island.IslandQueue
+import cn.hkim.addon.utils.render.island.IslandRenderer
 import cn.hkim.addon.utils.skyblock.inventory.SwapHandler
 import meteordevelopment.orbit.EventHandler
-import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry
-import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.resources.Identifier
 
 @ModuleInfo("swap_options", Category.MISC, true)
 object SwapOptions : Module("Swap Options", "Extra options for swapping.") {
@@ -24,12 +23,6 @@ object SwapOptions : Module("Swap Options", "Extra options for swapping.") {
     val noGui by BooleanSetting("No Gui", "Hide GUI while swapping.", false)
     val showSwapInfo by BooleanSetting("Show Swap Info", "Display current swap info.", true)
 
-    private val swapInfo: Identifier = Identifier.fromNamespaceAndPath("hkim", "swap_info")
-
-    init {
-        HudElementRegistry.attachElementBefore(VanillaHudElements.SLEEP, swapInfo, this::render)
-    }
-
     @EventHandler
     private fun onMouseClick(event: MouseButtonEvent) {
         if (noGui && event.button in 0..2 && SwapHandler.isInSwap) {
@@ -38,14 +31,16 @@ object SwapOptions : Module("Swap Options", "Extra options for swapping.") {
     }
 
     override fun render(graphics: GuiGraphicsExtractor, tickTracker: DeltaTracker) {
-        val text = SwapHandler.swapInfo ?: return
-        if (!noGui || !showSwapInfo || mc.options.hideGui) return
-        val width = mc.font.width(text)
-        val x = (mc.window.guiScaledWidth - width) / 2
-        val y = mc.window.guiScaledHeight / 2 + 12
-
-        graphics.text(mc.font, text, x, y, 0xFFFFFFFF.toInt(), true)
         super.render(graphics, tickTracker)
+        val info = SwapHandler.swapInfo ?: return
+        if (!noGui || !showSwapInfo || mc.options.hideGui) return
+        IslandRenderer.showMessage(
+            info.title,
+            info.detail,
+            centered = true,
+            priority = IslandQueue.PRIORITY_SWAP_INFO,
+            key = "swap-info",
+        )
     }
 
     override fun toggle() {}
