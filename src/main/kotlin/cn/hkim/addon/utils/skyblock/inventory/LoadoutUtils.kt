@@ -36,7 +36,7 @@ object LoadoutUtils : SwapHandler() {
                     targetPage = LoadoutLayout.getPage(index)
                     isActive = true
                     isProcessing = false
-                    startSwap("Swapping to Loadout #$index")
+                    startSwap(SwapInfo("Loadout", "Swapping to Loadout #$index"))
                     sendCommand("loadout")
                 }
             }

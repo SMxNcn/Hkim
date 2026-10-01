@@ -10,6 +10,8 @@ import cn.hkim.addon.features.impl.AutoFish
 import cn.hkim.addon.features.impl.CropNuker
 import cn.hkim.addon.features.impl.Nuker
 import cn.hkim.addon.utils.modMessage
+import cn.hkim.addon.utils.notification.NotificationManager
+import cn.hkim.addon.utils.notification.NotificationType
 import cn.hkim.addon.utils.playSoundAtPlayer
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
@@ -131,9 +133,9 @@ object FailSafeUtils {
 
         lastSelectedSlot = mc.player?.inventory?.selectedSlot ?: -1
 
-        playSoundAtPlayer(zxf2Sound)
+        NotificationManager.alert(NotificationType.CHECK, reason, "§c§l⚠ FailSafe ⚠§r §6$name §cdisabled§7. §8- §7$reason")
         modMessage("§cAlert! Macro check!")
-        modMessage("§c§l⚠ FailSafe ⚠§r §6$name §cdisabled§7. §8- §7$reason")
+        playSoundAtPlayer(zxf2Sound)
     }
 
     private fun hasAnyMacroEnabled(): Boolean {

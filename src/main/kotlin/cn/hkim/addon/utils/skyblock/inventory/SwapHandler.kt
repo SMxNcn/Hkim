@@ -13,11 +13,13 @@ import net.minecraft.network.chat.Component
 import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket
 import net.minecraft.world.entity.player.Input
 
+data class SwapInfo(val title: String, val detail: String)
+
 abstract class SwapHandler {
     companion object {
         @JvmStatic var isInSwap = false
             private set
-        var swapInfo: String? = null
+        var swapInfo: SwapInfo? = null
         private var savedInput: ClientInput? = null
         private val handlers = mutableListOf<SwapHandler>()
 
@@ -26,7 +28,7 @@ abstract class SwapHandler {
             handlers.toList().forEach { it.reset() }
         }
 
-        fun startSwap(info: String? = null) {
+        fun startSwap(info: SwapInfo? = null) {
             isInSwap = true
             swapInfo = info
             if (SwapOptions.noGui) ViewLock.lock(SwapOptions)

@@ -10,6 +10,7 @@ import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.mixins.accessors.FishingHookAccessor
 import cn.hkim.addon.utils.*
+import cn.hkim.addon.utils.notification.NotificationManager
 import cn.hkim.addon.utils.skyblock.LocationUtils
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.world.InteractionHand
@@ -48,14 +49,14 @@ object AutoFish : Module("Auto Fish", "Automatically casts and reels the fishing
             return
         }
         reset()
-        modMessage("§6Auto Fish§a enabled.")
+        NotificationManager.toggle(name, true)
     }
 
     override fun onDisable() {
         reset()
-        schedule(5) {
+        NotificationManager.toggle(name, false)
+        schedule(2) {
             if (mc.player?.fishing != null) useItemAction()
-            modMessage("§6Auto Fish§c disabled.")
         }
     }
 

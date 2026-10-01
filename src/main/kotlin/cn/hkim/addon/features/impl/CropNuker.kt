@@ -5,6 +5,7 @@ import cn.hkim.addon.utils.HudUtils.alert
 import cn.hkim.addon.utils.ViewLock
 import cn.hkim.addon.utils.holdKey
 import cn.hkim.addon.utils.modMessage
+import cn.hkim.addon.utils.notification.NotificationManager
 import cn.hkim.addon.utils.waypoints.FarmingWaypoints
 import net.minecraft.world.phys.Vec3
 import kotlin.math.roundToInt
@@ -20,7 +21,7 @@ object CropNuker {
 
     fun toggleNuker() {
         if (enabled) stop() else start()
-        modMessage("§6Crop Nuker${if (enabled) "§a enabled" else "§c disabled"}.")
+        NotificationManager.toggle("Crop Nuker", enabled)
     }
 
     fun start() {
