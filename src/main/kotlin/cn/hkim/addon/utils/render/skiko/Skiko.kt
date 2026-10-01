@@ -8,7 +8,10 @@ import org.joml.Matrix3x2fc
 import java.awt.Color
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.math.*
+import kotlin.math.cos
+import kotlin.math.max
+import kotlin.math.round
+import kotlin.math.sin
 
 object Skiko {
     private val typefaces = HashMap<SkikoFont, Typeface>()
@@ -246,15 +249,15 @@ object Skiko {
 
         PathBuilder().use { builder ->
             if (inner > 0f) {
-                val outerStart = edgeAngle(startAngle, offset, outer)
-                val outerEnd = edgeAngle(endAngle, -offset, outer)
-                val innerEnd = edgeAngle(endAngle, -offset, inner)
-                val innerStart = edgeAngle(startAngle, offset, inner)
+                val outerStart = SkikoDraw.edgeAngle(startAngle, offset, outer)
+                val outerEnd = SkikoDraw.edgeAngle(endAngle, -offset, outer)
+                val innerEnd = SkikoDraw.edgeAngle(endAngle, -offset, inner)
+                val innerStart = SkikoDraw.edgeAngle(startAngle, offset, inner)
                 builder.arcTo(oval(centerX, centerY, outer), degrees(outerStart), degrees(outerEnd - outerStart), true)
                 builder.arcTo(oval(centerX, centerY, inner), degrees(innerEnd), degrees(innerStart - innerEnd), false)
             } else {
-                val outerStart = edgeAngle(startAngle, offset, outer)
-                val outerEnd = edgeAngle(endAngle, -offset, outer)
+                val outerStart = SkikoDraw.edgeAngle(startAngle, offset, outer)
+                val outerEnd = SkikoDraw.edgeAngle(endAngle, -offset, outer)
                 builder.moveTo(centerX, centerY)
                 builder.lineTo(centerX + cos(outerStart) * outer, centerY + sin(outerStart) * outer)
                 builder.arcTo(oval(centerX, centerY, outer), degrees(outerStart), degrees(outerEnd - outerStart), false)
@@ -266,13 +269,6 @@ object Skiko {
                 }
             }
         }
-    }
-
-    fun edgeAngle(angle: Float, offset: Float, radius: Number): Float {
-        val r = radius.toFloat()
-        val along = sqrt((r * r - offset * offset).coerceAtLeast(0f))
-        if (along == 0f) return angle
-        return angle + atan2(offset, along)
     }
 
     private fun oval(cx: Float, cy: Float, radius: Float) =
