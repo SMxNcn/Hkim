@@ -1,9 +1,11 @@
-package cn.hkim.addon.gui
+package cn.hkim.addon.gui.screen
 
 import cn.hkim.addon.Hkim
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.ModuleConfig
 import cn.hkim.addon.features.impl.MainMenuModule
+import cn.hkim.addon.gui.Background
+import cn.hkim.addon.gui.ClientButton
 import cn.hkim.addon.utils.coloredChar
 import cn.hkim.addon.utils.mcVersion
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRectWithBorder
