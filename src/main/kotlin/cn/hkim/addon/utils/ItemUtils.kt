@@ -15,6 +15,7 @@ import net.minecraft.world.item.component.CustomData
 import net.minecraft.world.item.component.ItemLore
 import net.minecraft.world.level.block.*
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.BlockHitResult
 
 inline val ItemStack.customData: CompoundTag
     get() = getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag()
@@ -161,4 +162,29 @@ private fun isBlockCarrier(block: Block, state: BlockState): Boolean {
             block is SporeBlossomBlock ||
             block is AzaleaBlock ||
             block is FrogspawnBlock
+}
+
+fun lookingAtUsableBlock(): Boolean {
+    val player = mc.player ?: return false
+    val level = mc.level ?: return false
+    val hit = mc.hitResult as? BlockHitResult ?: return false
+    if (player.eyePosition.distanceTo(hit.location) > player.blockInteractionRange()) return false
+
+    val state = level.getBlockState(hit.blockPos)
+    if (state.getMenuProvider(level, hit.blockPos) != null) return true
+
+    if (state.`is`(BlockTags.BUTTONS) || state.`is`(BlockTags.DOORS) || state.`is`(BlockTags.TRAPDOORS) ||
+        state.`is`(BlockTags.FENCE_GATES) || state.`is`(BlockTags.FLOWER_POTS) || state.`is`(BlockTags.BEDS)
+    ) return true
+
+    return when (state.block) {
+        is EnderChestBlock -> true
+
+        is LeverBlock, is DiodeBlock, is SignBlock, is CaveVines, is NoteBlock, is DaylightDetectorBlock,
+        is CakeBlock, is BellBlock, is JukeboxBlock, is DragonEggBlock, is SweetBerryBushBlock,
+        is RedStoneWireBlock, is RespawnAnchorBlock, is ChiseledBookShelfBlock, is DecoratedPotBlock,
+        -> true
+
+        else -> false
+    }
 }
