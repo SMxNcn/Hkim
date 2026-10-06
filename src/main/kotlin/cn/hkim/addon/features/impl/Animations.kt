@@ -8,6 +8,7 @@ import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.utils.isSword
+import cn.hkim.addon.utils.lookingAtUsableBlock
 import cn.hkim.addon.utils.toRadians
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.world.entity.HumanoidArm
@@ -47,7 +48,7 @@ object Animations : Module("Animations", "Customize the first-person view model.
     fun shouldNotSwing() = enabled && disableReSwing
 
     fun shouldApplyOldAnimation(itemStack: ItemStack): Boolean {
-        return enabled && oldAnimation && mc.options.keyUse.isDown && itemStack.isSword
+        return enabled && oldAnimation && mc.options.keyUse.isDown && itemStack.isSword && !lookingAtUsableBlock()
     }
 
     fun animationVanilla(poseStack: PoseStack, arm: HumanoidArm, equipProgress: Float, swingProgress: Float) {
