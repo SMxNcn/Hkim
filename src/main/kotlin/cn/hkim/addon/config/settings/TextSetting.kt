@@ -31,7 +31,7 @@ class TextSetting(name: String, desc: String, default: String) : Setting<String>
             graphics.drawRoundedRectWithBorder(x, y, width, height, Theme.controlHover, 0, 0f, 3f)
         }
 
-        graphics.drawSkikoText(name, x + 10f, y + 3f, Theme.CARD_FONT_SIZE, Theme.controlText)
+        graphics.drawSkikoText(name, x + 6f, y + 3f, Theme.CARD_FONT_SIZE, Theme.controlText)
 
         val inputX = x + 85f
         val inputW = width - 95f
