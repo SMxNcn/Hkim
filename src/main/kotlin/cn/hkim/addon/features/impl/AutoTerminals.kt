@@ -26,8 +26,6 @@ import net.minecraft.world.inventory.Slot
 object AutoTerminals : Module("Auto Terminals", "Automatically solve terminals in Floor 7.") {
     private val firstClickDelay by NumberSetting("First Click Delay", "Delay before the first click after opening a terminal.", 500f, 0f, 1000f, 10f, "ms")
     private val clickDelay by NumberSetting("Click Delay", "Delay between each click.", 200f, 150f, 500f, 10f, "ms")
-    private val melodySkip by BooleanSetting("Melody Skip", "Skip melody at edge.", true).depends { melody }
-    private val melodySkipDelay by NumberSetting("Melody Skip Delay", "Delay for melody skip.", 100f, 100f, 150f, 5f, "ms").depends { melody && melodySkip }
 
     private val terminals by DropdownSetting("Terminals", "Select which terminal types to auto-complete.")
     private val panes by BooleanSetting("Panes", "Solve Panes terminal.", true).depends { terminals }
@@ -36,6 +34,8 @@ object AutoTerminals : Module("Auto Terminals", "Automatically solve terminals i
     private val startsWith by BooleanSetting("Starts With", "Solve Starts With terminal.", false).depends { terminals }
     private val select by BooleanSetting("Select All", "Solve Select All terminal.", false).depends { terminals }
     private val melody by BooleanSetting("Melody", "Solve Melody terminal.", false).depends { terminals }
+    private val melodySkip by BooleanSetting("Melody Skip", "Skip melody at edge.", true).depends { terminals && melody }
+    private val melodySkipDelay by NumberSetting("Melody Skip Delay", "Delay for melody skip.", 100f, 100f, 150f, 5f, "ms").depends { terminals && melody && melodySkip }
 
     private var handler: TerminalHandler? = null
     private var terminalTitle: String? = null

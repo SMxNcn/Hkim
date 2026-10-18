@@ -47,7 +47,7 @@ class SelectorSetting(name: String, desc: String, val options: List<String>, def
             graphics.drawRoundedRectWithBorder(x, y, width, height, Theme.controlHover, 0, 0f, 3f)
         }
 
-        graphics.drawSkikoText(name, x + 10f, y + 3f, Theme.CARD_FONT_SIZE, Theme.controlText)
+        graphics.drawSkikoText(name, x + 6f, y + 3f, Theme.CARD_FONT_SIZE, Theme.controlText)
 
         val selectorX = x + width - 100f
         val selectorW = 90f

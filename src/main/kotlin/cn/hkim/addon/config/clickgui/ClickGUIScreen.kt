@@ -533,7 +533,7 @@ class ClickGUIScreen(private val parent: Screen? = null) : Screen(Component.lite
 
         val closeX = x + w - 32f
         val closeY = y + 12f
-        val hovering = HudUtils.isPointInRect(mouseX.toFloat(), mouseY.toFloat(), closeX, closeY, 20f, 20f)
+        val hovering = HudUtils.isPointInRect(mouseX.toFloat(), mouseY.toFloat(), closeX + 4f, closeY + 4f, 12f, 12f)
 
         if (hovering) {
             graphics.requestCursor(CursorTypes.POINTING_HAND)
@@ -667,7 +667,7 @@ class ClickGUIScreen(private val parent: Screen? = null) : Screen(Component.lite
 
         val closeX = x + w - 32f
         val closeY = y + 12f
-        if (HudUtils.isPointInRect(mouseX, mouseY, closeX, closeY, 20f, 20f)) {
+        if (HudUtils.isPointInRect(mouseX, mouseY, closeX + 4f, closeY + 4f, 12f, 12f)) {
             playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value(), 0.3f)
             onClose()
             return true

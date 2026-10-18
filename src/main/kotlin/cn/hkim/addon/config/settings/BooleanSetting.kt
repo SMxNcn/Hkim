@@ -36,9 +36,9 @@ open class BooleanSetting(name: String, desc: String, default: Boolean) : Settin
             graphics.drawRoundedRectWithBorder(x, y, width, height, Theme.controlHover, 0, 0f, 3f)
         }
 
-        graphics.drawSkikoText(name, x + 10f, y + 3f, Theme.CARD_FONT_SIZE, Theme.controlText)
+        graphics.drawSkikoText(name, x + 6f, y + 3f, Theme.CARD_FONT_SIZE, Theme.controlText)
 
-        val toggleX = x + width - 28f
+        val toggleX = x + width - 30f
         val toggleY = y + 3f
         val toggleW = 22f
         val toggleH = 12f
@@ -66,7 +66,7 @@ open class BooleanSetting(name: String, desc: String, default: Boolean) : Settin
     override fun mouseClicked(mouseX: Float, mouseY: Float, button: Int, x: Float, y: Float, width: Float, doubleClick: Boolean): Boolean {
         if (button != InputConstants.MOUSE_BUTTON_LEFT) return false
 
-        val toggleX = x + width - 28f
+        val toggleX = x + width - 30f
         val toggleY = y + 3f
         val toggleW = 22f
         val toggleH = 12f

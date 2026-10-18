@@ -31,7 +31,7 @@ class ActionSetting(name: String, desc: String, val action: () -> Unit) : Settin
             graphics.drawRoundedRectWithBorder(x, y, width, height, Theme.controlHover, 0, 0f, 3f)
         }
 
-        graphics.drawSkikoText(name, x + 10f, y + 3f, Theme.CARD_FONT_SIZE, Theme.controlText)
+        graphics.drawSkikoText(name, x + 6f, y + 3f, Theme.CARD_FONT_SIZE, Theme.controlText)
 
         val btnX = x + width - 80f
         val btnY = y + 2f

@@ -113,15 +113,44 @@ class ModuleCardState(val module: Module) {
                 val contentBottom = y + totalHeight
 
                 if (contentBottom > visibleTop && contentTop < visibleBottom) {
+                    val indent = 12f
+                    val settings = visibleSettings
+
+                    val rows = ArrayList<Pair<Setting<*>, Float>>(settings.size)
                     var sy = y + cardH + 6f
-                    for (setting in visibleSettings) {
-                        val settingTop = sy
-                        val settingBottom = sy + settingHeight + settingGap
-                        if (settingBottom >= contentTop && settingTop <= contentBottom) {
-                            val indent = 12f
-                            setting.render(graphics, x + indent, sy, width - indent * 2, mouseX, mouseY, themeColor, delta, visibleTop, visibleBottom)
-                        }
+                    for (setting in settings) {
+                        rows.add(setting to sy)
                         sy += settingHeight + settingGap
+                    }
+
+                    for (i in rows.indices) {
+                        val (setting, rowY) = rows[i]
+                        if (setting !is DropdownSetting) continue
+
+                        var bgBottom = rowY + settingHeight
+                        if (setting.get()) {
+                            var j = i + 1
+                            while (j < rows.size) {
+                                val option = rows[j].first
+                                if (option is DropdownSetting || option.dependsCondition == null) break
+                                bgBottom = rows[j].second + settingHeight
+                                j++
+                            }
+                        }
+
+                        graphics.drawRoundedRect(
+                            x + indent, rowY,
+                            width - indent * 2, bgBottom - rowY,
+                            Theme.controlRowBg, 3f
+                        )
+                    }
+
+                    for ((setting, settingY) in rows) {
+                        val settingTop = settingY
+                        val settingBottom = settingY + settingHeight + settingGap
+                        if (settingBottom >= contentTop && settingTop <= contentBottom) {
+                            setting.render(graphics, x + indent, settingY, width - indent * 2, mouseX, mouseY, themeColor, delta, visibleTop, visibleBottom)
+                        }
                     }
                 }
             }
