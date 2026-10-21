@@ -2,8 +2,17 @@ package cn.hkim.addon.utils.render.skiko
 
 import cn.hkim.addon.Hkim
 import net.minecraft.client.gui.GuiGraphicsExtractor
+import kotlin.math.atan2
+import kotlin.math.sqrt
 
 object SkikoDraw {
+    fun edgeAngle(angle: Float, offset: Float, radius: Number): Float {
+        val r = radius.toFloat()
+        val along = sqrt((r * r - offset * offset).coerceAtLeast(0f))
+        if (along == 0f) return angle
+        return angle + atan2(offset, along)
+    }
+
     fun GuiGraphicsExtractor.skikoBatch(
         x: Float, y: Float,
         width: Float, height: Float,

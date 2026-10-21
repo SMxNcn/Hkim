@@ -5,6 +5,7 @@ import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.clickgui.ClickGUIScreen
 import cn.hkim.addon.gui.screen.GardenPlotScreen
 import cn.hkim.addon.gui.screen.HudEditScreen
+import cn.hkim.addon.gui.screen.RadialMenuEditorScreen
 import cn.hkim.addon.utils.customData
 import cn.hkim.addon.utils.modMessage
 import cn.hkim.addon.utils.playSoundAtPlayer
@@ -20,11 +21,15 @@ import net.minecraft.sounds.SoundEvent
 
 val hkimCommand = Commodore("hkim") {
     runs {
-        mc.execute { mc.gui.setScreen(ClickGUIScreen(null)) }
+        mc.execute { mc.gui.setScreen(ClickGUIScreen()) }
     }
 
-    literal("hud").runs {
-        mc.execute { mc.gui.setScreen(HudEditScreen(null)) }
+    literal("editHud").runs {
+        mc.execute { mc.gui.setScreen(HudEditScreen()) }
+    }
+
+    literal("editRadial").runs {
+        mc.execute { mc.gui.setScreen(RadialMenuEditorScreen()) }
     }
 
     literal("plot").runs {

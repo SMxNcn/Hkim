@@ -7,6 +7,7 @@ import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.utils.*
+import cn.hkim.addon.utils.notification.NotificationManager
 import cn.hkim.addon.utils.render.drawWireFrameBox
 import cn.hkim.addon.utils.skyblock.mining.*
 import cn.hkim.addon.utils.skyblock.mining.MineralType.Companion.isHighPriorityBlock
@@ -257,7 +258,7 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
                 return
             }
         }
-        modMessage("§6Nuker§a enabled.")
+        NotificationManager.toggle(name, true)
     }
 
     override fun onDisable() {
@@ -269,7 +270,7 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
         targetAcquiredTime = 0L
         DestroyProgressTracker.clear()
         TimiteHelper.reset()
-        modMessage("§6Nuker§c disabled.")
+        NotificationManager.toggle(name, false)
     }
 
     private fun clearTarget() {

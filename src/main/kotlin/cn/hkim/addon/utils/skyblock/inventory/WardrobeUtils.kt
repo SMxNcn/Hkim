@@ -40,7 +40,7 @@ object WardrobeUtils : SwapHandler() {
                     targetPage = page
                     isActive = true
                     isProcessing = false
-                    startSwap("Swapping to Armor #$index")
+                    startSwap(SwapInfo("Wardrobe", "Swapping to Armor #$index"))
                     sendCommand("wardrobe") // dube update removes page param
                 }
             }
