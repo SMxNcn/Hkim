@@ -48,7 +48,7 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
     private val plotScale by NumberSetting("Plot GUI Scale", "Scale of Garden Plot Screen.", 1f, 1f, 2f, 0.1f).depends { otherDropdown }
 
     private val waypointsDropdown by DropdownSetting("Waypoints")
-    private val switchDelayMs by NumberSetting("Switch Delay", "Delay after arriving at a waypoint before continuing (ms, random ±50 ms).", 200f, 0f, 500f, 10f).depends { waypointsDropdown }
+    private val switchDelayMs by NumberSetting("Switch Delay", "Delay after arriving at a waypoint before continuing.", 200f, 0f, 500f, 10f, "ms").depends { waypointsDropdown }
 
     private val nukerKeybind by KeybindSetting("Nuker Keybind", "Keybind to toggle nuker.", GLFW.GLFW_KEY_X)
 
