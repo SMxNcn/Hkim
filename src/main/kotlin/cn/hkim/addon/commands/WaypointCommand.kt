@@ -5,7 +5,6 @@ import cn.hkim.addon.features.impl.CropNuker
 import cn.hkim.addon.utils.modMessage
 import cn.hkim.addon.utils.waypoints.FarmingWaypoints
 import com.github.stivais.commodore.Commodore
-import com.github.stivais.commodore.utils.GreedyString
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.HoverEvent
@@ -23,32 +22,44 @@ val hwpCommand = Commodore("hwp") {
             val prefix = if (file == active) " §a■" else " §8■"
             val msg = Component.literal("$prefix §7$file.json").withStyle {
                 it.withHoverEvent(HoverEvent.ShowText(Component.literal("§7Click to load waypoint!")))
-                    .withClickEvent(ClickEvent.RunCommand("/nwp load $file"))
+                    .withClickEvent(ClickEvent.RunCommand("/hwp load $file"))
             }
             mc.execute { mc.gui.hud.chat.addClientSystemMessage(msg) }
         }
     }
 
-    literal("load").runs { file: GreedyString? ->
-        val fileName = file?.string?.trim()?.takeIf { it.isNotBlank() }
-            ?: return@runs modMessage("§7Usage: §7/hwp load <filename>")
-        FarmingWaypoints.load(fileName)
+    literal("load").executable {
+        param("file") {
+            suggests { FarmingWaypoints.listFiles() }
+        }
+        runs { file: String ->
+            val fileName = file.trim().takeIf { it.isNotBlank() }
+                ?: return@runs modMessage("§7Usage: §7/hwp load <filename>")
+            FarmingWaypoints.load(fileName)
+            CropNuker.resetRoute()
+        }
     }
 
     literal("reload").runs {
         FarmingWaypoints.reload()
+        CropNuker.resetRoute()
     }
 
     literal("unload").runs {
         FarmingWaypoints.unload()
+        CropNuker.resetRoute()
     }
 
     literal("setIndex").runs { index: Int ->
-        if (index < 1) {
-            modMessage("§cIndex must be >= 1.")
+        val size = FarmingWaypoints.currentWaypoints.size
+        if (size == 0) {
+            modMessage("§cWaypoints not loaded.")
             return@runs
         }
-        CropNuker.setCurrentActionId(index)
-        modMessage("§6Crop Nuker §7target set to waypoint §b#$index.")
+        if (index !in 1..size) {
+            modMessage("§cIndex out of range (1~$size).")
+            return@runs
+        }
+        CropNuker.setCurrentActionIndex(index)
     }
 }
