@@ -2,17 +2,23 @@ package cn.hkim.addon.mixins;
 
 import cn.hkim.addon.compat.tab.TabAnimation;
 import cn.hkim.addon.features.impl.ItemFeatures;
+import cn.hkim.addon.features.impl.CleanView;
 import cn.hkim.addon.features.impl.ModuleList;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.Hud;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.Holder;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Hud.class)
@@ -38,5 +44,11 @@ public class GuiMixin {
             TabAnimation.INSTANCE.setForcingListKey(false);
             TabAnimation.end(graphics);
         }
+    }
+
+    @Redirect(method = "extractCameraOverlays", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getEffectBlendFactor(Lnet/minecraft/core/Holder;F)F"))
+    private float cleanView$disableNauseaGuiOverlay(LocalPlayer player, Holder<MobEffect> effect, float delta) {
+        if (CleanView.shouldDisableDebuffs() && effect == MobEffects.NAUSEA) return 0.0F;
+        return player.getEffectBlendFactor(effect, delta);
     }
 }

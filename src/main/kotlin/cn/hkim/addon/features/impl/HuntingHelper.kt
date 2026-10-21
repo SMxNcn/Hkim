@@ -204,8 +204,8 @@ object HuntingHelper : Module("Hunting Helper", "Features for creature hunting."
         if (now - lastFloordropClick < 1000L) return
         lastFloordropClick = now
         Hkim.scope.launch {
-            delay(randomDelay(250, 100))
-            rightClick()
+            delay(randomDelay(150, 100))
+            leftClick()
         }
     }
 
