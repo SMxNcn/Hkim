@@ -124,16 +124,24 @@ enum class P3Stages(val corner1: BlockPos, val corner2: BlockPos) {
     }
 }
 
-enum class P2LeapAreas(val corner1: BlockPos, val corner2: BlockPos) {
-    PurplePillar(BlockPos(87, 169, 54), BlockPos(112, 174, 74)),
+enum class LeapAreas(val corner1: BlockPos, val corner2: BlockPos) {
+    // P1
+    LeftCrystalSpawn(BlockPos(80, 232, 52), BlockPos(84, 241, 44)),
+    LeftCrystalPlace(BlockPos(91, 223, 44), BlockPos(97, 227, 38)),
+    RightCrystalSpawn(BlockPos(66, 232, 52), BlockPos(62, 241, 44)),
+    RightCrystalPlace(BlockPos(55, 223, 44), BlockPos(49, 227, 38)),
+
+    // P2
+    PurplePillar(BlockPos(83, 169, 54), BlockPos(114, 174, 76)),
     PurplePad(BlockPos(122, 170, 86), BlockPos(106, 180, 102)),
-    YellowPillar(BlockPos(59, 169, 54), BlockPos(34, 174, 74)),
+    YellowPillar(BlockPos(63, 169, 54), BlockPos(32, 174, 76)),
     YellowPad(BlockPos(40, 170, 102), BlockPos(24, 180, 86)),
-    PurpleStorm(BlockPos(102, 162, 90), BlockPos(94, 170, 94));
+    PurpleStorm(BlockPos(76, 163, 92), BlockPos(90, 169, 86));
 
     companion object {
-        fun getP2Area(): P2LeapAreas? {
-            if (getF7Phase() != M7Phases.P2 || mc.player == null) return null
+        fun getAreas(): LeapAreas? {
+            val phase = getF7Phase()
+            if ((phase != M7Phases.P1 && phase != M7Phases.P2) || mc.player == null) return null
 
             val player = mc.player!!
             val playerPos = BlockPos(player.x.toInt(), player.y.toInt(), player.z.toInt())

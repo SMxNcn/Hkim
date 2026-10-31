@@ -2,6 +2,7 @@ package cn.hkim.addon.features.impl
 
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.settings.BooleanSetting
+import cn.hkim.addon.config.settings.NumberSetting
 import cn.hkim.addon.events.impl.GuiEvent
 import cn.hkim.addon.events.impl.MouseButtonEvent
 import cn.hkim.addon.features.Category
@@ -15,9 +16,8 @@ import net.minecraft.core.BlockPos
 
 @ModuleInfo("auto_leap", Category.SKYBLOCK)
 object AutoLeap : Module("Auto Leap", "Auto leap to players in dungeons.") {
-    private val m7py by BooleanSetting("Always PY", "Always doing PY in F/M7.", true)
-    private val ee2Mage by BooleanSetting("Archer EE2", "Set EE2 leap target to Mage.", false)
-    private val forceMageCore by BooleanSetting("Force Mage Core", "Always treat mage as core in P3 S3.", true)
+    private val ee2Mage by BooleanSetting("Mage EE2", "Set EE2 leap target to Mage.", false)
+    private val leapTicks by NumberSetting("Leap Ticks", "Ticks to leap.", 2f, 1f, 4f, 1f, "t")
 
     private var inLeapGui = false
     private var shouldAutoLeap = false
@@ -41,7 +41,7 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players in dungeons.") {
         val chest = (event.screen as? AbstractContainerScreen<*>) ?: return
         inLeapGui = chest.title.string.equalsOneOf("Spirit Leap", "Teleport to Player")
         if (!LocationUtils.inDungeons || !inLeapGui || !shouldAutoLeap) return
-        schedule(4) { performAutoLeap(chest) }
+        schedule(leapTicks.toInt()) { performAutoLeap(chest) }
     }
 
     private fun performAutoLeap(screen: AbstractContainerScreen<*>) {
@@ -88,8 +88,7 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players in dungeons.") {
 
         if (phase == M7Phases.Unknown) return null
 
-        val isCoreNormal = p3Stage == P3Stages.S3
-        val isCore = if (forceMageCore && p3Stage == P3Stages.S3) true else isCoreNormal
+        val isCore = p3Stage == P3Stages.S3
 
         return queryRule(myClass, phase, p3Stage, isCore)
     }
@@ -118,14 +117,22 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players in dungeons.") {
 
     // Dynamic leap rules in the future.
     private fun queryRule(sourceClass: DungeonClass, phase: M7Phases, p3Stage: P3Stages, isCore: Boolean = false): DungeonClass? {
-        if (phase == M7Phases.P2) return queryP2Rule(sourceClass)
-
         val player = mc.player!!
         val playerPos = BlockPos(player.x.toInt(), player.y.toInt(), player.z.toInt())
+        val area = LeapAreas.getAreas()
 
         return when (sourceClass) {
             DungeonClass.Archer -> when (phase) {
-                M7Phases.P1 -> DungeonClass.Berserk
+                M7Phases.P1 -> when (area) {
+                    LeapAreas.LeftCrystalSpawn -> DungeonClass.Tank
+                    LeapAreas.LeftCrystalPlace -> DungeonClass.Mage
+                    else -> DungeonClass.Berserk
+                }
+                M7Phases.P2 -> when (area) {
+                    LeapAreas.PurplePillar -> DungeonClass.Mage
+                    LeapAreas.YellowPillar -> DungeonClass.Healer
+                    else -> null
+                }
                 M7Phases.P3 -> when (p3Stage) {
                     P3Stages.S1 -> {
                         if (ee2Mage) DungeonClass.Mage
@@ -146,13 +153,19 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players in dungeons.") {
             }
 
             DungeonClass.Berserk -> when (phase) {
-                M7Phases.P1 -> null
+                M7Phases.P1 -> if (area == LeapAreas.RightCrystalSpawn) DungeonClass.Healer else null
+                M7Phases.P2 -> DungeonClass.Tank
                 M7Phases.P3 -> when (p3Stage) {
                     P3Stages.S1 -> {
                         if (ee2Mage) DungeonClass.Mage
                         else DungeonClass.Archer
                     }
-                    P3Stages.S2 -> DungeonClass.Healer
+                    P3Stages.S2 -> {
+                        if (isPositionInArea(BlockPos(57, 131, 137), BlockPos(63, 136, 142), playerPos)) {
+                            DungeonClass.Tank
+                        }
+                        else DungeonClass.Healer
+                    }
                     P3Stages.S3 -> {
                         if (isCore) DungeonClass.Mage
                         else DungeonClass.Archer
@@ -166,12 +179,13 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players in dungeons.") {
                     else -> null
                 }
                 M7Phases.P4 -> DungeonClass.Healer
-                M7Phases.P5 -> null
+                M7Phases.P5 -> DungeonClass.Archer
                 else -> null
             }
 
             DungeonClass.Healer -> when (phase) {
                 M7Phases.P1 -> null
+                M7Phases.P2 -> if (area == LeapAreas.PurplePad) DungeonClass.Berserk else null
                 M7Phases.P3 -> when (p3Stage) {
                     P3Stages.S1 -> {
                         if (ee2Mage) DungeonClass.Mage
@@ -179,8 +193,8 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players in dungeons.") {
                     }
                     P3Stages.S2 -> null
                     P3Stages.S3 -> {
-                        if (isPositionInArea(BlockPos(-3, 125, 80), BlockPos(3, 118, 74), playerPos)) {
-                            DungeonClass.Berserk
+                        if (isPositionInArea(BlockPos(-3, 125, 80), BlockPos(3, 118, 74), playerPos)) { // Arrow
+                            DungeonClass.Mage
                         } else if (isCore) DungeonClass.Mage
                         else DungeonClass.Archer
                     }
@@ -195,6 +209,12 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players in dungeons.") {
 
             DungeonClass.Mage -> when (phase) {
                 M7Phases.P1 -> DungeonClass.Berserk
+                M7Phases.P2 -> when (area) {
+                    LeapAreas.PurplePad -> DungeonClass.Healer
+                    LeapAreas.PurpleStorm -> DungeonClass.Tank
+                    LeapAreas.YellowPillar -> DungeonClass.Healer
+                    else -> null
+                }
                 M7Phases.P3 -> when (p3Stage) {
                     P3Stages.S1 -> {
                         if (ee2Mage) null
@@ -207,12 +227,19 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players in dungeons.") {
                     else -> null
                 }
                 M7Phases.P4 -> DungeonClass.Healer
-                M7Phases.P5 -> DungeonClass.Berserk
+                M7Phases.P5 -> {
+                    if (hasRelicInHotbar()) DungeonClass.Berserk
+                    else DungeonClass.Tank
+                }
                 else -> null
             }
 
             DungeonClass.Tank -> when (phase) {
-                M7Phases.P1 -> DungeonClass.Berserk
+                M7Phases.P1 -> when (area) {
+                    LeapAreas.LeftCrystalPlace -> DungeonClass.Mage
+                    else -> DungeonClass.Berserk
+                }
+                M7Phases.P2 -> if (area == LeapAreas.YellowPad) DungeonClass.Healer else null
                 M7Phases.P3 -> when (p3Stage) {
                     P3Stages.S1 -> {
                         if (ee2Mage) DungeonClass.Mage
@@ -236,38 +263,8 @@ object AutoLeap : Module("Auto Leap", "Auto leap to players in dungeons.") {
         }
     }
 
-    // Dynamic leap rules in the future.
-    private fun queryP2Rule(sourceClass: DungeonClass): DungeonClass? {
-        val p2Area = P2LeapAreas.getP2Area() ?: return null
-
-        return when (sourceClass) {
-            DungeonClass.Archer -> when {
-                p2Area == P2LeapAreas.YellowPillar -> DungeonClass.Healer
-                m7py && p2Area == P2LeapAreas.PurplePillar -> DungeonClass.Healer
-                else -> null
-            }
-
-            DungeonClass.Berserk -> null
-
-            DungeonClass.Mage -> when {
-                m7py && p2Area == P2LeapAreas.PurplePillar && ee2Mage -> DungeonClass.Tank
-                m7py && p2Area == P2LeapAreas.PurpleStorm -> DungeonClass.Healer
-                m7py && p2Area == P2LeapAreas.YellowPillar -> DungeonClass.Healer
-                !m7py && p2Area == P2LeapAreas.YellowPillar -> DungeonClass.Healer
-                else -> null
-            }
-
-            DungeonClass.Tank -> when {
-                p2Area == P2LeapAreas.YellowPad -> DungeonClass.Healer
-                else -> null
-            }
-
-            DungeonClass.Healer -> when {
-                p2Area == P2LeapAreas.YellowPillar -> DungeonClass.Berserk
-                else -> null
-            }
-
-            DungeonClass.Unknown -> null
-        }
+    private fun hasRelicInHotbar(): Boolean {
+        val stack = mc.player?.inventory?.getItem(8) ?: return false
+        return !stack.isEmpty && stack.itemId.contains("RELIC")
     }
 }
