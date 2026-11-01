@@ -29,6 +29,6 @@ jobs:
         uses: actions/upload-artifact@v7.0.1
         with:
           name: Hkim-mc${{ matrix.mc }}
-          path: build/libs/Hkim-*-mc${{ matrix.mc }}.jar
+          path: build/libs/Hkim-*+mc${{ matrix.mc }}.jar
           if-no-files-found: error
           archive: false
