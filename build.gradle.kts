@@ -190,9 +190,9 @@ base {
 }
 
 // Put both versions' artifacts into the root build/libs and make their names
-// Unique: Hkim-<mod_version>-mc<minecraft>.jar.
+// Unique: Hkim-<mod_version>+mc<minecraft>.jar.
 tasks.withType<Jar>().configureEach {
-    archiveVersion.set("${project.property("mod_version")}-mc$mcVersion")
+    archiveVersion.set("${project.property("mod_version")}+mc$mcVersion")
     destinationDirectory.set(rootProject.layout.buildDirectory.dir("libs"))
 }
 
