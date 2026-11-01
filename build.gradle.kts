@@ -33,7 +33,7 @@ val mc = when (mcVersion) {
         fabricApi = "0.165.0+26.3",
         modmenu = "21.0.0",
         iris = "1.11.6+26.3-fabric",
-        placeholderApi = "3.2.0+26.2",
+        placeholderApi = "3.2.0+26.3",
         minecraftRange = "~26.3",
     )
     else -> error("Unsupported Minecraft version: $mcVersion")
