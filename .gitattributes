@@ -1,0 +1,9 @@
+# 统一使用 LF 行尾
+* text=auto eol=lf
+
+# 二进制文件（项目内或可能引用）
+*.png binary
+*.ogg binary
+*.wav binary
+*.ttf binary
+*.otf binary

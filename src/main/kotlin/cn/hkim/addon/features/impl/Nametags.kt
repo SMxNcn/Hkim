@@ -1,0 +1,108 @@
+package cn.hkim.addon.features.impl
+
+import cn.hkim.addon.Hkim.mc
+import cn.hkim.addon.config.settings.BooleanSetting
+import cn.hkim.addon.config.settings.DropdownSetting
+import cn.hkim.addon.events.impl.RenderEvent
+import cn.hkim.addon.features.Category
+import cn.hkim.addon.features.Module
+import cn.hkim.addon.features.ModuleInfo
+import cn.hkim.addon.utils.*
+import cn.hkim.addon.utils.render.drawStyledBox
+import cn.hkim.addon.utils.render.drawText
+import cn.hkim.addon.utils.skyblock.DungeonUtils
+import cn.hkim.addon.utils.skyblock.Island
+import cn.hkim.addon.utils.skyblock.LocationUtils
+import meteordevelopment.orbit.EventHandler
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.phys.Vec3
+
+@ModuleInfo("nametag", Category.RENDER)
+object Nametags : Module("Nametags", "Render a nametag above players.") {
+    private val dropdown by DropdownSetting("Show Settings")
+    private val removeGlowing by BooleanSetting("Remove Glowing Effect", "Removes glowing effect on dungeon teammates.", true).depends { dropdown && teammateESP }
+    private val forceSkyBlock by BooleanSetting("Force SkyBlock", "Force render other players.", false).depends { dropdown }
+    private val renderDistance by BooleanSetting("Distance", "Render distance string.", true)
+    private val teammateESP by BooleanSetting("Teammate ESP", "Draw ESP box for dungeon teammates.", false)
+
+    private val PLAYER_REGEX = Regex("^\\[\\d{1,3}]\\s[a-zA-Z0-9_]{1,16}.*")
+
+    @EventHandler
+    private fun onRender(event: RenderEvent.Extract) {
+        if (!canDisplayNametags()) return
+        val level = mc.level ?: return
+        val player = mc.player ?: return
+
+        val origin = if (FreeCam.isFreecamActive) Vec3(FreeCam.camX, FreeCam.camY, FreeCam.camZ)
+                     else player.position()
+
+        for (entity in level.players()) {
+            if (entity == player) continue
+            if (!isValidSkyBlockPlayer(entity)) continue
+            if (entity.isRemoved || !entity.isAlive) continue
+
+            val distance = origin.distanceTo(entity.position())
+            val nametagText = buildNametagText(entity, distance.toInt())
+            val scale = calculateScale(distance.toFloat())
+            val yOffset = if (entity.isCrouching) 0.6 + scale / 5f else 0.8 + scale / 5f
+            val renderPos = Vec3(entity.renderX, entity.renderY + entity.eyeHeight + yOffset, entity.renderZ)
+
+            event.drawText(nametagText, renderPos, scale, false)
+
+            if (teammateESP && LocationUtils.inDungeons) {
+                val playerName = entity.name.cleanString
+                val dungeonPlayer = DungeonUtils.dungeonTeammates.find { it.name == playerName }
+
+                dungeonPlayer?.let { dp ->
+                    val color = dp.clazz.color
+                    event.drawStyledBox(entity.renderBoundingBox, color, 1, false)
+                }
+            }
+        }
+    }
+
+    private fun calculateScale(distance: Float): Float {
+        var size = distance / 10.0f
+        if (size < 1.1f) size = 1.1f
+        return size * 2f / 1.6f
+    }
+
+    private fun buildNametagText(entity: Player, distance: Int): String {
+        val playerName = entity.name.string
+
+        return if (LocationUtils.isCurrentArea(Island.Dungeon)) {
+            val dungeonPlayer = DungeonUtils.dungeonTeammates.find { it.name == playerName }
+
+            if (dungeonPlayer != null) {
+                val clazz = dungeonPlayer.clazz
+                val classInitial = clazz.name.first().uppercase()
+
+                "§${clazz.colorCode}[$classInitial] $playerName"
+            } else {
+                "§7[?] $playerName"
+            }
+        } else {
+            if (renderDistance) "${entity.displayName.legacy} §7${distance}m" else entity.displayName.legacy
+        }
+    }
+
+    private fun isValidSkyBlockPlayer(entity: Player): Boolean {
+        val name = entity.displayName.string.clean
+        return if (forceSkyBlock) !name.contains("[NPC]") && !name.contains("CIT-")
+        else name.matches(PLAYER_REGEX)
+    }
+
+    @JvmStatic
+    fun isDungeonTeammate(player: Player): Boolean {
+        if (!LocationUtils.inDungeons) return false
+
+        val playerName = player.name.string
+        return DungeonUtils.dungeonTeammates.any { it.name == playerName }
+    }
+
+    @JvmStatic
+    fun shouldRemoveGlowing() = enabled && teammateESP && removeGlowing && LocationUtils.inDungeons
+
+    @JvmStatic
+    fun canDisplayNametags() = enabled && (forceSkyBlock || LocationUtils.inSkyBlock)
+}

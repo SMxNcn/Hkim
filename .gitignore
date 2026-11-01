@@ -1,0 +1,20 @@
+.idea/
+*.iml
+.vscode/
+
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+.kotlin/
+
+# Stonecutter version subprojects
+versions/*/build/
+versions/*/.gradle/
+versions/*/run/
+
+run/
+temp/
+
+.claude/
+CLAUDE.md
