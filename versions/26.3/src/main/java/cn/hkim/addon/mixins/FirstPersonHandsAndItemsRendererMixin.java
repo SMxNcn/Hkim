@@ -1,0 +1,93 @@
+package cn.hkim.addon.mixins;
+
+import cn.hkim.addon.features.impl.Animations;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
+import net.minecraft.client.renderer.FirstPersonHandsAndItemsRenderer;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.entity.state.AvatarRenderState;
+import net.minecraft.client.renderer.state.level.FirstPersonHandsAndItemsRenderState;
+import net.minecraft.client.renderer.state.level.PlayerRenderState;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.world.item.ItemStack;
+import org.joml.Matrix4f;
+import org.objectweb.asm.Opcodes;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+@Mixin(FirstPersonHandsAndItemsRenderer.class)
+public abstract class FirstPersonHandsAndItemsRendererMixin {
+
+    @Shadow
+    private void applyItemArmAttackTransform(PoseStack poseStack, HumanoidArm arm, float attackValue) {
+    }
+
+    @WrapOperation(method = "submitArmWithItem", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;pushPose()V", ordinal = 0))
+    private void applyCustomHandAnimation(PoseStack instance, Operation<Void> original, @Local(argsOnly = true, name = "hand") InteractionHand hand, @Local(argsOnly = true, name = "itemStack") ItemStack itemStack) {
+        original.call(instance);
+
+        if (!Animations.INSTANCE.getEnabled() || itemStack.isEmpty() || itemStack.has(DataComponents.MAP_ID)) return;
+
+        float xOffset = Animations.getX();
+        float yOffset = Animations.getY();
+        float zOffset = Animations.getZ();
+
+        instance.translate(hand == InteractionHand.MAIN_HAND ? xOffset : -xOffset, yOffset, zOffset);
+        instance.mulPose(new Matrix4f().rotation(Axis.XP.rotationDegrees(Animations.getPitch())));
+        instance.mulPose(new Matrix4f().rotation(Axis.YP.rotationDegrees(Animations.getYaw())));
+        instance.mulPose(new Matrix4f().rotation(Axis.ZP.rotationDegrees(Animations.getRoll())));
+    }
+
+    @Inject(method = "submitArmWithItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/item/ItemStackRenderState;submit(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;III)V"))
+    private void applySizeTransform(PlayerRenderState playerState, FirstPersonHandsAndItemsRenderState state, float partialTicks, float xRot, InteractionHand hand, float attack, ItemStack itemStack, float inverseArmHeight, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
+        if (!Animations.INSTANCE.getEnabled() || itemStack.isEmpty() || itemStack.has(DataComponents.MAP_ID)) return;
+
+        float size = Animations.getSize();
+        poseStack.scale(size, size, size);
+    }
+
+    @Inject(method = "swingArm", at = @At("HEAD"), cancellable = true)
+    private void handleCustomSwingAnimation(float animation, PoseStack poseStack, int invert, HumanoidArm arm, CallbackInfo ci) {
+        if (!Animations.INSTANCE.shouldStopSwing()) return;
+        ci.cancel();
+
+        this.applyItemArmAttackTransform(poseStack, arm, animation);
+    }
+
+    @ModifyExpressionValue(method = "submitArmWithItem", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;isUsingItem:Z", ordinal = 1, opcode = Opcodes.GETFIELD))
+    private boolean insertOldSwordAnimationIf(boolean original, @Local(argsOnly = true, name = "hand") InteractionHand hand, @Local(argsOnly = true, name = "itemStack") ItemStack itemStack, @Local(argsOnly = true, name = "poseStack") PoseStack poseStack, @Local(argsOnly = true, name = "attack") float attack, @Local(argsOnly = true, name = "inverseArmHeight") float inverseArmHeight, @Local(name = "avatarRenderState") AvatarRenderState avatarRenderState) {
+        if (Animations.INSTANCE.shouldApplyOldAnimation(itemStack)) {
+            HumanoidArm arm = hand == InteractionHand.MAIN_HAND ? avatarRenderState.mainArm : avatarRenderState.mainArm.getOpposite();
+            Animations.INSTANCE.animationVanilla(poseStack, arm, inverseArmHeight, attack);
+            return false;
+        }
+        return original;
+    }
+
+    @ModifyExpressionValue(method = "submitArmWithItem", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;isAutoSpinAttack:Z"))
+    private boolean skipAutoSpinForOldSword(boolean original, @Local(argsOnly = true, name = "itemStack") ItemStack itemStack) {
+        if (Animations.INSTANCE.shouldApplyOldAnimation(itemStack)) return false;
+        return original;
+    }
+
+    @WrapOperation(method = "submitArmWithItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FirstPersonHandsAndItemsRenderer;applyItemArmTransform(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/world/entity/HumanoidArm;F)V"))
+    private void skipItemArmTransformForOldSword(FirstPersonHandsAndItemsRenderer instance, PoseStack poseStack, HumanoidArm arm, float inverseArmHeight, Operation<Void> original, @Local(argsOnly = true, name = "itemStack") ItemStack itemStack) {
+        if (Animations.INSTANCE.shouldApplyOldAnimation(itemStack)) return;
+        original.call(instance, poseStack, arm, inverseArmHeight);
+    }
+
+    @WrapOperation(method = "submitArmWithItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FirstPersonHandsAndItemsRenderer;swingArm(FLcom/mojang/blaze3d/vertex/PoseStack;ILnet/minecraft/world/entity/HumanoidArm;)V"))
+    private void skipSwingForOldSword(FirstPersonHandsAndItemsRenderer instance, float animation, PoseStack poseStack, int invert, HumanoidArm arm, Operation<Void> original, @Local(argsOnly = true, name = "itemStack") ItemStack itemStack) {
+        if (Animations.INSTANCE.shouldApplyOldAnimation(itemStack)) return;
+        original.call(instance, animation, poseStack, invert, arm);
+    }
+}
