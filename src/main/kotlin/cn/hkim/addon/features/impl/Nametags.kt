@@ -14,6 +14,7 @@ import cn.hkim.addon.utils.skyblock.DungeonUtils
 import cn.hkim.addon.utils.skyblock.Island
 import cn.hkim.addon.utils.skyblock.LocationUtils
 import meteordevelopment.orbit.EventHandler
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.Vec3
 
@@ -21,9 +22,10 @@ import net.minecraft.world.phys.Vec3
 object Nametags : Module("Nametags", "Render a nametag above players.") {
     private val dropdown by DropdownSetting("Show Settings")
     private val removeGlowing by BooleanSetting("Remove Glowing Effect", "Removes glowing effect on dungeon teammates.", true).depends { dropdown && teammateESP }
-    private val forceSkyBlock by BooleanSetting("Force SkyBlock", "Force render other players.", false).depends { dropdown }
+    private val forceSkyBlock by BooleanSetting("Force SkyBlock", "Render nametags outside SkyBlock.", false).depends { dropdown }
     private val renderDistance by BooleanSetting("Distance", "Render distance string.", true)
     private val teammateESP by BooleanSetting("Teammate ESP", "Draw ESP box for dungeon teammates.", false)
+    private val showOwnNametag by BooleanSetting("Show Own Nametag", "Show your own nameplate in third-person view.", false)
 
     private val PLAYER_REGEX = Regex("^\\[\\d{1,3}]\\s[a-zA-Z0-9_]{1,16}.*")
 
@@ -34,14 +36,14 @@ object Nametags : Module("Nametags", "Render a nametag above players.") {
         val player = mc.player ?: return
 
         val origin = if (FreeCam.isFreecamActive) Vec3(FreeCam.camX, FreeCam.camY, FreeCam.camZ)
-                     else player.position()
+                     else player.renderPos
 
         for (entity in level.players()) {
             if (entity == player) continue
             if (!isValidSkyBlockPlayer(entity)) continue
             if (entity.isRemoved || !entity.isAlive) continue
 
-            val distance = origin.distanceTo(entity.position())
+            val distance = origin.distanceTo(entity.renderPos)
             val nametagText = buildNametagText(entity, distance.toInt())
             val scale = calculateScale(distance.toFloat())
             val yOffset = if (entity.isCrouching) 0.6 + scale / 5f else 0.8 + scale / 5f
@@ -105,4 +107,10 @@ object Nametags : Module("Nametags", "Render a nametag above players.") {
 
     @JvmStatic
     fun canDisplayNametags() = enabled && (forceSkyBlock || LocationUtils.inSkyBlock)
+
+    @JvmStatic
+    fun shouldShowOwnNametag(): Boolean = enabled && showOwnNametag && !mc.options.cameraType.isFirstPerson
+
+    @JvmStatic
+    fun shouldShowOwnNametag(entity: LivingEntity): Boolean = entity == mc.player && shouldShowOwnNametag()
 }
