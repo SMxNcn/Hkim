@@ -35,17 +35,18 @@ import java.awt.Color
 object DungeonESP : Module("Dungeon ESP", "ESP for dungeon entities.") {
     private val highlightStar by BooleanSetting("Highlight Starred Mobs", "Highlights starred dungeon mobs.", true)
     private val highlightInvisible by BooleanSetting("Highlight Invisible Mobs", "Highlight invisible starred dungeon mobs.", true).depends { highlightStar }
-    private val highlightKeys by BooleanSetting("Highlight Keys", "Highlight wither and blood keys in dungeons.", true)
-    private val highlightColor by ColorSetting("Highlight Color", "The color of the highlight.", Colors.WHITE.rgb)
+    private val mobStyle by SelectorSetting("Starred Mob Box Style", "Style of starred mob esp.", listOf("Filled", "Outline", "Filled Outline"), "Outline").depends { highlightStar }
     private val hideNonNames by BooleanSetting("Hide Non-starred Names", "Hides names of entities that are not starred.", true)
+
+    private val highlightKeys by BooleanSetting("Highlight Keys", "Highlight wither and blood keys in dungeons.", true)
+    private val keyStyle by SelectorSetting("Key Box Style", "Style of key esp.", listOf("Filled", "Outline", "Filled Outline"), "Filled Outline").depends { highlightKeys }
+    private val bloodColor by ColorSetting("Blood Color", "The color of the blood key box.", Colors.BLACK.multiplyAlpha(0.8f).rgb).depends { highlightKeys }
+    private val witherColor by ColorSetting("Wither Color", "The color of the wither key box.", Colors.MINECRAFT_RED.multiplyAlpha(0.8f).rgb).depends { highlightKeys }
 
     private val batESP by BooleanSetting("Bat ESP", "Highlight Bat entities.", true)
     private val witherESP by BooleanSetting("Wither ESP", "Highlight Wither entities.", true)
-    private val mobStyle by SelectorSetting("Mob Box Style", "Style of mob esp.", listOf("Filled", "Outline", "Filled Outline"), "Outline")
 
-    private val bloodColor by ColorSetting("Blood Color", "The color of the box.", Colors.BLACK.multiplyAlpha(0.8f).rgb).depends { highlightKeys }
-    private val witherColor by ColorSetting("Wither Color", "The color of the box.", Colors.MINECRAFT_RED.multiplyAlpha(0.8f).rgb).depends { highlightKeys }
-    private val keyStyle by SelectorSetting("Mob Box Style", "Style of key esp.", listOf("Filled", "Outline", "Filled Outline"), "Filled Outline").depends { highlightKeys }
+    private val highlightColor by ColorSetting("Highlight Color", "The color of starred mob and boss ESP.", Colors.WHITE.rgb).depends { highlightStar || batESP || witherESP }
 
     private val dungeonMobSpawns = hashSetOf("Lurker", "Dreadlord", "Souleater", "Zombie", "Skeleton", "Skeletor", "Sniper", "Super Archer", "Spider", "Fels", "Withermancer", "Lost Adventurer", "Angry Archaeologist", "Frozen Adventurer", "Shadow Assassin")
     private val starredRegex = Regex("^.*✯ .*\\d{1,3}(?:,\\d{3})*(?:\\.\\d+)?[kM]?❤$")
