@@ -126,10 +126,10 @@ enum class P3Stages(val corner1: BlockPos, val corner2: BlockPos) {
 
 enum class LeapAreas(val corner1: BlockPos, val corner2: BlockPos) {
     // P1
-    LeftCrystalSpawn(BlockPos(80, 232, 52), BlockPos(84, 241, 44)),
+    LeftCrystalSpawn(BlockPos(80, 229, 53), BlockPos(84, 241, 47)),
     LeftCrystalPlace(BlockPos(91, 223, 44), BlockPos(97, 227, 38)),
-    RightCrystalSpawn(BlockPos(66, 232, 52), BlockPos(62, 241, 44)),
-    RightCrystalPlace(BlockPos(55, 223, 44), BlockPos(49, 227, 38)),
+    RightCrystalSpawn(BlockPos(66, 229, 53), BlockPos(62, 241, 47)),
+    // RightCrystalPlace(BlockPos(55, 223, 44), BlockPos(49, 227, 38)),  // Not used right now.
 
     // P2
     PurplePillar(BlockPos(83, 169, 54), BlockPos(114, 174, 76)),
