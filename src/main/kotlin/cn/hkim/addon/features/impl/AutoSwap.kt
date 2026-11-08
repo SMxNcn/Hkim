@@ -10,8 +10,11 @@ import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.utils.findRodSlot
+import cn.hkim.addon.utils.randomDelay
 import cn.hkim.addon.utils.rightClick
 import cn.hkim.addon.utils.skyblock.LocationUtils
+import cn.hkim.addon.utils.skyblock.M7Phases
+import cn.hkim.addon.utils.skyblock.getF7Phase
 import cn.hkim.addon.utils.skyblock.inventory.EquipmentUtils.swapEquipment
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -19,6 +22,7 @@ import meteordevelopment.orbit.EventHandler
 
 @ModuleInfo("auto_swap", Category.SKYBLOCK)
 object AutoSwap : Module("Auto Swap", "Auto swap spirit/bonzo.") {
+    private val onlyP3 by BooleanSetting("Only P3", "Only swap heads/pet in P3", true)
     private val useCustomDelay by BooleanSetting("Custom Swap Delay", "Customize delay before swapping items.", false)
     private val custom by DropdownSetting("Delay", "Delay settings.", false).depends { useCustomDelay }
     private val spiritDelay by NumberSetting("Spirit Delay", "Delay before equipping Spirit Mask.", 200f, 100f, 2000f, 50f, unit = "ms").depends { custom }
@@ -29,7 +33,7 @@ object AutoSwap : Module("Auto Swap", "Auto swap spirit/bonzo.") {
 
     @EventHandler
     private fun onChat(event: ChatReceiveEvent) {
-        if (!enabled || !LocationUtils.inDungeons) return
+        if (!enabled || !LocationUtils.inDungeons || (onlyP3 && getF7Phase() != M7Phases.P3)) return
 
         when {
             event.message.matches(bonzoRegex) -> Hkim.scope.launch { handleBonzo() }
@@ -38,14 +42,9 @@ object AutoSwap : Module("Auto Swap", "Auto swap spirit/bonzo.") {
     }
 
     private suspend fun handleBonzo() {
-        val delayTime = if (useCustomDelay) spiritDelay.toInt() else 250
-        delay(delayTime + (0..99).random().toLong())
-
-        delay(100)
-
-        if (swapEquipment(listOf("SPIRIT_MASK"))) {
-            delay(50)
-        }
+        val delayTime = if (useCustomDelay) spiritDelay.toInt() else 400
+        delay(randomDelay(delayTime, 50))
+        swapEquipment(listOf("SPIRIT_MASK"))
     }
 
     private suspend fun handleSpirit() {
@@ -53,16 +52,13 @@ object AutoSwap : Module("Auto Swap", "Auto swap spirit/bonzo.") {
         val rodSlot = findRodSlot()
         if (rodSlot == -1) return
 
-        val delayTime = if (useCustomDelay) phoenixDelay.toInt() else 250
-        delay(delayTime + (0..99).random().toLong())
-
-        delay(100)
+        val delayTime = if (useCustomDelay) phoenixDelay.toInt() else 400
+        delay(randomDelay(delayTime, 50))
 
         mc.player?.inventory?.selectedSlot = rodSlot
-        delay(160 + (0..40).random().toLong())
+        delay(randomDelay(150, 50))
         rightClick()
-        delay(160 + (0..40).random().toLong())
+        delay(randomDelay(150, 50))
         mc.player?.inventory?.selectedSlot = lastSlot
-        delay(50)
     }
 }
