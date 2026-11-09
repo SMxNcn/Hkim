@@ -63,7 +63,7 @@ class HudEditScreen(private val parent: Screen? = null) : Screen(Component.liter
         if (target != null) {
             val displayName = target.name.ifEmpty { target.owner?.name ?: "?" }
             val lines = listOfNotNull(
-                "§f$displayName§7  §7(${target.owner?.javaClass?.simpleName ?: "?"}) §f${"%.1f".format(target.hudScale)}x",
+                "§f$displayName§7 §7(${target.owner?.javaClass?.simpleName ?: "?"}) §f${"%.1f".format(target.hudScale)}x",
                 target.desc.takeIf { it.isNotEmpty() }?.let { "§f$it" }
             )
             var iy = 4f

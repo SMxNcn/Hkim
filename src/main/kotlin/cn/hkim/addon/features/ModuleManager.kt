@@ -13,7 +13,7 @@ object ModuleManager {
     private val modules = mutableListOf<Module>()
     private var isInitialized = false
     private var hudHookRegistered = false
-    private val hideModules = listOf(ClickGUI, DynamicIsland, MainMenuModule, ModuleList, ProtectItem, RadialMenu, SwapOptions, Test, TitleManager)
+    private val hideModules = listOf(ClickGUI, DynamicIsland, MainMenuModule, ModuleList, ProtectItem, RadialMenu, RngMeter, SwapOptions, Test, TitleManager)
 
     fun initOrbit() {
         Hkim.EVENT_BUS.registerLambdaFactory("cn.hkim.addon") { lookupInMethod, klass ->

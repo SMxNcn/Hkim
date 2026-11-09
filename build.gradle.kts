@@ -53,6 +53,7 @@ version = property("mod_version")!!
 repositories {
     mavenCentral()
     maven("https://jitpack.io")
+    maven("https://api.modrinth.com/maven")
     maven("https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1")
     maven("https://maven.meteordev.org/releases")
     maven("https://maven.meteordev.org/snapshots")
@@ -61,7 +62,6 @@ repositories {
     maven("https://maven.deftu.dev/releases")
     maven("https://maven.nucleoid.xyz/releases")
     maven("https://redirector.kotlinlang.org/maven/compose-dev")
-    maven("https://api.modrinth.com/maven")
 }
 
 dependencies {
@@ -119,11 +119,11 @@ if (project != rootProject) {
             rootProject.file("src/main/kotlin").toPath(),
             rootProject.file("src/main/java").toPath(),
         )
-        fun isGenerated(dir: java.io.File) = dir.toPath().startsWith(generatedRoot)
-        fun isRawRoot(dir: java.io.File) = rawRoots.any { it == dir.toPath() }
+        fun isGenerated(dir: File) = dir.toPath().startsWith(generatedRoot)
+        fun isRawRoot(dir: File) = rawRoots.any { it == dir.toPath() }
         if (main.kotlin.srcDirs.any(::isGenerated) && main.kotlin.srcDirs.any(::isRawRoot)) {
             val keepGenerated = mcVersion != stonecutter.active?.version
-            val drop: (java.io.File) -> Boolean = if (keepGenerated) ::isRawRoot else ::isGenerated
+            val drop: (File) -> Boolean = if (keepGenerated) ::isRawRoot else ::isGenerated
             main.kotlin.setSrcDirs(main.kotlin.srcDirs.filterNot(drop))
             main.java.setSrcDirs(main.java.srcDirs.filterNot(drop))
         }
