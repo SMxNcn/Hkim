@@ -35,7 +35,7 @@ object CustomHighlight : Module("Custom Highlight", "Highlight custom entities i
 
     private val entries = mutableListOf<HighlightEntry>()
     private val trackedEntities = mutableSetOf<Entity>()
-    private val PLAYER_REGEX = Regex("^\\[\\d{1,3}]\\s[a-zA-Z0-9_]{1,16}.*")
+    private val playerRegex = Regex("^\\[\\d{1,3}]\\s[a-zA-Z0-9_]{1,16}.*")
 
     private val configDir = File(FabricLoader.getInstance().configDir.toFile(), "hkim")
     private val dataFile = File(configDir, "custom_highlight.json")
@@ -138,14 +138,6 @@ object CustomHighlight : Module("Custom Highlight", "Highlight custom entities i
         }
     }
 
-    /**
-     * 以名字 ArmorStand 为锚点向下搜索实体。
-     * 原实现只用 ArmorStand 自身 boundingBox 向下移 1 格 + firstOrNull，导致：
-     * - 大型实体（如幽灵，高 3.5 格）身体与 1 格 box 无交集，永远命中不了；
-     * - 名字挂得高的实体（名字距头顶 > 1 格）同样漏检；
-     * - firstOrNull 的遍历顺序不确定，可能框到错误的实体。
-     * 现在改为：水平 ±2、向下 8 格的搜索范围，取距名字 ArmorStand 最近的合法实体。
-     */
     private fun findHighlightTarget(level: Level, stand: ArmorStand): Entity? {
         val box = AABB(
             stand.x - 2.0, stand.y - 8.0, stand.z - 2.0,
@@ -160,7 +152,7 @@ object CustomHighlight : Module("Custom Highlight", "Highlight custom entities i
         is Player -> {
             if (entity == mc.player) return false
             val name = entity.displayName.string.clean
-            !name.matches(PLAYER_REGEX)
+            !name.matches(playerRegex)
         }
         else -> true
     }

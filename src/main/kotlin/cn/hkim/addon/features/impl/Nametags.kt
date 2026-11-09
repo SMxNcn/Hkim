@@ -27,7 +27,7 @@ object Nametags : Module("Nametags", "Render a nametag above players.") {
     private val teammateESP by BooleanSetting("Teammate ESP", "Draw ESP box for dungeon teammates.", false)
     private val showOwnNametag by BooleanSetting("Show Own Nametag", "Show your own nameplate in third-person view.", false)
 
-    private val PLAYER_REGEX = Regex("^\\[\\d{1,3}]\\s[a-zA-Z0-9_]{1,16}.*")
+    private val playerRegex = Regex("^\\[\\d{1,3}]\\s[a-zA-Z0-9_]{1,16}.*")
 
     @EventHandler
     private fun onRender(event: RenderEvent.Extract) {
@@ -91,7 +91,7 @@ object Nametags : Module("Nametags", "Render a nametag above players.") {
     private fun isValidSkyBlockPlayer(entity: Player): Boolean {
         val name = entity.displayName.string.clean
         return if (forceSkyBlock) !name.contains("[NPC]") && !name.contains("CIT-")
-        else name.matches(PLAYER_REGEX)
+        else name.matches(playerRegex)
     }
 
     @JvmStatic
