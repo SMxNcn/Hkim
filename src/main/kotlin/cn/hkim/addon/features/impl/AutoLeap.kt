@@ -14,7 +14,6 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
 import cn.hkim.addon.compat.input.InputCompat
 import cn.hkim.addon.config.settings.NumberSetting
-import net.minecraft.world.InteractionHand
 
 @ModuleInfo("auto_leap", Category.SKYBLOCK)
 object AutoLeap : Module("Auto Leap", "Auto leap to players in dungeons.") {

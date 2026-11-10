@@ -13,9 +13,9 @@ import cn.hkim.addon.utils.skyblock.LocationUtils
 
 @ModuleInfo("title", Category.MISC, true)
 object TitleManager : Module("Title Manager", "Manage game title.") {
-    @JvmStatic val titleText by TextSetting("Title Text", "Main title.", "愿「开拓」的结局如我们所书♪")
-    @JvmStatic val showPlayer by BooleanSetting("Player", "Current player username", false)
-    @JvmStatic val showLocation by BooleanSetting("Location", "Current SkyBlock location.", false)
+    val titleText by TextSetting("Title Text", "Main title.", "愿「开拓」的结局如我们所书♪")
+    val showPlayer by BooleanSetting("Player", "Current player username", false)
+    val showLocation by BooleanSetting("Location", "Current SkyBlock location.", false)
     @JvmStatic val customIcon by BooleanSetting("Custom Icon", "Restart the game to apply icon changes.", false)
 
     fun buildTitle(): String {
