@@ -82,7 +82,7 @@ object RngMeter : Module("RNG Meter", "Shows the current RNG Meter progress.") {
     }
 
     @EventHandler
-    private fun onWorldUnload(event: WorldEvent.Unload) {
+    private fun onWorldLoad(event: WorldEvent.Load) {
         RngMeterChatParser.reset()
     }
 

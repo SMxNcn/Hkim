@@ -100,7 +100,7 @@ object FailSafeUtils {
     }
 
     @EventHandler
-    private fun onWorldUnload(event: WorldEvent.Unload) {
+    private fun onWorldLoad(event: WorldEvent.Load) {
         if (!LocationUtils.inSkyBlock) return
         trigger("World Change")
     }

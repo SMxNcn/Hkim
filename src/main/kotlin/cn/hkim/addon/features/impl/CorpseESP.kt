@@ -75,7 +75,7 @@ object CorpseESP : Module("Corpse ESP", "Highlights corpses in the Mineshaft.") 
     }
 
     @EventHandler
-    private fun onWorldUnload(event: WorldEvent.Unload) {
+    private fun onWorldLoad(event: WorldEvent.Load) {
         corpses.clear()
         dismissedIds.clear()
     }
