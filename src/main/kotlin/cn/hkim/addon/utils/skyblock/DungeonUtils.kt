@@ -5,7 +5,6 @@ import cn.hkim.addon.events.impl.ChatReceiveEvent
 import cn.hkim.addon.events.impl.PacketReceiveEvent
 import cn.hkim.addon.events.impl.TickEvent
 import cn.hkim.addon.events.impl.WorldEvent
-import cn.hkim.addon.features.impl.LeapMenu
 import cn.hkim.addon.utils.Colors
 import cn.hkim.addon.utils.clean
 import cn.hkim.addon.utils.isPositionInArea
@@ -154,7 +153,6 @@ enum class LeapAreas(val corner1: BlockPos, val corner2: BlockPos) {
 object DungeonUtils {
     var dungeonTeammates: ArrayList<DungeonPlayer> = ArrayList(5)
     var dungeonTeammatesNoSelf: List<DungeonPlayer> = ArrayList(4)
-    var leapTeammates: List<DungeonPlayer> = ArrayList(4)
     inline val currentDungeonPlayer: DungeonPlayer
         get() = dungeonTeammates.find { it.name == mc.player?.name?.string } ?:
         DungeonPlayer(mc.player?.name?.string ?: "Unknown", DungeonClass.Unknown, 0, null)
@@ -190,7 +188,6 @@ object DungeonUtils {
     private fun onWorldLoad(event: WorldEvent.Load) {
         dungeonTeammates.clear()
         dungeonTeammatesNoSelf = emptyList()
-        leapTeammates = emptyList()
         inBoss = false
         floor = null
     }
@@ -237,13 +234,6 @@ object DungeonUtils {
     private fun updateDungeonTeammates(tabList: List<String>) = mc.execute {
         dungeonTeammates = getDungeonTeammates(dungeonTeammates, tabList)
         dungeonTeammatesNoSelf = dungeonTeammates.filter { it.name != mc.player?.name?.string }
-
-        leapTeammates = when (LeapMenu.type) {
-            0 -> LeapMenu.defaultSorting(dungeonTeammatesNoSelf.sortedBy { it.clazz.priority }).toList()
-            1 -> dungeonTeammatesNoSelf.sortedWith(compareBy ({ it.clazz.ordinal }, { it.name }))
-            2 -> dungeonTeammatesNoSelf.sortedBy { it.name }
-            else -> dungeonTeammatesNoSelf
-        }
     }
 
     private fun getDungeonTeammates(previousTeammates: ArrayList<DungeonPlayer>, tabList: List<String>): ArrayList<DungeonPlayer> {
