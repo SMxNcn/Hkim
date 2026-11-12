@@ -36,7 +36,6 @@
     "LivingEntityMixin",
     "LivingEntityRendererMixin",
     "LocalPlayerMixin",
-    "MinecraftCrashGuardMixin",
     "MinecraftMixin",
     "MobEffectFogEnvironmentMixin",
     "MouseHandlerMixin",
