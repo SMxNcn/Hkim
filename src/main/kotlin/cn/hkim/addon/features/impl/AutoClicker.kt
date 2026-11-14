@@ -12,6 +12,7 @@ import cn.hkim.addon.utils.clickKey
 import cn.hkim.addon.utils.isBuildingBlock
 import cn.hkim.addon.utils.itemId
 import meteordevelopment.orbit.EventHandler
+import net.minecraft.client.KeyMapping
 
 @ModuleInfo("auto_clicker", Category.SKYBLOCK)
 object AutoClicker : Module("Auto Clicker", "Auto click your mouse.") {
@@ -30,8 +31,12 @@ object AutoClicker : Module("Auto Clicker", "Auto click your mouse.") {
 
     @EventHandler
     private fun onTick(event: TickEvent.Start) {
-        if (!enabled || mc.gui.screen() != null || mc.player == null) return
-        if (mc.player!!.isUsingItem) return
+        if (!enabled || mc.gui.screen() != null || mc.player == null || mc.player!!.isUsingItem) {
+            nextLeftClick = 0.0
+            nextRightClick = 0.0
+            nextBlockClick = 0.0
+            return
+        }
 
         val nowMillis = System.currentTimeMillis().toDouble()
         when (mode) {
@@ -45,33 +50,46 @@ object AutoClicker : Module("Auto Clicker", "Auto click your mouse.") {
         return base + (Math.random() - 0.5) * base * 0.1
     }
 
+    private fun clickOnSchedule(key: KeyMapping, nextClick: Double, cps: Float, nowMillis: Double, beforeClick: () -> Unit = {}): Double {
+        var next = if (nextClick == 0.0) nowMillis else nextClick
+        if (nowMillis < next) return next
+
+        beforeClick()
+        clickKey(key)
+        next += nextDelay(cps)
+
+        if (next <= nowMillis) next = nowMillis + nextDelay(cps)
+
+        return next
+    }
+
     private fun handleTerminatorClicks(nowMillis: Double) {
-        if (mc.player?.mainHandItem?.itemId == "TERMINATOR" && mc.options.keyUse.isDown) {
-            if (nowMillis >= nextRightClick) {
-                nextRightClick = nowMillis + nextDelay(cps)
-                mc.missTime = 0
-                clickKey(mc.options.keyAttack)
-            }
+        val player = mc.player ?: return
+
+        if (player.mainHandItem.itemId == "TERMINATOR" && mc.options.keyUse.isDown) {
+            nextRightClick = clickOnSchedule(mc.options.keyAttack, nextRightClick, cps, nowMillis) { mc.missTime = 0 }
+        } else {
+            nextRightClick = 0.0
         }
 
-        if (rightClickBlock && isBuildingBlock(mc.player?.mainHandItem) && mc.options.keyUse.isDown) {
-            if (nowMillis >= nextBlockClick) {
-                nextBlockClick = nowMillis + nextDelay(blockCps)
-                clickKey(mc.options.keyUse)
-            }
+        if (rightClickBlock && isBuildingBlock(player.mainHandItem) && mc.options.keyUse.isDown) {
+            nextBlockClick = clickOnSchedule(mc.options.keyUse, nextBlockClick, blockCps, nowMillis)
+        } else {
+            nextBlockClick = 0.0
         }
     }
 
     private fun handleNormalClicks(nowMillis: Double) {
-        if (enableLeftClick && mc.options.keyAttack.isDown && nowMillis >= nextLeftClick) {
-            nextLeftClick = nowMillis + nextDelay(leftCps)
-            mc.missTime = 0
-            clickKey(mc.options.keyAttack)
+        if (enableLeftClick && mc.options.keyAttack.isDown) {
+            nextLeftClick = clickOnSchedule(mc.options.keyAttack, nextLeftClick, leftCps, nowMillis) { mc.missTime = 0 }
+        } else {
+            nextLeftClick = 0.0
         }
 
-        if (enableRightClick && mc.options.keyUse.isDown && nowMillis >= nextRightClick) {
-            nextRightClick = nowMillis + nextDelay(rightCps)
-            clickKey(mc.options.keyUse)
+        if (enableRightClick && mc.options.keyUse.isDown) {
+            nextRightClick = clickOnSchedule(mc.options.keyUse, nextRightClick, rightCps, nowMillis)
+        } else {
+            nextRightClick = 0.0
         }
     }
 }
