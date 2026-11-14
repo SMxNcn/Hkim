@@ -54,6 +54,7 @@
     "accessors.FishingHookAccessor",
     "accessors.JoinMultiplayerScreenAccessor",
     "accessors.KeyMappingAccessor",
+    "accessors.MultiPlayerGameModeAccessor",
     "accessors.ScreenAccessor",
     "compat.SkyHanniTabListRendererMixin"
   ]

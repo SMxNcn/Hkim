@@ -4,6 +4,7 @@ import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.features.impl.SwapOptions
 import cn.hkim.addon.utils.clickInventorySlot
 import cn.hkim.addon.utils.modMessage
+import cn.hkim.addon.utils.randomDelay
 import cn.hkim.addon.utils.schedule
 import cn.hkim.addon.utils.sendCommand
 import kotlinx.coroutines.TimeoutCancellationException
@@ -51,7 +52,7 @@ object LoadoutUtils : SwapHandler() {
 
         if (targetPage > totalPages) return
 
-        schedule((4..6).random()) {
+        schedule(randomDelay(SwapOptions.startClickTicks.toInt(), 2).toInt()) {
             when {
                 currentPage == targetPage -> performClick()
                 currentPage < targetPage -> turnPage()

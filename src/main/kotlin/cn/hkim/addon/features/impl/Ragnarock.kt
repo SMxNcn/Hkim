@@ -45,9 +45,8 @@ object Ragnarock : Module("Ragnarock", "Alerts when you cast the Ragnarock.") {
             if (strengthGainedMessage) {
                 modMessage("Gained strength: §4$strengthGained")
                 if (announceStrengthGained) {
-                    val message = customStrengthMessage.ifBlank {
-                        this.settings.filterIsInstance<TextSetting>().find { it.configKey == "customStrengthMessage" }?.default.toString()
-                    }.replace("%s", strengthGained.toString(), true)
+                    val message = customStrengthMessage
+                        .ifBlank { "Gained strength from Ragnarock: %s" }.replace("%s", strengthGained.toString(), true)
                     sendCommand("pc $message")
                 }
             }

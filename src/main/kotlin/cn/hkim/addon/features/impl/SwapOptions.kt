@@ -20,7 +20,8 @@ object SwapOptions : Module("Swap Options", "Extra options for swapping.") {
     val ldTitleRegex = Regex("\\((\\d+)/(\\d+)\\) Loadouts")
     val wdTitleRegex = Regex("\\((\\d+)/(\\d+)\\) Armor Sets")
 
-    val closeTicks by NumberSetting("Close Ticks", "Ticks to close GUI.", 10f, 5f, 20f, 1f)
+    val startClickTicks by NumberSetting("Start Click Ticks", "Ticks to start clicking.", 4f, 4f, 10f, 1f)
+    val closeTicks by NumberSetting("Close Ticks", "Ticks to close GUI.", 10f, 4f, 10f, 1f)
     val noGui by BooleanSetting("No Gui", "Hide GUI while swapping.", false)
     val showSwapInfo by BooleanSetting("Show Swap Info", "Display current swap info.", true)
 

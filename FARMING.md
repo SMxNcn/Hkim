@@ -55,7 +55,3 @@ Interactive tool for generating farming waypoint: [Waypoint Generator](https://g
 | **Pest Spawned** | Stop Nuker, set spawn, swap to Mossy loadout, teleport to plot |
 | **Pest Ready**   | Swap to Mantid loadout                                         |
 | **Pest Killed**  | Warp to Garden, resume Nuker                                   |
-
-## Future Changes
-
-- Hypixel will **remove** [Pest Disco](https://hypixelskyblock.minecraft.wiki/w/Buzzybee%27s_Fantabulous_Disco_Destination) soon, and the Nuker behavior may change in the future.

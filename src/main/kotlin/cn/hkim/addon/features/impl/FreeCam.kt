@@ -1,7 +1,6 @@
 package cn.hkim.addon.features.impl
 
 import cn.hkim.addon.Hkim.mc
-import cn.hkim.addon.config.settings.BooleanSetting
 import cn.hkim.addon.config.settings.KeybindSetting
 import cn.hkim.addon.config.settings.NumberSetting
 import cn.hkim.addon.config.settings.SelectorSetting
@@ -24,11 +23,10 @@ import cn.hkim.addon.compat.input.InputCompat
 
 @ModuleInfo("free_cam", category = Category.MISC)
 object FreeCam : Module("Free Camera", "Detach your camera and fly around freely.") {
-    private val acceleration by NumberSetting("Acceleration", "Movement acceleration (blocks/s²).", 50f, 5f, 500f, 5f)
-    private val maxSpeed by NumberSetting("Max Speed", "Maximum movement speed (blocks/s).", 50f, 5f, 500f, 5f)
-    private val slowdownFactor by NumberSetting("Slowdown", "Velocity multiplier per second when no key is held.", 0.01f, 0.0001f, 0.5f, 0.001f)
+    private val acceleration by NumberSetting("Acceleration", "Movement acceleration (blocks/s²).", 50f, 5f, 100f, 1f)
+    private val maxSpeed by NumberSetting("Max Speed", "Maximum movement speed (blocks/s).", 50f, 5f, 100f, 1f)
+    private val slowdownFactor by NumberSetting("Slowdown", "Velocity multiplier per second when no key is held.", 0.01f, 0.001f, 0.5f, 0.001f)
     private val movementMode by SelectorSetting("Movement Mode", "Default = camera moves on pitch plane; Spectator = horizontal-only.", listOf("Default", "Spectator"), "Default")
-    private val showMyName by BooleanSetting("Show My Name", "Show your own name tag while in FreeCam.", true)
     private val toggleKey by KeybindSetting("Toggle FreeCam", "Key to toggle FreeCam.", InputCompat.KEY_F6)
 
     @JvmStatic var isFreecamActive = false
@@ -56,8 +54,6 @@ object FreeCam : Module("Free Camera", "Detach your camera and fly around freely
     private val forward = Vector3f()
     private val up = Vector3f()
     private val left = Vector3f()
-
-    @JvmStatic fun shouldShowPlayerName() = isFreecamActive && showMyName
 
     @EventHandler
     private fun onInput(event: InputEvent) {

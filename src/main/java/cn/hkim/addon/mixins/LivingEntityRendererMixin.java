@@ -24,7 +24,8 @@ public class LivingEntityRendererMixin {
 
     @Inject(method = "shouldShowName(Lnet/minecraft/world/entity/LivingEntity;D)Z", at = @At("HEAD"), cancellable = true)
     private void shouldShowName(LivingEntity entity, double distanceToCameraSq, CallbackInfoReturnable<Boolean> cir) {
-        if (Nametags.canDisplayNametags() && !Nametags.shouldShowOwnNametag(entity)) {
+        if (!Nametags.canDisplayNametags() || (FreeCam.isFreecamActive() && entity == Hkim.mc.player)) return;
+        if (!Nametags.shouldShowOwnNametag(entity)) {
             cir.setReturnValue(false);
             cir.cancel();
         }
@@ -32,7 +33,7 @@ public class LivingEntityRendererMixin {
 
     @ModifyExpressionValue(method = "shouldShowName*", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;getCameraEntity()Lnet/minecraft/world/entity/Entity;"))
     private Entity modifyCameraEntityForName(Entity original) {
-        if (FreeCam.shouldShowPlayerName() || Nametags.shouldShowOwnNametag()) {
+        if (FreeCam.isFreecamActive() || Nametags.shouldShowOwnNametag()) {
             return null;
         }
         return original;

@@ -6,6 +6,7 @@ import cn.hkim.addon.events.impl.*
 import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
+import cn.hkim.addon.mixins.accessors.MultiPlayerGameModeAccessor
 import cn.hkim.addon.utils.*
 import cn.hkim.addon.utils.notification.NotificationManager
 import cn.hkim.addon.utils.render.drawWireFrameBox
@@ -126,8 +127,8 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
         }
 
         if (preAiming && target != null) {
-            val pg = DestroyProgressTracker.getDestroyProgress(target)
-            if (pg in 8..9) clearTarget()
+            val destroyProgress = (mc.gameMode as MultiPlayerGameModeAccessor?)?.destroyProgress ?: 0f
+            if (destroyProgress >= 0.8f) clearTarget()
         }
 
         if (currentTarget == null) {
@@ -268,7 +269,6 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
         hasMineralsInRange = false
         cachedAllowedTypes = null
         targetAcquiredTime = 0L
-        DestroyProgressTracker.clear()
         TimiteHelper.reset()
         NotificationManager.toggle(name, false)
     }

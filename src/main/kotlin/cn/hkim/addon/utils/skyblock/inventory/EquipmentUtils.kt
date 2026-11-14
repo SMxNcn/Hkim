@@ -5,6 +5,7 @@ import cn.hkim.addon.features.impl.SwapOptions
 import cn.hkim.addon.utils.clickPlayerInventorySlot
 import cn.hkim.addon.utils.findItemByID
 import cn.hkim.addon.utils.modMessage
+import cn.hkim.addon.utils.randomDelay
 import cn.hkim.addon.utils.schedule
 import cn.hkim.addon.utils.sendCommand
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -52,7 +53,7 @@ object EquipmentUtils : SwapHandler() {
             return
         }
 
-        schedule((6..8).random()) {
+        schedule(randomDelay(SwapOptions.startClickTicks.toInt(), 2).toInt()) {
             if (!isProcessing) { processNextItem() }
         }
     }

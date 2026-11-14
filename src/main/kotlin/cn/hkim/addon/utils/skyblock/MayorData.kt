@@ -76,10 +76,4 @@ object MayorData {
 
     val pestSpawnCooldown: Int
         get() = if (hasPerk("Finnegan", "Pest Eradicator")) 75 else 135
-
-    val pestExchangeTime: Long
-        get() = if (hasPerk("Finnegan", "Pest Eradicator")) 3_600_000 else 1_800_000
-
-    val aatroxMultiplier: Double
-        get() = if (hasPerk("Aatrox", "Slayer XP Buff")) 1.25 else 1.0
 }
