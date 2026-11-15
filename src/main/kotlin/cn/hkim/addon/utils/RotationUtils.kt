@@ -5,6 +5,7 @@ import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.atan2
+import kotlin.math.round
 import kotlin.math.sqrt
 
 object RotationUtils {
@@ -130,6 +131,17 @@ object RotationUtils {
         val angularDiffPitch = abs(wrapAngleTo180(serverPitch - clientPitch))
 
         if (angularDiffYaw < 0.1f && angularDiffPitch < 0.1f) {
+            val player = mc.player
+            if (player != null) {
+                val deltaYaw = round((serverYaw - player.yRot) / 360.0f) * 360.0f
+                if (deltaYaw != 0.0f) {
+                    player.yRot = player.yRot + deltaYaw
+                    player.yRotO += deltaYaw
+                }
+                clientYaw = player.yRot
+            } else {
+                clientYaw += round((serverYaw - clientYaw) / 360.0f) * 360.0f
+            }
             serverYaw = clientYaw
             serverPitch = clientPitch
             isStoppingAiming = false

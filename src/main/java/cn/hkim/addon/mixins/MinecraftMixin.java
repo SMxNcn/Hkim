@@ -27,6 +27,15 @@ public abstract class MinecraftMixin {
     @Unique
     private float hkim$raySavedPitch;
 
+    @Unique
+    private float hkim$raySavedYawO;
+
+    @Unique
+    private float hkim$raySavedPitchO;
+
+    @Unique
+    private boolean hkim$rayRotated;
+
     @Inject(method = "tick", at = @At("HEAD"))
     private void onStartTick(CallbackInfo ci) {
         Hkim.EVENT_BUS.post(new TickEvent.Start());
@@ -76,25 +85,35 @@ public abstract class MinecraftMixin {
 
     @Inject(method = "pick(F)V", at = @At("HEAD"))
     private void beforePick(CallbackInfo ci) {
+        this.hkim$rayRotated = false;
         LocalPlayer player = Hkim.mc.player;
         if (player == null) return;
         if (!RotationUtils.isSilentAiming() && !RotationUtils.isStoppingAiming()) return;
 
         this.hkim$raySavedYaw = player.getYRot();
         this.hkim$raySavedPitch = player.getXRot();
+        this.hkim$raySavedYawO = player.yRotO;
+        this.hkim$raySavedPitchO = player.xRotO;
 
         player.setYRot(RotationUtils.getServerYaw());
         player.setXRot(RotationUtils.getServerPitch());
+        player.yRotO = player.getYRot();
+        player.xRotO = player.getXRot();
 
+        this.hkim$rayRotated = true;
     }
 
     @Inject(method = "pick(F)V", at = @At("RETURN"))
     private void afterPick(CallbackInfo ci) {
+        if (!this.hkim$rayRotated) return;
+        this.hkim$rayRotated = false;
+
         LocalPlayer player = Hkim.mc.player;
         if (player == null) return;
-        if (!RotationUtils.isSilentAiming() && !RotationUtils.isStoppingAiming()) return;
 
         player.setYRot(this.hkim$raySavedYaw);
         player.setXRot(this.hkim$raySavedPitch);
+        player.yRotO = this.hkim$raySavedYawO;
+        player.xRotO = this.hkim$raySavedPitchO;
     }
 }
