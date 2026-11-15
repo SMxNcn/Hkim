@@ -1,12 +1,9 @@
 package cn.hkim.addon.utils
 
 import cn.hkim.addon.Hkim.mc
-import cn.hkim.addon.utils.HudUtils.getChromaColor
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
-import net.minecraft.network.chat.TextColor
-import java.awt.Color
 import java.util.*
 
 val prefix = Component.literal("[").withStyle(ChatFormatting.DARK_GRAY)
@@ -27,47 +24,6 @@ fun sendChatMessage(message: Any) {
 
 fun sendCommand(command: String) {
     mc.execute { mc.player?.connection?.sendCommand(command) }
-}
-
-fun coloredChar(char: String, color: Int) =
-    Component.literal(char).withColor(color)
-
-/** Build a [Component] where each visible character gets a chroma-gradient color between [startArgb] and [endArgb],
- *  with accumulated §-style formatting (§lomnkr). Set [speed] to 0 for a static gradient. */
-fun buildGradientComponent(text: String, startArgb: Int, endArgb: Int, speed: Int): Component {
-    val startCol = Color(startArgb and 0xFFFFFF, false)
-    val endCol = Color(endArgb and 0xFFFFFF, false)
-    val parts = mutableListOf<Component>()
-    var style = Style.EMPTY
-    var charPos = 0
-    val chars = text.toCharArray()
-    var i = 0
-    while (i < chars.size) {
-        if (chars[i] == '§' && i + 1 < chars.size) {
-            style = when (chars[i + 1]) {
-                'l' -> style.withBold(true)
-                'o' -> style.withItalic(true)
-                'n' -> style.withUnderlined(true)
-                'm' -> style.withStrikethrough(true)
-                'k' -> style.withObfuscated(true)
-                'r' -> Style.EMPTY
-                else -> style
-            }
-            i += 2
-            continue
-        }
-        val gradCol = getChromaColor(startCol, endCol, charPos, speed, 2)
-        val charStyle = style.withColor(TextColor.fromRgb(gradCol.rgb))
-        parts.add(Component.literal(chars[i].toString()).withStyle(charStyle))
-        charPos++
-        i++
-    }
-    return if (parts.isEmpty()) Component.literal("")
-    else {
-        val root = Component.literal("")
-        for (part in parts) root.append(part)
-        root
-    }
 }
 
 val String.clean: String
@@ -105,15 +61,3 @@ val Component.legacy: String
 
         return builder.toString()
     }
-
-private fun getLegacyColorCode(rgb: Int): String? = when (rgb) {
-    0x000000 -> "§0"; 0x0000AA -> "§1"
-    0x00AA00 -> "§2"; 0x00AAAA -> "§3"
-    0xAA0000 -> "§4"; 0xAA00AA -> "§5"
-    0xFFAA00 -> "§6"; 0xAAAAAA -> "§7"
-    0x555555 -> "§8"; 0x5555FF -> "§9"
-    0x55FF55 -> "§a"; 0x55FFFF -> "§b"
-    0xFF5555 -> "§c"; 0xFF55FF -> "§d"
-    0xFFFF55 -> "§e"; 0xFFFFFF -> "§f"
-    else -> null
-}

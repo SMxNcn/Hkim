@@ -17,6 +17,7 @@ import cn.hkim.addon.gui.SkikoEditBox
 import cn.hkim.addon.gui.SkikoTooltip.drawTooltip
 import cn.hkim.addon.gui.screen.HudEditScreen
 import cn.hkim.addon.hud.Bounds
+import cn.hkim.addon.utils.ColorUtils
 import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.playSoundAtPlayer
 import cn.hkim.addon.utils.render.Easing
@@ -849,7 +850,7 @@ class ClickGUIScreen(private val parent: Screen? = null) : Screen(Component.lite
     }
 
     private fun applyColorEditValue(setting: ColorSetting, text: String) {
-        val parsed = HudUtils.fromHexString(text) ?: return
+        val parsed = ColorUtils.fromHexString(text) ?: return
         val value = if (text.replace("#", "").trim().length == 8) {
             parsed
         } else {

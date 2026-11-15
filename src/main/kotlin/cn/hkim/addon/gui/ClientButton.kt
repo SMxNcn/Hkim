@@ -1,7 +1,7 @@
 package cn.hkim.addon.gui
 
 import cn.hkim.addon.Hkim.mc
-import cn.hkim.addon.utils.HudUtils
+import cn.hkim.addon.utils.ColorUtils
 import cn.hkim.addon.utils.render.Easing
 import cn.hkim.addon.utils.render.GuiAnimation
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRectWithBorder
@@ -31,12 +31,12 @@ class ClientButton(
         }
 
         val progress = hoverAnim.getValue()
-        val bgColor = HudUtils.lerpColor(0x202A2A2A, 0x20AAAAAA, progress)
-        val borderColor = HudUtils.lerpColor(0x53969696, 0x63AAAAAA, progress)
+        val bgColor = ColorUtils.lerpColor(0x202A2A2A, 0x20AAAAAA, progress)
+        val borderColor = ColorUtils.lerpColor(0x53969696, 0x63AAAAAA, progress)
 
         val textColor = component.style.color
             ?.let { 0xFF000000.toInt() or (it.value and 0xFFFFFF) }
-            ?: HudUtils.lerpColor(0xFFE0E0E0.toInt(), 0xFFFFFFFF.toInt(), progress)
+            ?: ColorUtils.lerpColor(0xFFE0E0E0.toInt(), 0xFFFFFFFF.toInt(), progress)
 
         graphics.drawRoundedRectWithBorder(x.toFloat(), y.toFloat(), width.toFloat(), height.toFloat(), bgColor, borderColor, 1f, 4f)
 

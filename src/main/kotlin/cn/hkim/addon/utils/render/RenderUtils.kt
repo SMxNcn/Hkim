@@ -2,11 +2,11 @@ package cn.hkim.addon.utils.render
 
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.events.impl.RenderEvent
-import cn.hkim.addon.utils.HudUtils.aGL
-import cn.hkim.addon.utils.HudUtils.bGL
-import cn.hkim.addon.utils.HudUtils.gGL
-import cn.hkim.addon.utils.HudUtils.multiplyAlpha
-import cn.hkim.addon.utils.HudUtils.rGL
+import cn.hkim.addon.utils.ColorUtils.aGL
+import cn.hkim.addon.utils.ColorUtils.bGL
+import cn.hkim.addon.utils.ColorUtils.gGL
+import cn.hkim.addon.utils.ColorUtils.multiplyAlpha
+import cn.hkim.addon.utils.ColorUtils.rGL
 import cn.hkim.addon.utils.render.RenderBatchManager.noFogBuffer
 import cn.hkim.addon.utils.render.RenderBatchManager.pipelineContexts
 import cn.hkim.addon.utils.render.RenderBatchManager.usedPipelines

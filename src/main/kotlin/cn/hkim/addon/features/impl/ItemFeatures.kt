@@ -6,7 +6,7 @@ import cn.hkim.addon.config.settings.SelectorSetting
 import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
-import cn.hkim.addon.utils.HudUtils.multiplyShade
+import cn.hkim.addon.utils.ColorUtils.multiplyShade
 import cn.hkim.addon.utils.getItemRarity
 import cn.hkim.addon.utils.isSkyBlockItem
 import cn.hkim.addon.utils.skyblock.LocationUtils

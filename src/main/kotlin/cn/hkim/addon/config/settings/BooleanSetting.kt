@@ -4,7 +4,7 @@ import cn.hkim.addon.config.Setting
 import cn.hkim.addon.config.clickgui.Theme
 import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.HudUtils.lerp
-import cn.hkim.addon.utils.HudUtils.lerpColor
+import cn.hkim.addon.utils.ColorUtils.lerpColor
 import cn.hkim.addon.utils.playSoundAtPlayer
 import cn.hkim.addon.utils.render.Easing
 import cn.hkim.addon.utils.render.GuiAnimation

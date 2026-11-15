@@ -3,6 +3,7 @@ package cn.hkim.addon.config.clickgui
 import cn.hkim.addon.config.Setting
 import cn.hkim.addon.config.settings.DropdownSetting
 import cn.hkim.addon.features.Module
+import cn.hkim.addon.utils.ColorUtils
 import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.render.Easing
 import cn.hkim.addon.utils.render.GuiAnimation
@@ -79,9 +80,9 @@ class ModuleCardState(val module: Module) {
             && mouseY in visibleTop..visibleBottom
             && HudUtils.isPointInRect(mouseX, mouseY, x, y, width, Theme.CARD_HEIGHT)
 
-        val enabledEdge = HudUtils.lerpColor(0xFF000000.toInt(), themeColor, Theme.cardEdgeEnabledFactor)
-        val edgeColor = HudUtils.lerpColor(Theme.cardEdgeDisabled, enabledEdge, lerpEnabled)
-        val nameColor = HudUtils.lerpColor(Theme.textNameMuted, themeColor, lerpEnabled)
+        val enabledEdge = ColorUtils.lerpColor(0xFF000000.toInt(), themeColor, Theme.cardEdgeEnabledFactor)
+        val edgeColor = ColorUtils.lerpColor(Theme.cardEdgeDisabled, enabledEdge, lerpEnabled)
+        val nameColor = ColorUtils.lerpColor(Theme.textNameMuted, themeColor, lerpEnabled)
         val fillColor = if (isHovered) Theme.cardFillHover else Theme.cardFill
 
         val batchTop = max(y - 1f, visibleTop)

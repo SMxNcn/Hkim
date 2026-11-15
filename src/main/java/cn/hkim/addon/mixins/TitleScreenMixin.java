@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import static cn.hkim.addon.Hkim.mc;
-import static cn.hkim.addon.utils.ChatUtilsKt.coloredChar;
+import static cn.hkim.addon.utils.ColorUtilsKt.coloredChar;
 
 @Mixin(TitleScreen.class)
 public abstract class TitleScreenMixin {

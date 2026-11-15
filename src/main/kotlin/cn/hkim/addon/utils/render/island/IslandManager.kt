@@ -1,7 +1,7 @@
 package cn.hkim.addon.utils.render.island
 
 import cn.hkim.addon.hud.Bounds
-import cn.hkim.addon.utils.HudUtils
+import cn.hkim.addon.utils.ColorUtils
 import java.util.*
 
 data class IslandAnchor(
@@ -18,7 +18,7 @@ fun IslandAnchor.towards(bounds: Bounds, radius: Float, background: Int, t: Floa
         this.bounds.h + (bounds.h - this.bounds.h) * t,
     ),
     this.radius + (radius - this.radius) * t,
-    HudUtils.lerpColor(this.background, background, t),
+    ColorUtils.lerpColor(this.background, background, t),
 )
 
 data class IslandContent(

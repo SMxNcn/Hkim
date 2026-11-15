@@ -13,7 +13,7 @@ import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.utils.Colors
 import cn.hkim.addon.utils.HudUtils.alert
-import cn.hkim.addon.utils.HudUtils.multiplyAlpha
+import cn.hkim.addon.utils.ColorUtils.multiplyAlpha
 import cn.hkim.addon.utils.render.drawStyledBox
 import cn.hkim.addon.utils.render.drawWireFrameBox
 import cn.hkim.addon.utils.renderBoundingBox

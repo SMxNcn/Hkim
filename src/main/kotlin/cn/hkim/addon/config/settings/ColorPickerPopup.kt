@@ -5,6 +5,7 @@ import cn.hkim.addon.config.Setting
 import cn.hkim.addon.config.clickgui.ClickGUIScreen
 import cn.hkim.addon.config.clickgui.Theme
 import cn.hkim.addon.gui.SkikoEditBox
+import cn.hkim.addon.utils.ColorUtils
 import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.playSoundAtPlayer
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawGradientRectMulti
@@ -78,7 +79,7 @@ class ColorPickerPopup(private val setting: ColorSetting) {
     }
 
     private fun refreshCache() {
-        val hsb = HudUtils.hsbOf(setting.value)
+        val hsb = ColorUtils.hsbOf(setting.value)
         cachedH = hsb[0]
         cachedS = hsb[1]
         cachedB = hsb[2]
@@ -92,13 +93,13 @@ class ColorPickerPopup(private val setting: ColorSetting) {
     }
 
     private fun syncAlphaBox() {
-        val text = HudUtils.alphaToPercent(HudUtils.alphaOf(setting.value)).toString()
+        val text = ColorUtils.alphaToPercent(ColorUtils.alphaOf(setting.value)).toString()
         if (alphaBox.text != text) alphaBox.setText(text)
     }
 
     private fun onAlphaTextChanged(text: String) {
         val p = text.toIntOrNull()?.coerceIn(0, 100) ?: return
-        setting.set((setting.value and 0xFFFFFF) or (HudUtils.percentToAlpha(p) shl 24))
+        setting.set((setting.value and 0xFFFFFF) or (ColorUtils.percentToAlpha(p) shl 24))
     }
 
     fun renderPopup(
@@ -142,7 +143,7 @@ class ColorPickerPopup(private val setting: ColorSetting) {
             if (HudUtils.isPointInRect(mouseX, mouseY, innerX, hexY, HEX_W, HEX_H)) {
                 graphics.requestCursor(CursorTypes.IBEAM)
             }
-            graphics.drawSkikoText(HudUtils.toHexStringRGB(setting.value), innerX + TEXT_INSET_X, hexY + TEXT_INSET_Y, fontSize, Theme.controlTextActive)
+            graphics.drawSkikoText(ColorUtils.toHexStringRGB(setting.value), innerX + TEXT_INSET_X, hexY + TEXT_INSET_Y, fontSize, Theme.controlTextActive)
         }
 
         alphaBox.render(graphics, alphaX, hexY, ALPHA_W, HEX_H, mouseX, mouseY, themeColor, fontSize)
@@ -150,7 +151,7 @@ class ColorPickerPopup(private val setting: ColorSetting) {
         val percentW = skikoTextWidth("%", fontSize)
         graphics.drawSkikoText("%", percentX + (PERCENT_W - percentW) / 2f, hexY + TEXT_INSET_Y, fontSize, Theme.controlTextMuted)
 
-        val pure = HudUtils.hsvToRgb(cachedH, 1f, 1f)
+        val pure = ColorUtils.hsvToRgb(cachedH, 1f, 1f)
         graphics.drawGradientRectMulti(
             innerX, panelY, PANEL_SIZE, PANEL_SIZE, listOf(0xFFFFFFFF.toInt(), pure), null, SkikoGradient.LEFT_RIGHT, RADIUS,
             cacheKey = "color-picker-sv-hue",
@@ -213,7 +214,7 @@ class ColorPickerPopup(private val setting: ColorSetting) {
                 if (screen.activeEditBoxSetting == setting) {
                     screen.activeSkikoEditBox?.handleMouseClicked(mx, my, innerX, hexY, HEX_W, HEX_H, doubleClick)
                 } else {
-                    screen.activateSkikoEditBox(setting, HudUtils.toHexStringRGB(setting.value), maxLength = 7, insetY = TEXT_INSET_Y)
+                    screen.activateSkikoEditBox(setting, ColorUtils.toHexStringRGB(setting.value), maxLength = 7, insetY = TEXT_INSET_Y)
                     playSoundAtPlayer(SoundEvents.UI_BUTTON_CLICK.value(), 0.3f)
                 }
             }
@@ -279,7 +280,7 @@ class ColorPickerPopup(private val setting: ColorSetting) {
     }
 
     private fun argbOf(h: Float, s: Float, b: Float): Int {
-        val rgb = HudUtils.hsvToRgb(h.coerceIn(0f, 1f), s.coerceIn(0f, 1f), b.coerceIn(0f, 1f))
+        val rgb = ColorUtils.hsvToRgb(h.coerceIn(0f, 1f), s.coerceIn(0f, 1f), b.coerceIn(0f, 1f))
         return (rgb and 0xFFFFFF) or (setting.value and 0xFF000000.toInt())
     }
 
@@ -311,7 +312,7 @@ class ColorPickerPopup(private val setting: ColorSetting) {
         private const val SCREEN_MARGIN = 10f
 
         private val HUE_COLORS: List<Int> by lazy {
-            (0..6).map { HudUtils.hsvToRgb(it / 6f, 1f, 1f) }
+            (0..6).map { ColorUtils.hsvToRgb(it / 6f, 1f, 1f) }
         }
     }
 }

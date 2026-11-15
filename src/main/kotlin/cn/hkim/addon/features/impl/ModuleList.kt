@@ -9,7 +9,7 @@ import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.features.ModuleManager
 import cn.hkim.addon.hud.HudElement
-import cn.hkim.addon.utils.HudUtils.getChromaColor
+import cn.hkim.addon.utils.ColorUtils.getChromaColor
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoText
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.skikoTextWidth
 import net.minecraft.client.gui.GuiGraphicsExtractor
