@@ -244,7 +244,7 @@ fun buildGradientComponent(text: String, startArgb: Int, endArgb: Int, speed: In
 }
 
 
-class ParsedColoredText(val plain: String, val component: Component) {
+class ParsedColoredText(val plain: String, val component: Component, val formatting: String) {
     val legacy: String by lazy { component.legacy }
     val hasExtendedColor: Boolean by lazy { component.hasNonLegacyColor() }
     fun asComponent(): Component = if (hasExtendedColor) component else Component.literal(legacy)
@@ -260,6 +260,7 @@ private fun hexValueAt(text: String, start: Int): Int? {
 
 fun parseColoredText(text: String): ParsedColoredText {
     val plain = StringBuilder(text.length)
+    val formatting = StringBuilder(text.length + 8)
     val root = Component.empty()
     val pending = StringBuilder()
     var style = Style.EMPTY
@@ -273,6 +274,7 @@ fun parseColoredText(text: String): ParsedColoredText {
     fun applyColor(rgb: Int) {
         flush()
         style = Style.EMPTY.withColor(rgb)
+        formatting.append("§r")
     }
 
     var i = 0
@@ -284,6 +286,9 @@ fun parseColoredText(text: String): ParsedColoredText {
             if (format != null) {
                 flush()
                 style = style.applyLegacyFormat(format)
+                val c = code.lowercaseChar()
+                if (c in 'k'..'o' || c == 'r') formatting.append('§').append(c)
+                else formatting.append("§r")
                 i += 2
                 continue
             }
@@ -297,9 +302,10 @@ fun parseColoredText(text: String): ParsedColoredText {
             }
         }
         plain.append(ch)
+        formatting.append(ch)
         pending.append(ch)
         i++
     }
     flush()
-    return ParsedColoredText(plain.toString(), root)
+    return ParsedColoredText(plain.toString(), root, formatting.toString())
 }

@@ -10,12 +10,39 @@ import cn.hkim.addon.hud.HudAlignment
 import cn.hkim.addon.hud.HudElement
 import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.ColorUtils.gradientText
+import cn.hkim.addon.utils.ParsedColoredText
+import cn.hkim.addon.utils.parseColoredText
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRect
+import cn.hkim.addon.utils.toLegacyOrComponent
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.network.chat.Component
-import java.awt.Color
 
 @ModuleInfo("custom_scoreboard", Category.MISC)
 object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard features.") {
+    private val background by DropdownSetting("Background")
+    private val showBackground by BooleanSetting("Enabled", "", true).depends { background }
+    private val bgColor by ColorSetting("Color", "", 0x4C000000).depends { background && showBackground }
+    private val padding by NumberSetting("Padding", "", 2f, 0f, 5f, 1f).depends { background && showBackground }
+    private val backgroundRadius by NumberSetting("Radius", "", 0f, 0f, 5f, 1f).depends { background && showBackground }
+    private val replaceIpLine by BooleanSetting("Replace Last Line", "Replace the last row.", true)
+    private val customServerIp by TextSetting("Custom IP Line", "Use '&' for color codes. Supports &#RRGGBB hex colors.", "").depends { replaceIpLine }
+    private val centerIpLine by BooleanSetting("Center IP Line", "Center the custom last line horizontally.", false).depends { hasCustomIpText() }
+    private val lastLineGradient by BooleanSetting("IP Gradient", "", false).depends { hasCustomIpText() }
+    private val gradient by DropdownSetting("Gradient").depends { hasCustomIpText() && lastLineGradient }
+    private val gradStart by ColorSetting("Start Color", "", 0xFF55FF).depends { hasCustomIpText() && lastLineGradient && gradient }
+    private val gradEnd by ColorSetting("End Color", "", 0x55FFFF).depends { hasCustomIpText() && lastLineGradient && gradient }
+    private val gradSpeed by NumberSetting("Speed", "", 5f, 1f, 10f, 1f).depends { hasCustomIpText() && lastLineGradient && gradient }
+
+    private val resetPosition by ActionSetting("Reset Position", "Reset scoreboard position to default.") {
+        hud.hudAlignment = HudAlignment.MIDDLE_RIGHT
+        hud.anchorX = -100f
+        hud.anchorY = -25f
+        hud.hudScale = 1f
+        prevContentWidth = 0f
+        initialPositionSet = false
+        ModuleConfig.saveConfig()
+    }
+
     private const val EXAMPLE_TITLE = "§e§lSKYBLOCK"
     private val EXAMPLE_LINES = listOf(
         "§6  5,234,567",
@@ -26,43 +53,6 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard features.") {
         "§7  §m━━━━━━━━━",
         "§d§l✿ BMW ✿"
     )
-
-    private val showBackground by BooleanSetting("Background", "", true)
-    private val bgColor by ColorSetting("Color", "", 0x4C000000).depends { showBackground }
-    private val padding by NumberSetting("Padding", "Space between content and background edge.", 2f, 0f, 6f, 0.5f).depends { showBackground }
-    private val replaceIpLine by BooleanSetting(
-        "Replace Last Line",
-        "Replace the last row (e.g. server IP). Leave the custom text empty to hide the row.",
-        true
-    )
-    private val customServerIp by TextSetting(
-        "Custom IP Line",
-        "Use & instead of § for colour codes. Supports &#RRGGBB hex colours. Empty hides the last row.",
-        ""
-    ).depends { replaceIpLine }
-    private val centerIpLine by BooleanSetting(
-        "Center IP Line",
-        "Center the custom last line horizontally.",
-        false
-    ).depends { hasCustomIpText() }
-    private val lastLineGradient by BooleanSetting(
-        "IP Gradient",
-        "Render the custom last line with a colour gradient (overrides text colours).",
-        false
-    ).depends { hasCustomIpText() }
-    private val gradStart by ColorSetting("Gradient Start", "", 0xFF55FF).depends { hasCustomIpText() && lastLineGradient }
-    private val gradEnd by ColorSetting("Gradient End", "", 0x55FFFF).depends { hasCustomIpText() && lastLineGradient }
-    private val gradSpeed by NumberSetting("Gradient Speed", "", 5f, 1f, 10f, 1f).depends { hasCustomIpText() && lastLineGradient }
-
-    private val resetPosition by ActionSetting("Reset Position", "Reset scoreboard position to default (middle-right).") {
-        hud.hudAlignment = HudAlignment.MIDDLE_RIGHT
-        hud.anchorX = -100f
-        hud.anchorY = -25f
-        hud.hudScale = 1f
-        prevContentWidth = 0f
-        initialPositionSet = false
-        ModuleConfig.saveConfig()
-    }
 
     private var prevContentWidth = 0f
     private var initialPositionSet = false
@@ -186,9 +176,8 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard features.") {
         val customHasText = custom != null && custom.plain.isNotEmpty()
         val useGradient = customHasText && lastLineGradient
 
-        // Measure the same thing that gets drawn: gradient mode ignores component colours and uses plain text.
         val displayLines = lines.mapIndexed { i, line ->
-            if (useGradient && i == lastIdx) Component.literal(custom.plain) else line
+            if (useGradient && i == lastIdx) Component.literal(custom.formatting) else line
         }
 
         val titleComp = data.title
@@ -206,7 +195,11 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard features.") {
         val totalHeight = titleH + entriesH
 
         if (showBackground) {
-            graphics.fill(0, 0, totalWidth, totalHeight, bgColor)
+            if (backgroundRadius > 0f) {
+                graphics.drawRoundedRect(0f, 0f, totalWidth.toFloat(), totalHeight.toFloat(), bgColor, backgroundRadius)
+            } else {
+                graphics.fill(0, 0, totalWidth, totalHeight, bgColor)
+            }
         }
 
         graphics.text(font, titleComp, textLeft + (maxW - titleWidth) / 2, pad, 0xFFFFFFFF.toInt(), true)
@@ -216,7 +209,7 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard features.") {
             val y = startY + i * fontHeight
             val x = if (customHasText && centerIpLine && i == lastIdx) textLeft + (maxW - lineWidths[i]) / 2 else textLeft
             if (useGradient && i == lastIdx) {
-                graphics.gradientText(font, custom.plain, x, y,
+                graphics.gradientText(font, custom.formatting, x, y,
                     gradStart and 0xFFFFFF,
                     gradEnd and 0xFFFFFF,
                     gradSpeed.toInt(), shadow = true)

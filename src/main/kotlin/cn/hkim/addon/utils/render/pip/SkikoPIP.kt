@@ -329,11 +329,24 @@ class SkikoPIP : PictureInPictureRenderer<SkikoPIP.SkikoRenderState>() {
             val pose = Matrix3x2f(pose())
             val scissor = scissorStack.peek()
 
-            val left = floor(x.toFloat()).toInt()
-            val top = floor(y.toFloat()).toInt()
-            val right = ceil(x.toFloat() + width.toFloat()).toInt()
-            val bottom = ceil(y.toFloat() + height.toFloat()).toInt()
-            val renderRect = ScreenRectangle(left, top, right - left, bottom - top).transformMaxBounds(pose)
+            val x0 = x.toFloat()
+            val y0 = y.toFloat()
+            val x1 = x0 + width.toFloat()
+            val y1 = y0 + height.toFloat()
+            val m00 = pose.m00(); val m01 = pose.m01()
+            val m10 = pose.m10(); val m11 = pose.m11()
+            val m20 = pose.m20(); val m21 = pose.m21()
+            val ax = m00 * x0 + m10 * y0 + m20; val ay = m01 * x0 + m11 * y0 + m21
+            val bx = m00 * x1 + m10 * y0 + m20; val by = m01 * x1 + m11 * y0 + m21
+            val cx = m00 * x0 + m10 * y1 + m20; val cy = m01 * x0 + m11 * y1 + m21
+            val dx = m00 * x1 + m10 * y1 + m20; val dy = m01 * x1 + m11 * y1 + m21
+            val minX = minOf(ax, bx, cx, dx)
+            val minY = minOf(ay, by, cy, dy)
+            val maxX = maxOf(ax, bx, cx, dx)
+            val maxY = maxOf(ay, by, cy, dy)
+            val left = floor(minX).toInt()
+            val top = floor(minY).toInt()
+            val renderRect = ScreenRectangle(left, top, ceil(maxX).toInt() - left, ceil(maxY).toInt() - top)
             if (renderRect.width() <= 0 || renderRect.height() <= 0) return
 
             val bounds = if (scissor != null) {
