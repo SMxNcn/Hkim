@@ -183,9 +183,11 @@ fun lookingAtUsableBlock(): Boolean {
         is LeverBlock, is DiodeBlock, is SignBlock, is CaveVines, is NoteBlock, is DaylightDetectorBlock,
         is CakeBlock, is BellBlock, is JukeboxBlock, is DragonEggBlock, is SweetBerryBushBlock,
         //? if 26.2 {
-        is RedStoneWireBlock, is RespawnAnchorBlock, is ChiseledBookShelfBlock, is DecoratedPotBlock,
+        is RedStoneWireBlock, is RespawnAnchorBlock, is ChiseledBookShelfBlock, is ShelfBlock,
+        is DecoratedPotBlock
         //? } else {
-        //is RedstoneWireBlock, is RespawnAnchorBlock, is ChiseledBookShelfBlock, is DecoratedPotBlock,
+        //is RedstoneWireBlock, is RespawnAnchorBlock, is ChiseledBookShelfBlock, is ShelfBlock,
+        //is DecoratedPotBlock
         //? }
             -> true
 
