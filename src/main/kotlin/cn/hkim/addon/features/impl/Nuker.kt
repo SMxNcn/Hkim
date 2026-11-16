@@ -75,7 +75,7 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
 
     @EventHandler
     private fun onKey(event: InputEvent) {
-        if (event.key.value == toggleKeybind) toggle()
+        if (event.matches(toggleKeybind)) toggle()
     }
 
     @EventHandler

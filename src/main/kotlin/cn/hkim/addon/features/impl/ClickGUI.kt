@@ -21,7 +21,7 @@ object ClickGUI : Module("Click GUI", "Click GUI settings.") {
     @EventHandler
     private fun onKeyEvent(event: InputEvent) {
         if (mc.gui.screen() != null) return
-        if (event.key.value == keybind) mc.gui.setScreen(ClickGUIScreen(null))
+        if (event.matches(keybind)) mc.gui.setScreen(ClickGUIScreen(null))
     }
 
     override fun toggle() {}

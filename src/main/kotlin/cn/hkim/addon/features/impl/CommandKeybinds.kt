@@ -23,14 +23,14 @@ object CommandKeybinds : Module("Command Keybinds", "Various keybinds for skyblo
     @EventHandler
     private fun onKeyPressed(event: InputEvent) {
         if (!enabled || mc.gui.screen() != null || !LocationUtils.inSkyBlock) return
-        when (event.key.value) {
-            pet -> sendCommand("pets")
-            armorWd -> sendCommand("wardrobe")
-            equipmentWd -> sendCommand("equipment")
-            loadouts -> sendCommand("loadouts")
-            stats -> sendCommand("stats")
-            potion -> sendCommand("potionbag")
-            cookie -> sendCommand("boostercookie")
+        when {
+            event.matches(pet) -> sendCommand("pets")
+            event.matches(armorWd) -> sendCommand("wardrobe")
+            event.matches(equipmentWd) -> sendCommand("equipment")
+            event.matches(loadouts) -> sendCommand("loadouts")
+            event.matches(stats) -> sendCommand("stats")
+            event.matches(potion) -> sendCommand("potionbag")
+            event.matches(cookie) -> sendCommand("boostercookie")
         }
     }
 }

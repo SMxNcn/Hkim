@@ -19,8 +19,8 @@ class KeybindSetting(
     desc: String,
     defaultKey: Int = InputCompat.KEY_NONE,
     private val defaultType: KeyType = KeyType.KEYBOARD,
-) : Setting<Int>(name, desc, defaultKey) {
-    override var value: Int = defaultKey
+) : Setting<Int>(name, desc, InputCompat.encode(defaultKey, defaultType)) {
+    override var value: Int = InputCompat.encode(defaultKey, defaultType)
 
     /** Whether [value] is a mouse button rather than a keyboard key. */
     var keyType: KeyType = defaultType
@@ -95,9 +95,10 @@ class KeybindSetting(
             return true
         }
 
-        if (keyCode == InputCompat.KEY_NONE) return false
+        val encoded = InputCompat.encode(keyCode, KeyType.KEYBOARD)
+        if (encoded == InputCompat.KEY_NONE) return false
 
-        value = keyCode
+        value = encoded
         keyType = KeyType.KEYBOARD
         isBinding = false
         settingsChanged()
@@ -117,7 +118,7 @@ class KeybindSetting(
             else -> Unit
         }
 
-        value = button
+        value = InputCompat.encode(button, KeyType.MOUSE)
         keyType = KeyType.MOUSE
         isBinding = false
         settingsChanged()
@@ -135,7 +136,7 @@ class KeybindSetting(
             value = InputCompat.KEY_NONE
             keyType = KeyType.KEYBOARD
         } else {
-            value = binding.code
+            value = InputCompat.encode(binding.code, binding.type)
             keyType = binding.type
         }
     }
@@ -150,6 +151,7 @@ class KeybindSetting(
         fun keyCodeToName(code: Int, type: KeyType): String = InputCompat.keyName(code, type)
 
         @JvmStatic
-        fun nameToKeyCode(name: String): Int = InputCompat.keyCode(name)?.code ?: InputCompat.KEY_NONE
+        fun nameToKeyCode(name: String): Int =
+            InputCompat.keyCode(name)?.let { InputCompat.encode(it.code, it.type) } ?: InputCompat.KEY_NONE
     }
 }

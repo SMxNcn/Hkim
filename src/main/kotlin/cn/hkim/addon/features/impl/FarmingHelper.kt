@@ -186,7 +186,7 @@ object FarmingHelper : Module("Farming Helper", "Features for garden farming.") 
 
     @EventHandler
     private fun onKey(event: InputEvent) {
-        if (enabled && event.key.value == nukerKeybind) CropNuker.toggleNuker()
+        if (enabled && event.matches(nukerKeybind)) CropNuker.toggleNuker()
     }
 
     private inline val reachPosition: BlockPos?

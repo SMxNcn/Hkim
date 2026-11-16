@@ -68,7 +68,7 @@ object AutoFish : Module("Auto Fish", "Automatically casts and reels the fishing
     private fun onKey(event: InputEvent) {
         if (!LocationUtils.inSkyBlock) return
         if (mc.gui.screen() != null) return
-        if (event.key.value == toggleKeybind) toggle()
+        if (event.matches(toggleKeybind)) toggle()
     }
 
     @EventHandler

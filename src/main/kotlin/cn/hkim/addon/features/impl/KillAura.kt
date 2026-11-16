@@ -54,7 +54,7 @@ object KillAura : Module("Kill Aura", "Automatically attack nearby entities.") {
 
     @EventHandler
     private fun onKey(event: InputEvent) {
-        if (event.key.value == toggleKeybind) toggle()
+        if (event.matches(toggleKeybind)) toggle()
     }
 
     @EventHandler

@@ -67,7 +67,7 @@ object ProtectItem : Module("Protect Item", "Protect your item.") {
         val screen = mc.gui.screen() as? AbstractContainerScreen<*> ?: return
         val accessor = screen as AbstractContainerScreenAccessor
 
-        if (event.input.key == protectKeybind) {
+        if (InputCompat.matchesKeyboard(event.input.key(), protectKeybind)) {
             val slot = accessor.hoveredSlot
             if (slot == null || !slot.hasItem()) return
             val uuid = slot.item.itemUUID

@@ -30,6 +30,7 @@
     "GuiMixin",
     "GuiRenderStateMixin",
     "HudMixin",
+    "KeyboardHandlerMixin",
     "KeyMappingMixin",
     "LavaFogEnvironmentMixin",
     "LevelChunkMixin",

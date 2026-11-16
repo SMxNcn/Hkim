@@ -9,6 +9,7 @@ import cn.hkim.addon.events.impl.TickEvent
 import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
+import cn.hkim.addon.utils.KeyAction
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.client.CameraType
 import net.minecraft.client.player.ClientInput
@@ -57,11 +58,10 @@ object FreeCam : Module("Free Camera", "Detach your camera and fly around freely
 
     @EventHandler
     private fun onInput(event: InputEvent) {
-        if (!InputCompat.isKeyboard(event.key)) return
-        if (event.key.value == toggleKey) {
-            toggle()
+        if (event.isBoundTo(toggleKey)) {
+            if (event.action == KeyAction.Press) toggle()
             event.cancel()
-        } else if (event.key.value == InputCompat.KEY_F5 && isFreecamActive) {
+        } else if (InputCompat.isKeyboard(event.key) && event.key.value == InputCompat.KEY_F5 && isFreecamActive) {
             event.cancel()
         }
     }

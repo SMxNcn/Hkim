@@ -6,6 +6,7 @@ import cn.hkim.addon.events.impl.TickEvent
 import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
+import cn.hkim.addon.utils.KeyAction
 import cn.hkim.addon.utils.boundKey
 import cn.hkim.addon.utils.hasEthermerge
 import cn.hkim.addon.utils.rightClick
@@ -21,6 +22,7 @@ object Etherwarp : Module("Etherwarp", "Sneak to instantly Etherwarp with AOTV/A
     @EventHandler
     private fun onInput(event: InputEvent) {
         if (!enabled || FreeCam.isFreecamActive || !LocationUtils.inSkyBlock || mc.player == null || mc.gui.screen() != null) return
+        if (event.action != KeyAction.Press) return
         if (event.key != mc.options.keyShift.boundKey) return
         if (handledThisPress) return
         handledThisPress = true

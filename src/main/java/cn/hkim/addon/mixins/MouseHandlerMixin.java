@@ -1,12 +1,15 @@
 package cn.hkim.addon.mixins;
 
 import cn.hkim.addon.Hkim;
+import cn.hkim.addon.events.impl.InputEvent;
 import cn.hkim.addon.events.impl.MouseButtonEvent;
 import cn.hkim.addon.features.impl.FreeCam;
 import cn.hkim.addon.features.impl.RadialMenu;
 import cn.hkim.addon.utils.KeyAction;
 import cn.hkim.addon.utils.RotationUtils;
 import cn.hkim.addon.utils.ViewLock;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.input.MouseButtonInfo;
 import net.minecraft.client.player.LocalPlayer;
@@ -33,6 +36,15 @@ public class MouseHandlerMixin {
         Hkim.EVENT_BUS.post(event);
 
         if (event.isCancelled()) ci.cancel();
+    }
+
+    @Redirect(method = "onButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/KeyMapping;click(Lcom/mojang/blaze3d/platform/InputConstants$Key;)V"))
+    private static void hkim$postInputEvent(InputConstants.Key key, long handle, MouseButtonInfo rawButtonInfo, int action) {
+        InputEvent inputEvent = new InputEvent(key, KeyAction.get(action));
+        Hkim.EVENT_BUS.post(inputEvent);
+        if (!inputEvent.isCancelled()) {
+            KeyMapping.click(key);
+        }
     }
 
     @Inject(method = "onScroll", at = @At("HEAD"), cancellable = true)

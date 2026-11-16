@@ -29,6 +29,7 @@
     "GuiRenderStateMixin",
     "HudMixin",
     "ItemInHandRendererMixin",
+    "KeyboardHandlerMixin",
     "KeyMappingMixin",
     "LavaFogEnvironmentMixin",
     "LevelChunkMixin",

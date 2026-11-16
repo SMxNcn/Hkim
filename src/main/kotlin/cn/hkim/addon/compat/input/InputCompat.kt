@@ -39,11 +39,10 @@ data class InputBinding(val code: Int, val type: KeyType)
  * which input library the current Minecraft version uses.
  */
 object InputCompat {
-    // ---------------------------------------------------------------------
-    // Keyboard keys used by the mod. Values are version native; only the
-    // symbolic names are stable across versions.
-    // ---------------------------------------------------------------------
-    val KEY_NONE get() = InputBackend.KEY_NONE
+    val KEY_NONE get() = NONE
+
+    private const val MOUSE_FLAG = 0x10000
+    private const val NONE = Int.MIN_VALUE
     val KEY_ESCAPE get() = InputBackend.KEY_ESCAPE
     val KEY_TAB get() = InputBackend.KEY_TAB
     val KEY_HOME get() = InputBackend.KEY_HOME
@@ -82,16 +81,41 @@ object InputCompat {
     const val PRESS = 1
     const val RELEASE = 0
 
+    fun encode(code: Int, type: KeyType): Int {
+        if (code == NONE || code == InputBackend.KEY_NONE) return KEY_NONE
+        return if (type == KeyType.MOUSE) code or MOUSE_FLAG else code
+    }
+
+    fun encode(key: InputConstants.Key): Int = when {
+        isKeyboard(key) -> encode(key.value, KeyType.KEYBOARD)
+        key.type == InputConstants.Type.MOUSE -> encode(key.value, KeyType.MOUSE)
+        else -> KEY_NONE
+    }
+
+    fun decodeCode(code: Int): Int {
+        if (code == KEY_NONE) return InputBackend.KEY_NONE
+        return if (code and MOUSE_FLAG != 0) code and MOUSE_FLAG.inv() else code
+    }
+
+    fun decodeType(code: Int): KeyType =
+        if (code and MOUSE_FLAG != 0) KeyType.MOUSE else KeyType.KEYBOARD
+
     // ---------------------------------------------------------------------
     // Queries
     // ---------------------------------------------------------------------
-    fun isKeyDown(keyCode: Int): Boolean = InputBackend.isKeyDown(keyCode)
+    fun isKeyDown(keyCode: Int): Boolean {
+        if (keyCode == KEY_NONE) return false
+        return InputBackend.isKeyDown(decodeCode(keyCode))
+    }
 
     fun isShiftDown(): Boolean = isKeyDown(KEY_LSHIFT) || isKeyDown(KEY_RSHIFT)
 
     fun isCtrlDown(): Boolean = isKeyDown(KEY_LCONTROL) || isKeyDown(KEY_RCONTROL)
 
-    fun isMouseButtonDown(button: Int): Boolean = InputBackend.isMouseButtonDown(button)
+    fun isMouseButtonDown(button: Int): Boolean {
+        if (button == KEY_NONE) return false
+        return InputBackend.isMouseButtonDown(decodeCode(button))
+    }
 
     fun mouseButton(button: Int): MouseButton = InputBackend.mouseButton(button)
 
@@ -102,20 +126,27 @@ object InputCompat {
 
     fun isKeyboard(key: InputConstants.Key): Boolean = InputBackend.isKeyboard(key)
 
+    fun isMouse(key: InputConstants.Key): Boolean = key.type == InputConstants.Type.MOUSE
+
     /** True if [modifiers] (as reported by [net.minecraft.client.input.KeyEvent]) has shift held. */
     fun shiftPressed(modifiers: Int): Boolean = InputBackend.shiftPressed(modifiers)
 
-    /**
-     * Match an MC key against a stored keybind. Mouse keybinds never match
-     * keyboard events, even if their numeric codes happen to collide.
-     */
+    fun matches(key: InputConstants.Key, code: Int): Boolean =
+        code != KEY_NONE && encode(key) == code
+
+    fun matchesKeyboard(keyCode: Int, code: Int): Boolean =
+        code != KEY_NONE && encode(keyCode, KeyType.KEYBOARD) == code
+
     fun matches(key: InputConstants.Key, code: Int, type: KeyType): Boolean =
-        type == KeyType.KEYBOARD && isKeyboard(key) && key.value == code
+        code != KEY_NONE && decodeType(code) == type && encode(key) == code
 
     // ---------------------------------------------------------------------
     // Naming / (de)serialization
     // ---------------------------------------------------------------------
-    fun keyDisplayName(code: Int, type: KeyType): String = InputBackend.keyDisplayName(code, type)
+    fun keyDisplayName(code: Int, type: KeyType): String {
+        if (code == KEY_NONE) return "None"
+        return InputBackend.keyDisplayName(decodeCode(code), type)
+    }
 
     /** Stable, cross-version name (e.g. `key.keyboard.x`, `key.mouse.4`). */
     fun keyName(code: Int, type: KeyType): String = InputBackend.keyName(code, type)
