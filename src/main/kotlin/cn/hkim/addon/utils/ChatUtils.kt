@@ -38,55 +38,27 @@ val Component.cleanString: String
 val Component.legacy: String
     get() {
         val builder = StringBuilder()
-
-        var activeColor: String? = null
-        var bold = false
-        var italic = false
-        var underlined = false
-        var strikethrough = false
-        var obfuscated = false
-
-        fun reset() {
-            builder.append("§r")
-            activeColor = null
-            bold = false
-            italic = false
-            underlined = false
-            strikethrough = false
-            obfuscated = false
-        }
+        var active = false
 
         this.visit({ style: Style, text: String ->
-            val colorCode = style.color?.let { getLegacyColorCode(it.value) }
-            val wantBold = style.isBold
-            val wantItalic = style.isItalic
-            val wantUnderlined = style.isUnderlined
-            val wantStrikethrough = style.isStrikethrough
-            val wantObfuscated = style.isObfuscated
+            if (text.isNotEmpty()) {
+                val colorCode = style.color?.let { getLegacyColorCode(it.value) }
+                if (colorCode != null) builder.append(colorCode)
+                else if (active) builder.append("§r")
 
-            if ((bold && !wantBold) || (italic && !wantItalic) ||
-                (underlined && !wantUnderlined) || (strikethrough && !wantStrikethrough) ||
-                (obfuscated && !wantObfuscated) ||
-                (colorCode == null && activeColor != null)
-            ) {
-                reset()
+                val bold = style.isBold
+                val italic = style.isItalic
+                val underlined = style.isUnderlined
+                val strikethrough = style.isStrikethrough
+                val obfuscated = style.isObfuscated
+                if (bold) builder.append("§l")
+                if (italic) builder.append("§o")
+                if (underlined) builder.append("§n")
+                if (strikethrough) builder.append("§m")
+                if (obfuscated) builder.append("§k")
+
+                active = colorCode != null || bold || italic || underlined || strikethrough || obfuscated
             }
-
-            if (colorCode != null && colorCode != activeColor) {
-                builder.append(colorCode)
-                activeColor = colorCode
-                bold = false
-                italic = false
-                underlined = false
-                strikethrough = false
-                obfuscated = false
-            }
-
-            if (wantBold && !bold) { builder.append("§l"); bold = true }
-            if (wantItalic && !italic) { builder.append("§o"); italic = true }
-            if (wantUnderlined && !underlined) { builder.append("§n"); underlined = true }
-            if (wantStrikethrough && !strikethrough) { builder.append("§m"); strikethrough = true }
-            if (wantObfuscated && !obfuscated) { builder.append("§k"); obfuscated = true }
 
             builder.append(text)
             Optional.empty<Unit>()
