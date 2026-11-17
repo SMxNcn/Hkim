@@ -162,12 +162,14 @@ class SkikoRuntimeImpl : SkikoRuntime {
     ) {
         if (width <= 0f || height <= 0f || clipW <= 0f || clipH <= 0f) return
         draw(graphics, clipX, clipY, clipW, clipH, cacheKey, cacheToken) {
+            Skiko.push()
             if (clipRadius > 0f) {
-                Skiko.push()
                 Skiko.clipRoundRect(clipX, clipY, clipW, clipH, clipRadius)
+            } else {
+                Skiko.clipRect(clipX, clipY, clipW, clipH)
             }
             Skiko.hollowRect(cx - width / 2f, cy - height / 2f, width, height, borderWidth, Color(borderColor, true), 0f)
-            if (clipRadius > 0f) Skiko.pop()
+            Skiko.pop()
         }
     }
 
@@ -352,7 +354,7 @@ class SkikoRuntimeImpl : SkikoRuntime {
         val height = Skiko.textHeight(size, font) + 2f
         val x = centerX - width / 2f
         if (shadow) {
-            draw(graphics, x - 2f, y - 2f, width + 4f, height + 4f, cacheKey, cacheToken) {
+            draw(graphics, x - 1f, y - 1f, width + 2f, height + 2f, cacheKey, cacheToken) {
                 Skiko.textShadow(text, x, y, size, Color(color, true), font)
             }
         }
@@ -379,12 +381,14 @@ class SkikoRuntimeImpl : SkikoRuntime {
         val font = if (bold) SkikoFont.system(bold = true) else SkikoFont.system()
         val radius = clipRadius.coerceAtMost(minOf(clipW, clipH) / 2f)
         draw(graphics, clipX, clipY, clipW, clipH, cacheKey, cacheToken) {
+            Skiko.push()
             if (radius > 0f) {
-                Skiko.push()
                 Skiko.clipRoundRect(clipX, clipY, clipW, clipH, radius)
+            } else {
+                Skiko.clipRect(clipX, clipY, clipW, clipH)
             }
             Skiko.text(text, x, y, size, Color(color, true), font)
-            if (radius > 0f) Skiko.pop()
+            Skiko.pop()
         }
     }
 
@@ -428,7 +432,10 @@ class SkikoRuntimeImpl : SkikoRuntime {
     ) {
         if (w <= 0f || h <= 0f || clipW <= 0f || clipH <= 0f) return
         draw(graphics, clipX, clipY, clipW, clipH, cacheKey, cacheToken) {
+            Skiko.push()
+            Skiko.clipRect(clipX, clipY, clipW, clipH)
             Skiko.rect(x, y, w, h, Color(color, true))
+            Skiko.pop()
         }
     }
 

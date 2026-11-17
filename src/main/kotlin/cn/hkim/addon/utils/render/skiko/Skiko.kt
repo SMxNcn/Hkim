@@ -1,6 +1,7 @@
 package cn.hkim.addon.utils.render.skiko
 
 import cn.hkim.addon.runtime.AssetInstaller
+import cn.hkim.addon.utils.shadow
 import org.jetbrains.skia.*
 import org.jetbrains.skia.svg.SVGDOM
 import org.jetbrains.skia.svg.SVGLengthContext
@@ -15,12 +16,16 @@ import kotlin.math.sin
 
 object Skiko {
     private val typefaces = HashMap<SkikoFont, Typeface>()
+    private val fallbackTypefaces = HashMap<FallbackKey, Typeface?>()
     private val imageCache = HashMap<String, CachedImage>()
     private var canvas: Canvas? = null
     private var frameSaveCount = 0
     private var alphaFactor = 1f
 
     val defaultFont = SkikoFont.system()
+
+    private val fallbackRegular = SkikoFont.file("assets/hkim/font/Symbols-Regular.ttf")
+    private val fallbackBold = SkikoFont.file("assets/hkim/font/Symbols-Bold.ttf")
 
     private const val SVG_RASTER_SCALE = 8f
     private const val SVG_MAX_RASTER = 2048
@@ -82,6 +87,10 @@ object Skiko {
 
     fun popScissor() {
         currentCanvas().restore()
+    }
+
+    fun clipRect(x: Number, y: Number, w: Number, h: Number) {
+        currentCanvas().clipRect(Rect.makeXYWH(x.toFloat(), y.toFloat(), w.toFloat(), h.toFloat()), ClipMode.INTERSECT)
     }
 
     fun clipRoundRect(x: Number, y: Number, w: Number, h: Number, radius: Number) {
@@ -277,9 +286,13 @@ object Skiko {
     private fun degrees(radians: Float) = Math.toDegrees(radians.toDouble()).toFloat()
 
     fun text(text: String, x: Number, y: Number, size: Number, color: Color, font: SkikoFont = defaultFont) {
+        if (text.isEmpty()) return
         withPaint(color) { fill ->
-            val skiaFont = skikoFont(font, size.toFloat())
-            currentCanvas().drawString(text, x.toFloat(), y.toFloat() - skiaFont.metrics.ascent, skiaFont, fill)
+            val sizeF = size.toFloat()
+            val baseline = y.toFloat() - skikoFont(font, sizeF).metrics.ascent
+            forEachFontRun(text, font, sizeF, x.toFloat()) { run, runX ->
+                currentCanvas().drawString(run.text, runX, baseline, run.font, fill)
+            }
         }
     }
 
@@ -299,18 +312,26 @@ object Skiko {
         withPaint(Color.WHITE) { fill ->
             val sizeF = size.toFloat()
             fill.shader = linearGradient(x.toFloat(), y.toFloat() - sizeF, width.toFloat(), sizeF, color1, color2, direction)
-            val skiaFont = skikoFont(font, sizeF)
-            currentCanvas().drawString(text, x.toFloat(), y.toFloat() - skiaFont.metrics.ascent, skiaFont, fill)
+            val baseline = y.toFloat() - skikoFont(font, sizeF).metrics.ascent
+            forEachFontRun(text, font, sizeF, x.toFloat()) { run, runX ->
+                currentCanvas().drawString(run.text, runX, baseline, run.font, fill)
+            }
         }
     }
 
     fun textShadow(text: String, x: Number, y: Number, size: Number, color: Color, font: SkikoFont = defaultFont) {
-        text(text, round(x.toFloat() + 2f), round(y.toFloat() + 2f), size, Color.BLACK, font)
-        text(text, round(x.toFloat()), round(y.toFloat()), size, color, font)
+        val textX = round(x.toFloat())
+        val textY = round(y.toFloat())
+        text(text, textX + 0.5f, textY + 0.5f, size, Color(color.rgb.shadow, true), font)
+        text(text, textX, textY, size, color, font)
     }
 
     fun textWidth(text: String, size: Number, font: SkikoFont = defaultFont): Float {
-        return skikoFont(font, size.toFloat()).measureTextWidth(text)
+        if (text.isEmpty()) return 0f
+        val sizeF = size.toFloat()
+        var width = 0f
+        for (run in buildFontRuns(text, font, sizeF)) width += run.width
+        return width
     }
 
     fun textHeight(size: Number, font: SkikoFont = defaultFont): Float {
@@ -406,17 +427,20 @@ object Skiko {
     private val fonts = HashMap<FontKey, Font>()
 
     fun skikoFont(font: SkikoFont, size: Float): Font {
-        val key = FontKey(font, size)
-        fonts[key]?.let { return it }
-
         val typeface = typefaces.getOrPut(font) { resolveTypeface(font) }
+        return fontForTypeface(typeface, size)
+    }
+
+    private fun fontForTypeface(typeface: Typeface, size: Float): Font {
+        val key = FontKey(typeface, size)
+        fonts[key]?.let { return it }
         val created = Font(typeface, size).apply { edging = FontEdging.SUBPIXEL_ANTI_ALIAS }
         if (fonts.size >= FONT_CACHE_LIMIT) fonts.clear()
         fonts[key] = created
         return created
     }
 
-    private data class FontKey(val font: SkikoFont, val size: Float)
+    private data class FontKey(val typeface: Typeface, val size: Float)
 
     private fun resolveTypeface(font: SkikoFont): Typeface {
         val manager = FontMgr.default
@@ -458,6 +482,135 @@ object Skiko {
             it.fileName.toString().lowercase().contains("bold")
         }
         return if (bold) boldFonts + regularFonts else regularFonts + boldFonts
+    }
+
+    private data class FallbackKey(val codePoint: Int, val bold: Boolean)
+    private data class RunsKey(val text: String, val font: SkikoFont, val size: Float)
+    private val glyphSupport = HashMap<Long, Boolean>()
+    private val runsCache = HashMap<RunsKey, List<FontRun>>()
+
+    private const val RUNS_CACHE_LIMIT = 256
+
+    private class FontRun(val text: String, val font: Font) {
+        val width: Float = font.measureTextWidth(text)
+    }
+
+    private fun Typeface.supportsGlyph(codePoint: Int): Boolean {
+        val key = (uniqueId.toLong() shl 32) or (codePoint.toLong() and 0xFFFFFFFFL)
+        glyphSupport[key]?.let { return it }
+        val supported = getUTF32Glyph(codePoint) != 0.toShort()
+        if (glyphSupport.size >= 4096) glyphSupport.clear()
+        glyphSupport[key] = supported
+        return supported
+    }
+
+    private inline fun forEachFontRun(
+        text: String,
+        font: SkikoFont,
+        size: Float,
+        x: Float,
+        action: (FontRun, Float) -> Unit,
+    ) {
+        var cursor = x
+        for (run in buildFontRuns(text, font, size)) {
+            action(run, cursor)
+            cursor += run.width
+        }
+    }
+
+    private fun buildFontRuns(text: String, font: SkikoFont, size: Float): List<FontRun> {
+        if (text.isEmpty()) return emptyList()
+
+        val cacheKey = RunsKey(text, font, size)
+        runsCache[cacheKey]?.let { return it }
+
+        val primary = skikoFont(font, size)
+        val primaryTypeface = primary.typeface ?: Typeface.makeEmpty()
+        val bold = font.bold
+
+        var scan = 0
+        while (scan < text.length) {
+            val codePoint = text.codePointAt(scan)
+            if (!primaryTypeface.supportsGlyph(codePoint)) break
+            scan += Character.charCount(codePoint)
+        }
+
+        val result = if (scan >= text.length) {
+            listOf(FontRun(text, primary))
+        } else {
+            val runs = ArrayList<FontRun>()
+            val current = StringBuilder()
+            var currentFont: Font? = null
+
+            fun flush() {
+                if (current.isEmpty()) return
+                runs += FontRun(current.toString(), currentFont ?: primary)
+                current.setLength(0)
+            }
+
+            var i = 0
+            while (i < text.length) {
+                val codePoint = text.codePointAt(i)
+                val chars = Character.charCount(codePoint)
+                val resolved = if (primaryTypeface.supportsGlyph(codePoint)) {
+                    primary
+                } else {
+                    fallbackFont(codePoint, bold, size) ?: primary
+                }
+                if (resolved !== currentFont) {
+                    flush()
+                    currentFont = resolved
+                }
+                current.append(text, i, i + chars)
+                i += chars
+            }
+            flush()
+            runs
+        }
+
+        if (runsCache.size >= RUNS_CACHE_LIMIT) runsCache.clear()
+        runsCache[cacheKey] = result
+        return result
+    }
+
+    private val fallbackRegularTypeface: Typeface? by lazy { fallbackRegular.loadTypeface() }
+    private val fallbackBoldTypeface: Typeface? by lazy { fallbackBold.loadTypeface() }
+
+    private fun SkikoFont.loadTypeface(): Typeface? = runCatching {
+        FontMgr.default.makeFromData(Data.makeFromBytes(bytes))
+    }.getOrNull()
+
+    private fun symbolFont(codePoint: Int, bold: Boolean, size: Float): Font? {
+        if (bold) {
+            val boldTypeface = fallbackBoldTypeface
+            if (boldTypeface?.supportsGlyph(codePoint) == true) {
+                return fontForTypeface(boldTypeface, size)
+            }
+        }
+        val regularTypeface = fallbackRegularTypeface
+        if (regularTypeface?.supportsGlyph(codePoint) == true) {
+            return fontForTypeface(regularTypeface, size)
+        }
+        return null
+    }
+
+    private fun fallbackFont(codePoint: Int, bold: Boolean, size: Float): Font? {
+        symbolFont(codePoint, bold, size)?.let { return it }
+
+        val key = FallbackKey(codePoint, bold)
+        val typeface = if (fallbackTypefaces.containsKey(key)) {
+            fallbackTypefaces[key]
+        } else {
+            val style = if (bold) FontStyle.BOLD else FontStyle.NORMAL
+            val resolved = runCatching {
+                FontMgr.default.matchFamilyStyleCharacter(null, style, null, codePoint)
+            }.getOrNull()
+            fallbackTypefaces[key] = resolved
+            resolved
+        } ?: return null
+
+        if (!typeface.supportsGlyph(codePoint)) return null
+        return fontForTypeface(typeface, size)
     }
 
     private val scratchPaint = Paint()

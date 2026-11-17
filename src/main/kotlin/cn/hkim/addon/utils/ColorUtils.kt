@@ -205,6 +205,9 @@ fun Component.toLegacyOrComponent(): Component =
 fun coloredChar(char: String, color: Int) =
     Component.literal(char).withColor(color)
 
+inline val Int.shadow
+    get() = (this and 0xFF000000.toInt()) or ((this and 0x00FCFCFC) ushr 2)
+
 /** Build a [Component] where each visible character gets a chroma-gradient color between [startArgb] and [endArgb],
  *  with accumulated §-style formatting (§lomnkr). Set [speed] to 0 for a static gradient. */
 fun buildGradientComponent(text: String, startArgb: Int, endArgb: Int, speed: Int): Component {
