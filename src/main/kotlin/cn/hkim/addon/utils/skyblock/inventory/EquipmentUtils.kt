@@ -60,11 +60,7 @@ object EquipmentUtils : SwapHandler() {
 
     private fun processNextItem() {
         if (currentIndex >= pendingSlots.size) {
-            schedule(SwapOptions.closeTicks.toInt()) {
-                mc.player?.closeContainer()
-                callback?.invoke(true)
-                reset()
-            }
+            closeGui()
             return
         }
 
@@ -73,7 +69,19 @@ object EquipmentUtils : SwapHandler() {
         mc.player?.clickPlayerInventorySlot(pendingSlots[currentIndex], containerId)
         currentIndex++
 
-        schedule((8..10).random()) { processNextItem() }
+        if (currentIndex >= pendingSlots.size) {
+            closeGui()
+        } else {
+            schedule((6..8).random()) { processNextItem() }
+        }
+    }
+
+    private fun closeGui() {
+        schedule(SwapOptions.closeTicks.toInt()) {
+            mc.player?.closeContainer()
+            callback?.invoke(true)
+            reset()
+        }
     }
 
     override fun reset() {
