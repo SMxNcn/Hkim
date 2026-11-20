@@ -36,6 +36,7 @@ internal object InputBackend {
     val KEY_RSHIFT = InputConstants.KEY_RSHIFT
     val KEY_LCONTROL = InputConstants.KEY_LCONTROL
     val KEY_RCONTROL = InputConstants.KEY_RCONTROL
+    val KEY_LALT = InputConstants.KEY_LALT
     val KEY_RALT = InputConstants.KEY_RALT
     val KEY_A = InputConstants.KEY_A
     val KEY_D = InputConstants.KEY_D

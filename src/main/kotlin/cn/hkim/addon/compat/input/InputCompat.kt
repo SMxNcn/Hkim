@@ -57,6 +57,7 @@ object InputCompat {
     val KEY_RSHIFT get() = InputBackend.KEY_RSHIFT
     val KEY_LCONTROL get() = InputBackend.KEY_LCONTROL
     val KEY_RCONTROL get() = InputBackend.KEY_RCONTROL
+    val KEY_LALT get() = InputBackend.KEY_LALT
     val KEY_RALT get() = InputBackend.KEY_RALT
     val KEY_A get() = InputBackend.KEY_A
     val KEY_D get() = InputBackend.KEY_D
@@ -111,6 +112,8 @@ object InputCompat {
     fun isShiftDown(): Boolean = isKeyDown(KEY_LSHIFT) || isKeyDown(KEY_RSHIFT)
 
     fun isCtrlDown(): Boolean = isKeyDown(KEY_LCONTROL) || isKeyDown(KEY_RCONTROL)
+
+    fun isAltDown(): Boolean = isKeyDown(KEY_LALT) || isKeyDown(KEY_RALT)
 
     fun isMouseButtonDown(button: Int): Boolean {
         if (button == KEY_NONE) return false
