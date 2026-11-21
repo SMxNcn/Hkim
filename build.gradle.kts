@@ -30,7 +30,7 @@ val mc = when (mcVersion) {
     "26.3" -> McVersion(
         minecraft = "26.3",
         loader = "0.20.1",
-        fabricApi = "0.165.0+26.3",
+        fabricApi = "0.166.2+26.3",
         modmenu = "21.0.0",
         iris = "1.11.6+26.3-fabric",
         placeholderApi = "3.2.0+26.3",
