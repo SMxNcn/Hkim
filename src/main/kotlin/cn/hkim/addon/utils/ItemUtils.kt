@@ -8,6 +8,15 @@ import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.chat.Component
 import net.minecraft.tags.BlockTags
 import net.minecraft.tags.ItemTags
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.animal.equine.AbstractHorse
+import net.minecraft.world.entity.animal.happyghast.HappyGhast
+import net.minecraft.world.entity.animal.pig.Pig
+import net.minecraft.world.entity.decoration.ArmorStand
+import net.minecraft.world.entity.decoration.ItemFrame
+import net.minecraft.world.entity.monster.Strider
+import net.minecraft.world.entity.npc.villager.AbstractVillager
+import net.minecraft.world.entity.vehicle.VehicleEntity
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
@@ -16,6 +25,10 @@ import net.minecraft.world.item.component.ItemLore
 import net.minecraft.world.level.block.*
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.EntityHitResult
+//? if 26.3 {
+//import net.minecraft.world.entity.decoration.Cushion
+//? }
 
 inline val ItemStack.customData: CompoundTag
     get() = getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag()
@@ -164,6 +177,8 @@ private fun isBlockCarrier(block: Block, state: BlockState): Boolean {
             block is FrogspawnBlock
 }
 
+fun lookingAtUsable(): Boolean = lookingAtUsableBlock() || lookingAtInteractableEntity()
+
 fun lookingAtUsableBlock(): Boolean {
     val player = mc.player ?: return false
     val level = mc.level ?: return false
@@ -186,11 +201,27 @@ fun lookingAtUsableBlock(): Boolean {
         is RedStoneWireBlock, is RespawnAnchorBlock, is ChiseledBookShelfBlock, is ShelfBlock,
         is DecoratedPotBlock
         //? } else {
-        //is RedstoneWireBlock, is RespawnAnchorBlock, is ChiseledBookShelfBlock, is ShelfBlock,
-        //is DecoratedPotBlock
-        //? }
+        /*is RedstoneWireBlock, is RespawnAnchorBlock, is ChiseledBookShelfBlock, is ShelfBlock,
+        is DecoratedPotBlock
+        *///? }
             -> true
 
         else -> false
     }
 }
+
+private fun lookingAtInteractableEntity(): Boolean {
+    val player = mc.player ?: return false
+    val hit = mc.hitResult as? EntityHitResult ?: return false
+    if (player.eyePosition.distanceTo(hit.location) > player.entityInteractionRange()) return false
+    return hit.entity.isInteractable
+}
+
+private val Entity.isInteractable: Boolean
+    get() =
+        this is AbstractVillager || this is VehicleEntity || this is AbstractHorse ||
+        this is Pig || this is Strider || this is HappyGhast ||
+        this is ItemFrame || this is ArmorStand
+        //? if 26.3 {
+        //|| this is Cushion
+        //? }
