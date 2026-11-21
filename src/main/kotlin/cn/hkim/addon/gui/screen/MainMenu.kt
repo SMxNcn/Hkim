@@ -6,8 +6,8 @@ import cn.hkim.addon.config.ModuleConfig
 import cn.hkim.addon.features.impl.MainMenuModule
 import cn.hkim.addon.gui.Background
 import cn.hkim.addon.gui.ClientButton
-import cn.hkim.addon.utils.coloredChar
 import cn.hkim.addon.utils.mcVersion
+import cn.hkim.addon.utils.withColor
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRectWithBorder
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoGradientText
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoText
@@ -97,7 +97,7 @@ class MainMenu : Screen(Component.literal("Main Menu")) {
             mc.stop()
         })
 
-        addRenderableWidget(ClientButton(width - 55, 5, 50, btnH, coloredChar("Vanilla", 0xFF4CAF50.toInt())) {
+        addRenderableWidget(ClientButton(width - 55, 5, 50, btnH, "Vanilla".withColor(0xFF4CAF50.toInt())) {
             MainMenuModule.enabled = false
             ModuleConfig.saveConfig()
             mc.gui.setScreen(TitleScreen())

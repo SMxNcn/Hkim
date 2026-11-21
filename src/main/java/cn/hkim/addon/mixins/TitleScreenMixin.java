@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import static cn.hkim.addon.Hkim.mc;
-import static cn.hkim.addon.utils.ColorUtilsKt.coloredChar;
+import static cn.hkim.addon.utils.ColorUtilsKt.withColor;
 
 @Mixin(TitleScreen.class)
 public abstract class TitleScreenMixin {
@@ -26,7 +26,7 @@ public abstract class TitleScreenMixin {
             return;
         }
 
-        ClientButton hkimButton = new ClientButton(screen.width - 55, -7, 50, 18, coloredChar("Hkim", 0xFF8EDDFF), _ -> {
+        ClientButton hkimButton = new ClientButton(screen.width - 55, -7, 50, 18, withColor("Hkim", 0xFF8EDDFF), _ -> {
             MainMenuModule.INSTANCE.setEnabled(true);
             ModuleConfig.INSTANCE.saveConfig();
             mc.gui.setScreen(new MainMenu());

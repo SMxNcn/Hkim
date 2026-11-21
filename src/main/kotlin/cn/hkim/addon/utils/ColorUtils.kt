@@ -202,8 +202,7 @@ private val INVALID_LEGACY_CODE = Regex("§[^0-9a-fk-or]")
 fun Component.toLegacyOrComponent(): Component =
     if (hasNonLegacyColor()) this else Component.literal(legacy.replace(INVALID_LEGACY_CODE, ""))
 
-fun coloredChar(char: String, color: Int) =
-    Component.literal(char).withColor(color)
+fun String.withColor(color: Int) = Component.literal(this).withColor(color)
 
 inline val Int.shadow
     get() = (this and 0xFF000000.toInt()) or ((this and 0x00FCFCFC) ushr 2)

@@ -7,10 +7,10 @@ import net.minecraft.network.chat.Style
 import java.util.*
 
 val prefix = Component.literal("[").withStyle(ChatFormatting.DARK_GRAY)
-    .append(coloredChar("H", 0xAD74E6).withStyle(ChatFormatting.BOLD))
-    .append(coloredChar("k", 0x9A82EC).withStyle(ChatFormatting.BOLD))
-    .append(coloredChar("i", 0x888FF3).withStyle(ChatFormatting.BOLD))
-    .append(coloredChar("m", 0x759DF9).withStyle(ChatFormatting.BOLD))
+    .append("H".withColor(0xAD74E6).withStyle(ChatFormatting.BOLD))
+    .append("k".withColor(0x9A82EC).withStyle(ChatFormatting.BOLD))
+    .append("i".withColor(0x888FF3).withStyle(ChatFormatting.BOLD))
+    .append("m".withColor(0x759DF9).withStyle(ChatFormatting.BOLD))
     .append(Component.literal("]").withStyle(ChatFormatting.DARK_GRAY))
 
 fun modMessage(message: Any?) {
