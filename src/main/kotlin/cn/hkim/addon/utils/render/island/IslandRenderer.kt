@@ -6,13 +6,15 @@ import cn.hkim.addon.utils.notification.NOTIFICATION_DETAIL_COLOR
 import cn.hkim.addon.utils.notification.NOTIFICATION_TITLE_COLOR
 import cn.hkim.addon.utils.render.Easing
 import cn.hkim.addon.utils.render.GuiAnimation
-import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRect
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRectWithShadow
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoImage
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoText
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.skikoBatch
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.skikoTextHeight
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.skikoTextWidth
+import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.network.chat.TextColor
 
 object IslandRenderer {
     private const val FALLBACK_TOP_OFFSET = 4f
@@ -20,10 +22,17 @@ object IslandRenderer {
 
     private const val PADDING_X = 7f
     private const val PADDING_Y = 4f
-    private const val ICON_SIZE = 13f
+    private const val ICON_SIZE = 12f
+
+    private const val INLINE_GAP = 6f
+    private const val INLINE_LABEL_GAP = 2f
+    private const val INLINE_PART_GAP = 4f
 
     private const val COLLAPSED_WIDTH = 28f
-    private const val COLLAPSED_HEIGHT = 2f
+    private const val COLLAPSED_HEIGHT = 16f
+
+    private const val SOFT_EDGE_BLUR = 1f
+    private const val SOFT_EDGE_PAD = SOFT_EDGE_BLUR * 3f
 
     private var animationDurationMs = 150L
 
@@ -33,6 +42,9 @@ object IslandRenderer {
     private val anchorYTween = Tween(Easing.CUBIC_OUT) { animationDurationMs }
 
     private var lastContent: IslandContent? = null
+
+    private var restWidth = COLLAPSED_WIDTH
+    private var restHeight = COLLAPSED_HEIGHT
 
     private val titleLine = IslandLine(Tween(Easing.QUAD_OUT) { animationDurationMs })
     private val detailLine = IslandLine(Tween(Easing.QUAD_OUT) { animationDurationMs })
@@ -68,7 +80,13 @@ object IslandRenderer {
         return IslandAnchor(Bounds(geometry.x, geometry.y, geometry.width, geometry.height), geometry.radius, background)
     }
 
-    fun render(graphics: GuiGraphicsExtractor, radius: Float, background: Int, animationDurationMs: Long) {
+    fun render(
+        graphics: GuiGraphicsExtractor,
+        radius: Float,
+        background: Int,
+        animationDurationMs: Long,
+        homeContent: IslandContent? = null,
+    ) {
         this.radius = radius
         this.background = background
         this.animationDurationMs = animationDurationMs
@@ -78,12 +96,12 @@ object IslandRenderer {
         lastTickMs = now
 
         if (IslandHost.takenOver) {
-            collapse()
+            collapse(homeContent)
             return
         }
         if (mc.gui.hud.isHidden) return
 
-        val content = IslandQueue.tick(delta)
+        val content = IslandQueue.tick(delta) ?: homeContent
         if (content != null) lastContent = content
 
         visibleTween.target(if (content != null) 1f else 0f, now)
@@ -94,8 +112,12 @@ object IslandRenderer {
         }
 
         if (content != null) {
-            val hasIcon = content.icon.isNotEmpty() && !content.centered
-            val (targetWidth, targetHeight) = measureMessage(content.title, content.detail, hasIcon)
+            if (visible <= 0.001f && homeContent != null) {
+                val (restW, restH) = measureContent(homeContent)
+                restWidth = restW
+                restHeight = restH
+            }
+            val (targetWidth, targetHeight) = measureContent(content)
             if (visible >= 0.999f) {
                 widthTween.target(targetWidth, now)
                 heightTween.target(targetHeight, now)
@@ -121,12 +143,20 @@ object IslandRenderer {
         )
     }
 
-    private fun collapse() {
+    private fun collapse(homeContent: IslandContent? = null) {
         titleLine.reset()
         detailLine.reset()
         iconLine.reset()
-        widthTween.snap(COLLAPSED_WIDTH)
-        heightTween.snap(COLLAPSED_HEIGHT)
+        if (homeContent != null) {
+            val (width, height) = measureContent(homeContent)
+            restWidth = width
+            restHeight = height
+        } else {
+            restWidth = COLLAPSED_WIDTH
+            restHeight = COLLAPSED_HEIGHT
+        }
+        widthTween.snap(restWidth)
+        heightTween.snap(restHeight)
         visibleTween.snap(0f)
         lastContent = null
     }
@@ -145,8 +175,8 @@ object IslandRenderer {
         val cardHeight = maxOf(heightTween.get(now), COLLAPSED_HEIGHT)
 
         val progress = ease(visible)
-        val width = COLLAPSED_WIDTH + (cardWidth - COLLAPSED_WIDTH) * progress
-        val height = COLLAPSED_HEIGHT + (cardHeight - COLLAPSED_HEIGHT) * progress
+        val width = restWidth + (cardWidth - restWidth) * progress
+        val height = restHeight + (cardHeight - restHeight) * progress
         val textSpace = (cardHeight - PADDING_Y * 2f).coerceAtLeast(1f)
 
         return Geometry(
@@ -186,28 +216,61 @@ object IslandRenderer {
         titleAlpha: Float, detailAlpha: Float, iconAlpha: Float,
     ) {
         val clip = Bounds(x, y, width, height)
-        graphics.skikoBatch(x, y, width, height, clipRadius = radius) {
-            graphics.drawRoundedRect(x, y, width, height, background, radius)
+        graphics.skikoBatch(
+            x - SOFT_EDGE_PAD, y - SOFT_EDGE_PAD,
+            width + SOFT_EDGE_PAD * 2f, height + SOFT_EDGE_PAD * 2f,
+            clipRadius = radius + SOFT_EDGE_PAD,
+        ) {
+            graphics.drawRoundedRectWithShadow(
+                x, y, width, height,
+                background, 0, 0f, radius,
+                background, SOFT_EDGE_BLUR, 0f,
+            )
 
             if (content != null) {
                 val titleColor = content.titleColor ?: NOTIFICATION_TITLE_COLOR
                 val detailColor = content.detailColor ?: NOTIFICATION_DETAIL_COLOR
-                drawMessage(graphics, content.title, content.detail, content.icon, content.iconColor, titleColor, detailColor, content.centered, contentX, y, iconAlpha, titleAlpha, detailAlpha, clip)
+                drawMessage(graphics, content.title, content.detail, content.icon, content.iconColor, titleColor, detailColor, content.centered, content.inline, contentX, y, iconAlpha, titleAlpha, detailAlpha, clip)
             }
         }
     }
 
-    private fun measureMessage(title: String, detail: String, hasIcon: Boolean): Pair<Float, Float> {
+    private fun measureContent(content: IslandContent): Pair<Float, Float> {
+        val hasIcon = content.icon.isNotEmpty() && !content.centered
+        return measureMessage(content.title, content.detail, hasIcon, content.inline)
+    }
+
+    private fun measureMessage(
+        title: String, detail: String, hasIcon: Boolean,
+        inline: List<IslandMetric> = emptyList(),
+    ): Pair<Float, Float> {
         val detailSize = mc.font.lineHeight.toFloat()
         val titleSize = detailSize - 1f
+        val titleWidth = skikoTextWidth(title, titleSize, bold = true) + inlineMetricsWidth(inline, titleSize)
         val textWidth = maxOf(
-            skikoTextWidth(title, titleSize, bold = true),
-            skikoTextWidth(detail, detailSize),
+            titleWidth,
+            runsWidth(parseRuns(detail, NOTIFICATION_DETAIL_COLOR), detailSize),
         )
         val iconWidth = if (hasIcon) ICON_SIZE + 5f else 0f
-        val height = PADDING_Y * 2f + skikoTextHeight(titleSize) + 1f + skikoTextHeight(detailSize)
+        val height = if (detail.isEmpty()) {
+            COLLAPSED_HEIGHT
+        } else {
+            PADDING_Y * 2f + skikoTextHeight(titleSize) + 1f + skikoTextHeight(detailSize)
+        }
         return Pair(PADDING_X * 2f + iconWidth + textWidth, height)
     }
+
+    private fun inlineMetricsWidth(metrics: List<IslandMetric>, size: Float): Float {
+        if (metrics.isEmpty()) return 0f
+        var width = INLINE_GAP
+        for (metric in metrics) {
+            width += skikoTextWidth(metric.slot, size) + inlineLabelWidth(metric, size) + INLINE_PART_GAP
+        }
+        return width - INLINE_PART_GAP
+    }
+
+    private fun inlineLabelWidth(metric: IslandMetric, size: Float): Float =
+        if (metric.label.isEmpty()) 0f else INLINE_LABEL_GAP + skikoTextWidth(metric.label, size)
 
     private fun drawMessage(
         graphics: GuiGraphicsExtractor,
@@ -215,6 +278,7 @@ object IslandRenderer {
         icon: String, iconColor: Int,
         titleColor: Int, detailColor: Int,
         centered: Boolean,
+        inline: List<IslandMetric>,
         x: Float, y: Float,
         iconAlpha: Float, titleAlpha: Float, detailAlpha: Float,
         clip: Bounds,
@@ -225,28 +289,116 @@ object IslandRenderer {
         val titleSize = detailSize - 1f
         val titleHeight = skikoTextHeight(titleSize)
         val hasIcon = icon.isNotEmpty() && !centered
+        val iconSize = ICON_SIZE
 
-        if (hasIcon && iconAlpha > 0.01f && clip.h >= ICON_SIZE) {
-            graphics.drawSkikoImage(icon, x + PADDING_X, y + (clip.h - ICON_SIZE) / 2f, ICON_SIZE, ICON_SIZE, 0f, tintColor = withAlpha(iconColor, iconAlpha),)
+        if (hasIcon && iconAlpha > 0.01f && clip.h >= iconSize) {
+            graphics.drawSkikoImage(icon, x + PADDING_X, y + (clip.h - iconSize) / 2f, iconSize, iconSize, 0f, tintColor = withAlpha(iconColor, iconAlpha),)
         }
 
         val centerX = clip.x + clip.w / 2f
-        val left = if (hasIcon) x + PADDING_X + ICON_SIZE + 5f else x + PADDING_X
+        val left = if (hasIcon) x + PADDING_X + iconSize + 5f else x + PADDING_X
         val titleX = if (centered) centerX - skikoTextWidth(title, titleSize, bold = true) / 2f else left
-        val detailX = if (centered) centerX - skikoTextWidth(detail, detailSize) / 2f else left
+        val detailRuns = parseRuns(detail, detailColor)
+        val detailX = if (centered) centerX - runsWidth(detailRuns, detailSize) / 2f else left
 
-        graphics.drawSkikoText(title, titleX, y + PADDING_Y, titleSize, withAlpha(titleColor, titleAlpha), bold = true)
-        graphics.drawSkikoText(
-            detail,
-            detailX, y + PADDING_Y + titleHeight + 1f,
-            detailSize, withAlpha(detailColor, detailAlpha),
-        )
+        val titleY = if (detail.isEmpty()) y + (clip.h - titleHeight) / 2f else y + PADDING_Y
+        graphics.drawSkikoText(title, titleX, titleY, titleSize, withAlpha(titleColor, titleAlpha), bold = true)
+
+        if (!centered && inline.isNotEmpty()) {
+            drawInlineMetrics(graphics, inline, titleX + skikoTextWidth(title, titleSize, bold = true) + INLINE_GAP, titleY, titleSize, titleAlpha)
+        }
+
+        var cursorX = detailX
+        val detailY = y + PADDING_Y + titleHeight + 1f
+        for (run in detailRuns) {
+            if (run.text.isEmpty()) continue
+            graphics.drawSkikoText(
+                run.text,
+                cursorX, detailY,
+                detailSize, withAlpha(run.color, detailAlpha),
+                bold = run.bold,
+            )
+            cursorX += skikoTextWidth(run.text, detailSize, run.bold)
+        }
+    }
+
+    private fun drawInlineMetrics(
+        graphics: GuiGraphicsExtractor,
+        metrics: List<IslandMetric>,
+        x: Float, y: Float,
+        size: Float, alpha: Float,
+    ) {
+        if (alpha <= 0.01f) return
+        var cursorX = x
+        for (metric in metrics) {
+            val slotWidth = skikoTextWidth(metric.slot, size)
+            val valueWidth = skikoTextWidth(metric.value, size)
+            graphics.drawSkikoText(metric.value, cursorX + slotWidth - valueWidth, y, size, withAlpha(metric.valueColor, alpha))
+            if (metric.label.isNotEmpty()) {
+                graphics.drawSkikoText(metric.label, cursorX + slotWidth + INLINE_LABEL_GAP, y, size, withAlpha(metric.labelColor, alpha))
+            }
+            cursorX += slotWidth + inlineLabelWidth(metric, size) + INLINE_PART_GAP
+        }
     }
 
     private fun withAlpha(color: Int, alpha: Float): Int =
         (color and 0x00FFFFFF) or ((((color ushr 24) * alpha).toInt().coerceIn(0, 255)) shl 24)
 
     private fun centeredX(width: Float) = (mc.window.guiScaledWidth - width) / 2f
+
+    private data class TextRun(val text: String, val color: Int, val bold: Boolean)
+
+    private fun parseRuns(text: String, baseColor: Int, baseBold: Boolean = false): List<TextRun> {
+        if (text.indexOf('§') < 0) return listOf(TextRun(text, baseColor, baseBold))
+
+        val runs = ArrayList<TextRun>()
+        val current = StringBuilder()
+        var color = baseColor
+        var bold = baseBold
+
+        fun flush() {
+            if (current.isEmpty()) return
+            runs += TextRun(current.toString(), color, bold)
+            current.setLength(0)
+        }
+
+        var i = 0
+        while (i < text.length) {
+            val ch = text[i]
+            if (ch == '§' && i + 1 < text.length) {
+                val format = ChatFormatting.getByCode(text[i + 1])
+                if (format != null) {
+                    if (format == ChatFormatting.RESET) {
+                        flush()
+                        color = baseColor
+                        bold = baseBold
+                    } else {
+                        val textColor = TextColor.fromLegacyFormat(format)
+                        if (textColor != null) {
+                            flush()
+                            color = 0xFF000000.toInt() or (textColor.value and 0xFFFFFF)
+                            bold = baseBold
+                        } else if (format == ChatFormatting.BOLD) {
+                            flush()
+                            bold = true
+                        }
+                    }
+                    i += 2
+                    continue
+                }
+            }
+            current.append(ch)
+            i++
+        }
+        flush()
+        return runs
+    }
+
+    private fun runsWidth(runs: List<TextRun>, size: Float): Float {
+        var width = 0f
+        for (run in runs) width += skikoTextWidth(run.text, size, run.bold)
+        return width
+    }
 }
 
 private class IslandLine(private val tween: Tween) {

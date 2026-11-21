@@ -3,6 +3,8 @@ package cn.hkim.addon.utils.skyblock.rng
 import cn.hkim.addon.events.impl.ChatReceiveEvent
 import cn.hkim.addon.utils.legacy
 import cn.hkim.addon.utils.modMessage
+import cn.hkim.addon.utils.render.island.IslandQueue
+import cn.hkim.addon.utils.render.island.IslandRenderer
 import cn.hkim.addon.utils.skyblock.LocationUtils
 import cn.hkim.addon.utils.skyblock.slayer.SlayerUtils
 
@@ -102,6 +104,7 @@ object RngMeterChatParser {
                     0.0
                 }
                 sendReset(data.score, percentage)
+                sendIslandReset(key, data.item, percentage)
             }
 
             RngMeterStorage.setScore(key, 0L)
@@ -146,6 +149,16 @@ object RngMeterChatParser {
         modMessage(
             "§dRng Item §7reset! (§6${RngMeterFormatter.formatNumber(dropScore)} §bScore, " +
                 "§6${RngMeterFormatter.formatPercentage(percentage)}§b%§7)",
+        )
+    }
+
+    private fun sendIslandReset(key: String, item: String?, percentage: Double) {
+        IslandRenderer.showMessage(
+            "RNG Reset! · $key",
+            "${item ?: "§7Unknown"} §f→ §d${RngMeterFormatter.formatPercentage(percentage)}%",
+            durationMs = 2000L,
+            priority = IslandQueue.PRIORITY_MODULE,
+            key = "rng_reset",
         )
     }
 }

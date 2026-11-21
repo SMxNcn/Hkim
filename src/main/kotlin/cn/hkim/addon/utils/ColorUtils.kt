@@ -187,6 +187,17 @@ private val LEGACY_COLOR_CODES: Map<Int, String> = ChatFormatting.entries
 
 internal fun getLegacyColorCode(rgb: Int): String? = LEGACY_COLOR_CODES[rgb]
 
+fun colorCodeBefore(text: String, index: Int): String? {
+    var i = index
+    while (i >= 2 && text[i - 2] == '§') {
+        val code = text[i - 1]
+        val format = ChatFormatting.getByCode(code) ?: return null
+        if (TextColor.fromLegacyFormat(format) != null) return "§$code"
+        i -= 2
+    }
+    return null
+}
+
 fun Component.hasNonLegacyColor(): Boolean {
     var extended = false
     this.visit({ style: Style, _: String ->

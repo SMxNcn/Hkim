@@ -35,7 +35,7 @@ object EquipmentUtils : SwapHandler() {
             currentIndex = 0
             isProcessing = false
             isActive = true
-            startSwap(SwapInfo("Equipment", "Swapping ${slots.size} equipment(s)"))
+            startSwap(SwapInfo("Equipment", "Swapping §a${slots.size}§r item(s)"))
             sendCommand("stats")
 
             schedule(200) {

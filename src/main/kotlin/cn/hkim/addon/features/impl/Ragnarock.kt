@@ -11,6 +11,8 @@ import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.utils.HudUtils.alert
 import cn.hkim.addon.utils.itemId
 import cn.hkim.addon.utils.modMessage
+import cn.hkim.addon.utils.render.island.IslandQueue
+import cn.hkim.addon.utils.render.island.IslandRenderer
 import cn.hkim.addon.utils.sendCommand
 import cn.hkim.addon.utils.strength
 import meteordevelopment.orbit.EventHandler
@@ -21,6 +23,7 @@ import net.minecraft.sounds.SoundEvents
 object Ragnarock : Module("Ragnarock", "Alerts when you cast the Ragnarock.") {
     private val castAlert by BooleanSetting("Cast Alert", "Alerts when you cast Ragnarock.", true)
     private val cancelAlert by BooleanSetting("Cancel Alert", "Alerts when Ragnarock is cancelled.", true)
+    private val islandMessage by BooleanSetting("Island Message", "Shows messages on island.", false)
     private val strengthGainedMessage by BooleanSetting("Strength Gained", "Shows Ragnarock strength gained.", true)
     private val announceStrengthGained by BooleanSetting("Announce Strength", "Announce gained strength in party chat.", false).depends { strengthGainedMessage }
     private val customStrengthMessage by TextSetting("Announce Message", "Strength gained message. %s for strength gained.", "Gained strength from Ragnarock: %s").depends { announceStrengthGained }
@@ -40,15 +43,23 @@ object Ragnarock : Module("Ragnarock", "Alerts when you cast the Ragnarock.") {
             SoundEvents.WOLF_SOUNDS.entries.any {
                 (_, variant) -> variant.adultSounds().deathSound() == event.packet.sound || variant.babySounds().deathSound() == event.packet.sound
             }) {
-            if (castAlert) alert("§aCasted Rag")
             val strengthGained = ((mc.player?.mainHandItem?.strength ?: return) * 1.5).toInt()
-            if (strengthGainedMessage) {
-                modMessage("Gained strength: §4$strengthGained")
-                if (announceStrengthGained) {
-                    val message = customStrengthMessage
-                        .ifBlank { "Gained strength from Ragnarock: %s" }.replace("%s", strengthGained.toString(), true)
-                    sendCommand("pc $message")
-                }
+            if (islandMessage) {
+                IslandRenderer.showMessage(
+                    "Ragnarock",
+                    "⚔ §4+$strengthGained§r strength for §a10s",
+                    durationMs = 2000L,
+                    priority = IslandQueue.PRIORITY_MODULE,
+                    key = "ragnarock",
+                )
+            } else {
+                if (castAlert) alert("§aCasted Rag")
+                if (strengthGainedMessage) modMessage("Gained strength: §4$strengthGained")
+            }
+            if (strengthGainedMessage && announceStrengthGained) {
+                val message = customStrengthMessage
+                    .ifBlank { "Gained strength from Ragnarock: %s" }.replace("%s", strengthGained.toString(), true)
+                sendCommand("pc $message")
             }
         }
     }

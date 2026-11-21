@@ -32,6 +32,15 @@ data class IslandContent(
     val titleColor: Int? = null,
     val detailColor: Int? = null,
     val durationMs: Long = 500L,
+    val inline: List<IslandMetric> = emptyList(),
+)
+
+data class IslandMetric(
+    val value: String,
+    val label: String,
+    val slot: String,
+    val valueColor: Int,
+    val labelColor: Int,
 )
 
 enum class IslandUser { TAB, CLICK_GUI }

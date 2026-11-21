@@ -3,9 +3,12 @@ package cn.hkim.addon.utils.skyblock.inventory
 import cn.hkim.addon.Hkim
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.events.impl.PacketReceiveEvent
+import cn.hkim.addon.events.impl.TickEvent
 import cn.hkim.addon.features.impl.SwapOptions
 import cn.hkim.addon.utils.ViewLock
 import cn.hkim.addon.utils.cleanString
+import cn.hkim.addon.utils.render.island.IslandQueue
+import cn.hkim.addon.utils.render.island.IslandRenderer
 import cn.hkim.addon.utils.schedule
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.client.player.ClientInput
@@ -19,7 +22,7 @@ abstract class SwapHandler {
     companion object {
         @JvmStatic var isInSwap = false
             private set
-        var swapInfo: SwapInfo? = null
+        private var swapInfo: SwapInfo? = null
         private var savedInput: ClientInput? = null
         private val handlers = mutableListOf<SwapHandler>()
 
@@ -71,6 +74,20 @@ abstract class SwapHandler {
     init {
         handlers += this
         Hkim.EVENT_BUS.subscribe(this)
+    }
+
+    @EventHandler
+    private fun onTick(event: TickEvent.End) {
+        if (!isActive) return
+        val info = swapInfo ?: return
+        if (!SwapOptions.noGui || !SwapOptions.showSwapInfo || mc.gui.hud.isHidden) return
+        IslandRenderer.showMessage(
+            info.title,
+            info.detail,
+            centered = true,
+            priority = IslandQueue.PRIORITY_SWAP_INFO,
+            key = "swap-info",
+        )
     }
 
     @EventHandler
