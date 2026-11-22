@@ -3,12 +3,14 @@ package cn.hkim.addon.compat.tab
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.features.impl.DynamicIsland
 import cn.hkim.addon.hud.Bounds
+import cn.hkim.addon.runtime.BackdropBlur
 import cn.hkim.addon.utils.render.Easing
 import cn.hkim.addon.utils.render.GuiAnimation
 import cn.hkim.addon.utils.render.island.IslandAnchor
 import cn.hkim.addon.utils.render.island.IslandHost
 import cn.hkim.addon.utils.render.island.IslandUser
 import cn.hkim.addon.utils.render.island.towards
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawBackdropBlur
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRect
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.navigation.ScreenRectangle
@@ -162,7 +164,19 @@ object TabAnimation {
 
         if (shape != null) {
             val rect = shape.bounds
-            if (!SkyHanniTab.hidesBackground()) graphics.drawRoundedRect(rect.x, rect.y, rect.w, rect.h, shape.background, shape.radius)
+            if (!SkyHanniTab.hidesBackground()) {
+                val blurRadius = DynamicIsland.effectiveBlurRadius
+                if (blurRadius > 0f) {
+                    graphics.drawBackdropBlur(
+                        rect.x, rect.y, rect.w, rect.h,
+                        BackdropBlur(
+                            radius = blurRadius,
+                            cornerRadius = shape.radius,
+                        ),
+                    )
+                }
+                graphics.drawRoundedRect(rect.x, rect.y, rect.w, rect.h, shape.background, shape.radius)
+            }
             IslandHost.publishShape(IslandUser.TAB, shape)
 
             if (progress < 1f) {

@@ -5,6 +5,7 @@ import cn.hkim.addon.config.ModuleConfig
 import cn.hkim.addon.features.ModuleManager
 import cn.hkim.addon.hud.Bounds
 import cn.hkim.addon.hud.HudAlignment
+import cn.hkim.addon.hud.HudBlurBackground
 import cn.hkim.addon.hud.HudElement
 import cn.hkim.addon.utils.HudUtils.drawHorizontalLine
 import cn.hkim.addon.utils.HudUtils.drawVerticalLine
@@ -33,6 +34,8 @@ class HudEditScreen(private val parent: Screen? = null) : Screen(Component.liter
             override fun getRealtimeDeltaTicks(): Float = delta
         }
         val mf = mouseX.toFloat(); val mfY = mouseY.toFloat()
+
+        HudBlurBackground.renderEditor(graphics)
 
         val halfW = width / 2f; val halfH = height / 2f
         graphics.drawHorizontalLine(0f, halfH, width.toFloat(), -1, 0.5f)

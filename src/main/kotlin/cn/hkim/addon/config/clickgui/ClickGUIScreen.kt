@@ -92,7 +92,6 @@ class ClickGUIScreen(private val parent: Screen? = null) : Screen(Component.lite
     private fun withAlpha(color: Int, alpha: Float): Int =
         (color and 0x00FFFFFF) or ((((color ushr 24) * alpha).toInt().coerceIn(0, 255)) shl 24)
 
-
     var activeSkikoEditBox: SkikoEditBox? = null
     var activeEditBoxSetting: Setting<*>? = null
     private var searchSkikoBox: SkikoEditBox? = null
@@ -101,7 +100,7 @@ class ClickGUIScreen(private val parent: Screen? = null) : Screen(Component.lite
         private var lastSelectedCategory: Category? = null
         private const val CARD_GAP = 8f
         private const val PANEL_RADIUS = 10f
-        private const val SHADOW_BLUR = 6f
+        private const val SHADOW_FEATHER = 6f
         private const val SHADOW_SPREAD = 1f
     }
 
@@ -251,14 +250,14 @@ class ClickGUIScreen(private val parent: Screen? = null) : Screen(Component.lite
         val panelRadius = panel.radius
         val panelColor = panel.background
         val shadowColor = withAlpha(Theme.bgShadow, progress)
-        val shadowBlur = SHADOW_BLUR * progress
+        val shadowFeather = SHADOW_FEATHER * progress
         val shadowSpread = SHADOW_SPREAD * progress
         val settled = progress >= 1f
         graphics.drawRoundedRectWithShadow(
             rectX, rectY, rectW, rectH, panelColor, 0, 0f, panelRadius,
-            shadowColor, shadowBlur, shadowSpread,
+            shadowColor, shadowFeather, shadowSpread,
             cacheKey = if (settled) "clickgui-panel" else null,
-            cacheToken = if (settled) skikoCacheToken(rectW, rectH, panelRadius, panelColor, shadowColor, shadowBlur, shadowSpread) else null,
+            cacheToken = if (settled) skikoCacheToken(rectW, rectH, panelRadius, panelColor, shadowColor, shadowFeather, shadowSpread) else null,
         )
 
         if (animateFromIsland) {
@@ -653,14 +652,14 @@ class ClickGUIScreen(private val parent: Screen? = null) : Screen(Component.lite
         if (progress >= 0.98f) {
             graphics.drawGradientRectMulti(
                 baseX - 1, baseY - contentPadding,
-                availW + 1, 8f,
+                availW + 2, 8f,
                 listOf(Theme.bg, Theme.bg and 0x00FFFFFF),
                 null, SkikoGradient.TOP_BOTTOM, 0f
             )
 
             graphics.drawGradientRectMulti(
                 baseX - 1, baseY + availH + contentPadding - 8f,
-                availW + 1, 8f,
+                availW + 2, 8f,
                 listOf(Theme.bg and 0x00FFFFFF, Theme.bg),
                 null, SkikoGradient.TOP_BOTTOM, 0f
             )

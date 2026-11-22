@@ -25,6 +25,8 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 @ModuleInfo("dynamic_island", Category.MISC)
 object DynamicIsland : Module("Dynamic Island", "Apple-style dynamic island HUD element.") {
     private val backgroundColor by ColorSetting("Background Color", "", 0xB3000000.toInt())
+    private val backgroundBlur by BooleanSetting("Background Blur", "Apply blur behind the background.", false)
+    private val backgroundBlurRadius by NumberSetting("Blur Radius", "", 10f, 0f, 20f, 1f).depends { backgroundBlur }
     private val animationDuration by NumberSetting("Animation Duration", "", 150f, 50f, 500f, 10f, "ms")
     private val tabOnIsland by BooleanSetting("Island Tab List", "Morph the tab list.", true)
 
@@ -92,16 +94,24 @@ object DynamicIsland : Module("Dynamic Island", "Apple-style dynamic island HUD 
         if (!enabled) return
         if (!canRenderTabOnIsland && IslandHost.listShowing) return
 
-        IslandRenderer.render(graphics, RADIUS, backgroundColor, animationDurationMs, homeContent)
+        IslandRenderer.render(
+            graphics, RADIUS, backgroundColor, animationDurationMs, homeContent,
+            effectiveBlurRadius,
+        )
         super.render(graphics, tickTracker)
     }
 
     fun renderStandalone(graphics: GuiGraphicsExtractor) {
         if (enabled || IslandHost.listShowing) return
-        IslandRenderer.render(graphics, RADIUS, backgroundColor, animationDurationMs)
+        IslandRenderer.render(
+            graphics, RADIUS, backgroundColor, animationDurationMs,
+            blurRadius = effectiveBlurRadius,
+        )
     }
 
     val animationDurationMs: Long get() = animationDuration.toLong()
+
+    val effectiveBlurRadius: Float get() = if (backgroundBlur) backgroundBlurRadius else 0f
 
     val canRenderTabOnIsland: Boolean get() = enabled && tabOnIsland
 

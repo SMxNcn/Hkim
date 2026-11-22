@@ -2,10 +2,12 @@ package cn.hkim.addon.utils.render.island
 
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.hud.Bounds
+import cn.hkim.addon.runtime.BackdropBlur
 import cn.hkim.addon.utils.notification.NOTIFICATION_DETAIL_COLOR
 import cn.hkim.addon.utils.notification.NOTIFICATION_TITLE_COLOR
 import cn.hkim.addon.utils.render.Easing
 import cn.hkim.addon.utils.render.GuiAnimation
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawBackdropBlur
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRectWithShadow
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoImage
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoText
@@ -31,8 +33,8 @@ object IslandRenderer {
     private const val COLLAPSED_WIDTH = 28f
     private const val COLLAPSED_HEIGHT = 16f
 
-    private const val SOFT_EDGE_BLUR = 1f
-    private const val SOFT_EDGE_PAD = SOFT_EDGE_BLUR * 3f
+    private const val SOFT_EDGE_FEATHER = 1f
+    private const val SOFT_EDGE_PAD = SOFT_EDGE_FEATHER * 3f
 
     private var animationDurationMs = 150L
 
@@ -86,6 +88,7 @@ object IslandRenderer {
         background: Int,
         animationDurationMs: Long,
         homeContent: IslandContent? = null,
+        blurRadius: Float = 0f,
     ) {
         this.radius = radius
         this.background = background
@@ -140,6 +143,7 @@ object IslandRenderer {
             geometry.radius, withAlpha(background, geometry.fade),
             centeredX(geometry.cardWidth),
             alphas.title * reveal, alphas.detail * reveal, alphas.icon * reveal,
+            blurRadius,
         )
     }
 
@@ -214,7 +218,14 @@ object IslandRenderer {
         radius: Float, background: Int,
         contentX: Float,
         titleAlpha: Float, detailAlpha: Float, iconAlpha: Float,
+        blurRadius: Float,
     ) {
+        if (blurRadius > 0f) {
+            graphics.drawBackdropBlur(
+                x, y, width, height,
+                BackdropBlur(radius = blurRadius, cornerRadius = radius),
+            )
+        }
         val clip = Bounds(x, y, width, height)
         graphics.skikoBatch(
             x - SOFT_EDGE_PAD, y - SOFT_EDGE_PAD,
@@ -224,7 +235,7 @@ object IslandRenderer {
             graphics.drawRoundedRectWithShadow(
                 x, y, width, height,
                 background, 0, 0f, radius,
-                background, SOFT_EDGE_BLUR, 0f,
+                background, SOFT_EDGE_FEATHER, 0f,
             )
 
             if (content != null) {

@@ -1,6 +1,7 @@
 package cn.hkim.addon.utils.render.skiko
 
 import cn.hkim.addon.Hkim
+import cn.hkim.addon.runtime.BackdropBlur
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import kotlin.math.atan2
 import kotlin.math.sqrt
@@ -30,6 +31,35 @@ object SkikoDraw {
         } finally {
             runtime.endBatch()
         }
+    }
+
+    fun GuiGraphicsExtractor.skikoBatch(
+        x: Float, y: Float,
+        width: Float, height: Float,
+        clipRadius: Float = 0f,
+        backdrop: BackdropBlur,
+        block: () -> Unit
+    ) {
+        val runtime = Hkim.runtime
+        if (runtime == null) {
+            block()
+            return
+        }
+        runtime.beginBatch(this, x, y, width, height, clipRadius, backdrop)
+        try {
+            block()
+        } finally {
+            runtime.endBatch()
+        }
+    }
+
+    fun GuiGraphicsExtractor.drawBackdropBlur(
+        x: Float, y: Float,
+        width: Float, height: Float,
+        backdrop: BackdropBlur,
+        cacheKey: Any? = null
+    ) {
+        Hkim.runtime?.drawBackdropBlur(this, x, y, width, height, backdrop, cacheKey)
     }
 
     fun GuiGraphicsExtractor.drawRoundedRect(
@@ -76,12 +106,29 @@ object SkikoDraw {
         borderWidth: Float,
         radius: Float,
         shadowColor: Int,
-        blur: Float,
+        feather: Float,
         spread: Float,
         cacheKey: Any? = null,
         cacheToken: Int? = null
     ) {
-        Hkim.runtime?.drawRoundedRect(this, x, y, width, height, fillColor, borderColor, borderWidth, radius, shadowColor, blur, spread, cacheKey, cacheToken)
+        Hkim.runtime?.drawRoundedRect(this, x, y, width, height, fillColor, borderColor, borderWidth, radius, shadowColor, feather, spread, cacheKey, cacheToken)
+    }
+
+    fun GuiGraphicsExtractor.drawRoundedRectWithShadow(
+        x: Float, y: Float,
+        width: Float, height: Float,
+        fillColor: Int,
+        borderColor: Int,
+        borderWidth: Float,
+        radius: Float,
+        shadowColor: Int,
+        feather: Float,
+        spread: Float,
+        cacheKey: Any? = null,
+        cacheToken: Int? = null,
+        backdrop: BackdropBlur
+    ) {
+        Hkim.runtime?.drawRoundedRect(this, x, y, width, height, fillColor, borderColor, borderWidth, radius, shadowColor, feather, spread, cacheKey, cacheToken, backdrop)
     }
 
     fun GuiGraphicsExtractor.drawCircle(
@@ -155,6 +202,20 @@ object SkikoDraw {
         cacheToken: Int? = null
     ) {
         Hkim.runtime?.drawGradientRectMulti(this, x, y, width, height, colors, positions, direction, radius, cacheKey, cacheToken)
+    }
+
+    fun GuiGraphicsExtractor.drawGradientRectMulti(
+        x: Float, y: Float,
+        width: Float, height: Float,
+        colors: List<Int>,
+        positions: FloatArray? = null,
+        direction: SkikoGradient = SkikoGradient.LEFT_RIGHT,
+        radius: Float = 0f,
+        cacheKey: Any? = null,
+        cacheToken: Int? = null,
+        backdrop: BackdropBlur
+    ) {
+        Hkim.runtime?.drawGradientRectMulti(this, x, y, width, height, colors, positions, direction, radius, cacheKey, cacheToken, backdrop)
     }
 
     fun GuiGraphicsExtractor.drawCircleWithBorder(

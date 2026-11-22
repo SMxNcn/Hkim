@@ -7,23 +7,30 @@ import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.hud.HudAlignment
+import cn.hkim.addon.hud.HudBlurBackground
 import cn.hkim.addon.hud.HudElement
+import cn.hkim.addon.runtime.BackdropBlur
 import cn.hkim.addon.utils.HudUtils
 import cn.hkim.addon.utils.ColorUtils.gradientText
 import cn.hkim.addon.utils.ParsedColoredText
 import cn.hkim.addon.utils.parseColoredText
+import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawBackdropBlur
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRect
 import cn.hkim.addon.utils.toLegacyOrComponent
+import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.client.gui.navigation.ScreenRectangle
 import net.minecraft.network.chat.Component
 
 @ModuleInfo("custom_scoreboard", Category.MISC)
 object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard features.") {
     private val background by DropdownSetting("Background")
     private val showBackground by BooleanSetting("Enabled", "", true).depends { background }
-    private val bgColor by ColorSetting("Color", "", 0x4C000000).depends { background && showBackground }
-    private val padding by NumberSetting("Padding", "", 2f, 0f, 5f, 1f).depends { background && showBackground }
+    private val bgColor by ColorSetting("Color", "", 0x66000000).depends { background && showBackground }
+    private val padding by NumberSetting("Padding", "Extra padding added on edges.", 2f, 0f, 5f, 1f).depends { background && showBackground }
     private val backgroundRadius by NumberSetting("Radius", "", 0f, 0f, 5f, 1f).depends { background && showBackground }
+    private val blurRadius by NumberSetting("Blur Radius", "", 0f, 0f, 20f, 1f).depends { background && showBackground }
+    private val textShadow by BooleanSetting("Text Shadow", "Draw scoreboard text with a shadow.", false)
     private val replaceIpLine by BooleanSetting("Replace Last Line", "Replace the last row.", true)
     private val customServerIp by TextSetting("Custom IP Line", "Use '&' for color codes. Supports &#RRGGBB hex colors.", "").depends { replaceIpLine }
     private val centerIpLine by BooleanSetting("Center IP Line", "Center the custom last line horizontally.", false).depends { hasCustomIpText() }
@@ -43,7 +50,7 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard features.") {
         ModuleConfig.saveConfig()
     }
 
-    private const val EXAMPLE_TITLE = "§e§lSKYBLOCK"
+    private const val EXAMPLE_TITLE = "§e§lTitle"
     private val EXAMPLE_LINES = listOf(
         "§6  5,234,567",
         "§d  ◆ 1,234",
@@ -51,7 +58,7 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard features.") {
         "§b  ✦ 128",
         "§e  Coins 100K",
         "§7  §m━━━━━━━━━",
-        "§d§l✿ BMW ✿"
+        "§eexample.com"
     )
 
     private var prevContentWidth = 0f
@@ -76,7 +83,7 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard features.") {
         }
     }
 
-    private fun hasCustomIpText(): Boolean = replaceIpLine && customLine().plain.isNotEmpty()
+    private fun hasCustomIpText(): Boolean = replaceIpLine && customLine().plain.isNotBlank()
 
     private val hud by HudElement("Scoreboard", "Replaces the vanilla scoreboard.",
         alignment = HudAlignment.TOP_LEFT
@@ -88,6 +95,33 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard features.") {
     }.onFirstRender { hud ->
         hud.anchorX = 50f
         hud.anchorY = 50f
+    }.apply {
+        contentWidth = 0f
+        contentHeight = 0f
+    }
+
+    init {
+        HudBlurBackground.register("hkim:custom_scoreboard") { graphics ->
+            if (!this@CustomScoreboard.enabled || !showBackground) return@register
+            if (!hud.isVisible()) return@register
+            val bounds = hud.getScreenBounds()
+            if (bounds.w <= 0f || bounds.h <= 0f) return@register
+            val scale = hud.hudScale
+            val blur = BackdropBlur(
+                radius = blurRadius * scale,
+                cornerRadius = backgroundRadius * scale,
+                tint = bgColor,
+            )
+            if (blur.enabled) {
+                graphics.drawBackdropBlur(bounds.x, bounds.y, bounds.w, bounds.h, blur)
+            } else {
+                graphics.drawRoundedRect(
+                    bounds.x, bounds.y, bounds.w, bounds.h,
+                    bgColor,
+                    backgroundRadius * scale,
+                )
+            }
+        }
     }
 
     private fun renderScoreboard(graphics: GuiGraphicsExtractor): Pair<Float, Float> {
@@ -160,20 +194,36 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard features.") {
         return null
     }
 
+    private fun List<Component>.trimTrailingBlankLines(): List<Component> =
+        dropLastWhile { it.string.isBlank() }
+
     private fun withCustomLine(title: Component, lines: List<Component>, custom: ParsedColoredText?): BoardContent {
-        if (custom == null || lines.isEmpty()) return BoardContent(title, lines, null)
-        return BoardContent(title, lines.dropLast(1) + custom.asComponent(), custom)
+        if (custom == null || lines.isEmpty()) {
+            return BoardContent(title, lines.trimTrailingBlankLines(), null)
+        }
+        val base = lines.dropLast(1)
+        if (custom.plain.isBlank()) {
+            return BoardContent(title, base.trimTrailingBlankLines(), null)
+        }
+        return BoardContent(title, (base + custom.asComponent()).trimTrailingBlankLines(), custom)
+    }
+
+    private fun measureText(font: Font, text: Component, shadow: Boolean): ScreenRectangle {
+        val prepared = font.prepareText(text.visualOrderText, 0f, 0f, 0xFFFFFFFF.toInt(), shadow, false, 0)
+        return prepared.bounds() ?: ScreenRectangle(0, 0, font.width(text), font.lineHeight)
     }
 
     private fun renderBoard(graphics: GuiGraphicsExtractor, data: BoardContent): Pair<Float, Float> {
         val font = mc.font
         val fontHeight = font.lineHeight
-        val pad = padding.toInt()
+        val borderPad = 1
+        val pad = borderPad + padding.toInt()
+        val titleGap = 1
 
         val lines = data.lines
         val lastIdx = lines.size - 1
         val custom = data.customLine
-        val customHasText = custom != null && custom.plain.isNotEmpty()
+        val customHasText = custom != null && custom.plain.isNotBlank()
         val useGradient = customHasText && lastLineGradient
 
         val displayLines = lines.mapIndexed { i, line ->
@@ -181,40 +231,44 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard features.") {
         }
 
         val titleComp = data.title
-        val titleWidth = font.width(titleComp)
-        val lineWidths = displayLines.map { font.width(it) }
-        var maxW = titleWidth
-        for (w in lineWidths) {
-            if (w > maxW) maxW = w
+        val titleBounds = measureText(font, titleComp, textShadow)
+        val lineBounds = displayLines.map { measureText(font, it, textShadow) }
+
+        val minLineLeft = lineBounds.minOfOrNull { it.left() } ?: 0
+        val maxLineRight = lineBounds.maxOfOrNull { it.right() } ?: 0
+        val lineContentW = (maxLineRight - minLineLeft).coerceAtLeast(0)
+        val contentW = maxOf(lineContentW, titleBounds.width())
+        val lineX = pad - minLineLeft
+        val titleX = pad + (contentW - titleBounds.width()) / 2 - titleBounds.left()
+        val titleY = pad - titleBounds.top()
+
+        val linesTop = pad + titleBounds.height() + titleGap
+        val lineTops = lineBounds.indices.map { linesTop + it * fontHeight }
+        val lastBottom = if (lineBounds.isEmpty()) {
+            pad + titleBounds.height()
+        } else {
+            lineTops.last() + lineBounds.last().height()
         }
+        val totalWidth = pad + contentW + pad
+        val totalHeight = lastBottom + pad
 
-        val textLeft = pad + 1
-        val totalWidth = maxW + pad * 2 + 3
-        val titleH = fontHeight + 2
-        val entriesH = displayLines.size * fontHeight + pad * 2
-        val totalHeight = titleH + entriesH
+        graphics.text(font, titleComp, titleX, titleY, 0xFFFFFFFF.toInt(), textShadow)
 
-        if (showBackground) {
-            if (backgroundRadius > 0f) {
-                graphics.drawRoundedRect(0f, 0f, totalWidth.toFloat(), totalHeight.toFloat(), bgColor, backgroundRadius)
-            } else {
-                graphics.fill(0, 0, totalWidth, totalHeight, bgColor)
-            }
-        }
-
-        graphics.text(font, titleComp, textLeft + (maxW - titleWidth) / 2, pad, 0xFFFFFFFF.toInt(), true)
-
-        val startY = pad + titleH
         for ((i, line) in displayLines.withIndex()) {
-            val y = startY + i * fontHeight
-            val x = if (customHasText && centerIpLine && i == lastIdx) textLeft + (maxW - lineWidths[i]) / 2 else textLeft
+            val bounds = lineBounds[i]
+            val y = lineTops[i] - bounds.top()
+            val x = if (customHasText && centerIpLine && i == lastIdx) {
+                pad + (contentW - bounds.width()) / 2 - bounds.left()
+            } else {
+                lineX
+            }
             if (useGradient && i == lastIdx) {
                 graphics.gradientText(font, custom.formatting, x, y,
                     gradStart and 0xFFFFFF,
                     gradEnd and 0xFFFFFF,
-                    gradSpeed.toInt(), shadow = true)
+                    gradSpeed.toInt(), shadow = textShadow)
             } else {
-                graphics.text(font, line, x, y, 0xFFFFFFFF.toInt(), true)
+                graphics.text(font, line, x, y, 0xFFFFFFFF.toInt(), textShadow)
             }
         }
 

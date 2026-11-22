@@ -1,5 +1,6 @@
 package cn.hkim.addon.utils.render.pip
 
+import cn.hkim.addon.runtime.BackdropBlur
 import cn.hkim.addon.utils.render.skiko.Skiko
 //? if 26.2 {
 import com.mojang.blaze3d.GpuFormat
@@ -261,7 +262,7 @@ class SkikoPIP : PictureInPictureRenderer<SkikoPIP.SkikoRenderState>() {
 
         @JvmStatic
         fun drawSkikoTo(graphics: GuiGraphicsExtractor, x: Number, y: Number, width: Number, height: Number, callback: Runnable) {
-            graphics.drawSkiko(x, y, width, height, callback)
+            graphics.drawSkiko(x, y, width, height, null, null, null, callback)
         }
 
         @JvmStatic
@@ -272,21 +273,39 @@ class SkikoPIP : PictureInPictureRenderer<SkikoPIP.SkikoRenderState>() {
             cacheToken: Int?,
             callback: Runnable
         ) {
-            if (cacheKey != null && cacheToken != null) {
-                graphics.drawSkikoCached(cacheKey, x, y, width, height, cacheToken, callback)
-            } else {
-                graphics.drawSkiko(x, y, width, height, callback)
-            }
+            graphics.drawSkiko(x, y, width, height, cacheKey, cacheToken, null, callback)
+        }
+
+        @JvmStatic
+        fun drawSkikoTo(
+            graphics: GuiGraphicsExtractor,
+            x: Number, y: Number, width: Number, height: Number,
+            cacheKey: Any?,
+            cacheToken: Int?,
+            backdrop: BackdropDraw?,
+            callback: Runnable
+        ) {
+            graphics.drawSkiko(x, y, width, height, cacheKey, cacheToken, backdrop, callback)
+        }
+
+        @JvmStatic
+        fun drawBackdropBlurTo(
+            graphics: GuiGraphicsExtractor,
+            x: Number, y: Number, width: Number, height: Number,
+            backdrop: BackdropBlur,
+            cacheKey: Any?
+        ) {
+            graphics.drawBackdropBlur(x, y, width, height, backdrop, cacheKey)
         }
 
         @JvmStatic
         fun GuiGraphicsExtractor.drawSkiko(callback: Runnable) {
-            drawSkiko(0f, 0f, guiWidth().toFloat(), guiHeight().toFloat(), callback)
+            drawSkiko(0f, 0f, guiWidth().toFloat(), guiHeight().toFloat(), null, null, null, callback)
         }
 
         @JvmStatic
         fun GuiGraphicsExtractor.drawSkiko(x: Number, y: Number, width: Number, height: Number, callback: Runnable) {
-            drawSkiko(x, y, width, height, null, callback)
+            drawSkiko(x, y, width, height, null, null, null, callback)
         }
 
         @JvmStatic
@@ -298,7 +317,7 @@ class SkikoPIP : PictureInPictureRenderer<SkikoPIP.SkikoRenderState>() {
             cacheToken: Int?,
             callback: Runnable
         ) {
-            drawSkiko(x, y, width, height, null, cacheToken, callback)
+            drawSkiko(x, y, width, height, null, cacheToken, null, callback)
         }
 
         @JvmStatic
@@ -311,7 +330,7 @@ class SkikoPIP : PictureInPictureRenderer<SkikoPIP.SkikoRenderState>() {
             cacheToken: Int?,
             callback: Runnable
         ) {
-            drawSkiko(x, y, width, height, cacheKey, cacheToken, callback)
+            drawSkiko(x, y, width, height, cacheKey, cacheToken, null, callback)
         }
 
         private fun GuiGraphicsExtractor.drawSkiko(
@@ -321,6 +340,7 @@ class SkikoPIP : PictureInPictureRenderer<SkikoPIP.SkikoRenderState>() {
             height: Number,
             cacheKey: Any?,
             cacheToken: Int?,
+            backdrop: BackdropDraw?,
             callback: Runnable
         ) {
             val window = Minecraft.getInstance().window
@@ -328,36 +348,10 @@ class SkikoPIP : PictureInPictureRenderer<SkikoPIP.SkikoRenderState>() {
 
             val pose = Matrix3x2f(pose())
             val scissor = scissorStack.peek()
-
-            val x0 = x.toFloat()
-            val y0 = y.toFloat()
-            val x1 = x0 + width.toFloat()
-            val y1 = y0 + height.toFloat()
-            val m00 = pose.m00(); val m01 = pose.m01()
-            val m10 = pose.m10(); val m11 = pose.m11()
-            val m20 = pose.m20(); val m21 = pose.m21()
-            val ax = m00 * x0 + m10 * y0 + m20; val ay = m01 * x0 + m11 * y0 + m21
-            val bx = m00 * x1 + m10 * y0 + m20; val by = m01 * x1 + m11 * y0 + m21
-            val cx = m00 * x0 + m10 * y1 + m20; val cy = m01 * x0 + m11 * y1 + m21
-            val dx = m00 * x1 + m10 * y1 + m20; val dy = m01 * x1 + m11 * y1 + m21
-            val minX = minOf(ax, bx, cx, dx)
-            val minY = minOf(ay, by, cy, dy)
-            val maxX = maxOf(ax, bx, cx, dx)
-            val maxY = maxOf(ay, by, cy, dy)
-            val left = floor(minX).toInt()
-            val top = floor(minY).toInt()
-            val renderRect = ScreenRectangle(left, top, ceil(maxX).toInt() - left, ceil(maxY).toInt() - top)
-            if (renderRect.width() <= 0 || renderRect.height() <= 0) return
-
-            val bounds = if (scissor != null) {
-                scissor.intersection(renderRect) ?: return
-            }
-            else {
-                renderRect
-            }
-            if (bounds.width() <= 0 || bounds.height() <= 0) return
-
             val screenRect = ScreenRectangle(0, 0, window.guiScaledWidth, window.guiScaledHeight)
+            val renderRect = screenRectOf(pose, x.toFloat(), y.toFloat(), width.toFloat(), height.toFloat()) ?: return
+            val bounds = if (scissor != null) scissor.intersection(renderRect) ?: return else renderRect
+            if (bounds.width() <= 0 || bounds.height() <= 0) return
             val clipped = screenRect.intersection(bounds) ?: return
             if (clipped.width() <= 0 || clipped.height() <= 0) return
 
@@ -368,6 +362,11 @@ class SkikoPIP : PictureInPictureRenderer<SkikoPIP.SkikoRenderState>() {
                 clipped.height() + PAD * 2
             )
 
+            val slot = nextDrawSlotKey()
+            if (backdrop != null && backdrop.blur.enabled) {
+                addBackdropBlurState(backdrop, pose, scissor, screenRect, slot, cacheKey)
+            }
+
             val state = SkikoRenderState(
                 renderBounds.width(),
                 renderBounds.height(),
@@ -376,11 +375,97 @@ class SkikoPIP : PictureInPictureRenderer<SkikoPIP.SkikoRenderState>() {
                 clipped,
                 callback,
                 cacheToken,
-                targetKey(clipped, cacheKey, nextDrawSlotKey()),
+                targetKey(clipped, cacheKey, slot),
                 cacheKey != null,
                 PAD
             )
             this.guiRenderState.addPicturesInPictureState(state)
+        }
+
+        private fun GuiGraphicsExtractor.drawBackdropBlur(
+            x: Number,
+            y: Number,
+            width: Number,
+            height: Number,
+            backdrop: BackdropBlur,
+            cacheKey: Any?
+        ) {
+            if (!backdrop.enabled) return
+            val window = Minecraft.getInstance().window
+            if (window.isIconified || window.guiScaledWidth <= 0 || window.guiScaledHeight <= 0) return
+
+            val pose = Matrix3x2f(pose())
+            val scissor = scissorStack.peek()
+            val screenRect = ScreenRectangle(0, 0, window.guiScaledWidth, window.guiScaledHeight)
+            val shapeRect = screenRectOf(pose, x.toFloat(), y.toFloat(), width.toFloat(), height.toFloat()) ?: return
+            val display = visibleShape(scissor, screenRect, shapeRect) ?: return
+            val capture = captureRect(shapeRect, backdrop.radius, screenRect) ?: return
+            val state = BackdropBlurState(
+                capture,
+                shapeRect,
+                display,
+                backdrop,
+                blurTargetKey(backdrop, cacheKey, nextDrawSlotKey())
+            )
+            this.guiRenderState.addPicturesInPictureState(state)
+        }
+
+        private fun GuiGraphicsExtractor.addBackdropBlurState(
+            backdrop: BackdropDraw,
+            pose: Matrix3x2f,
+            scissor: ScreenRectangle?,
+            screenRect: ScreenRectangle,
+            slot: Int,
+            cacheKey: Any?
+        ) {
+            val shapeRect = screenRectOf(pose, backdrop.x, backdrop.y, backdrop.width, backdrop.height) ?: return
+            val display = visibleShape(scissor, screenRect, shapeRect) ?: return
+            val capture = captureRect(shapeRect, backdrop.blur.radius, screenRect) ?: return
+            val state = BackdropBlurState(
+                capture,
+                shapeRect,
+                display,
+                backdrop.blur,
+                blurTargetKey(backdrop.blur, cacheKey, slot)
+            )
+            this.guiRenderState.addPicturesInPictureState(state)
+        }
+
+        private fun visibleShape(scissor: ScreenRectangle?, screenRect: ScreenRectangle, shape: ScreenRectangle): ScreenRectangle? {
+            val clipped = if (scissor != null) scissor.intersection(shape) ?: return null else shape
+            val visible = screenRect.intersection(clipped) ?: return null
+            return if (visible.width() > 0 && visible.height() > 0) visible else null
+        }
+
+        private fun captureRect(shape: ScreenRectangle, radius: Float, screenRect: ScreenRectangle): ScreenRectangle? {
+            val pad = ceil(radius * 3f).toInt().coerceAtLeast(2)
+            val expanded = ScreenRectangle(shape.left() - pad, shape.top() - pad, shape.width() + pad * 2, shape.height() + pad * 2)
+            val clamped = screenRect.intersection(expanded) ?: return null
+            return if (clamped.width() > 0 && clamped.height() > 0) clamped else null
+        }
+
+        private fun screenRectOf(pose: Matrix3x2f, x: Float, y: Float, width: Float, height: Float): ScreenRectangle? {
+            val x1 = x + width
+            val y1 = y + height
+            val m00 = pose.m00(); val m01 = pose.m01()
+            val m10 = pose.m10(); val m11 = pose.m11()
+            val m20 = pose.m20(); val m21 = pose.m21()
+            val ax = m00 * x + m10 * y + m20; val ay = m01 * x + m11 * y + m21
+            val bx = m00 * x1 + m10 * y + m20; val by = m01 * x1 + m11 * y + m21
+            val cx = m00 * x + m10 * y1 + m20; val cy = m01 * x + m11 * y1 + m21
+            val dx = m00 * x1 + m10 * y1 + m20; val dy = m01 * x1 + m11 * y1 + m21
+            val left = floor(minOf(ax, bx, cx, dx)).toInt()
+            val top = floor(minOf(ay, by, cy, dy)).toInt()
+            val rect = ScreenRectangle(left, top, ceil(maxOf(ax, bx, cx, dx)).toInt() - left, ceil(maxOf(ay, by, cy, dy)).toInt() - top)
+            return if (rect.width() > 0 && rect.height() > 0) rect else null
+        }
+
+        private fun blurTargetKey(blur: BackdropBlur, cacheKey: Any?, slot: Int): Int {
+            var result = cacheKey?.hashCode() ?: blur.maskKey?.hashCode() ?: 0x51ED
+            result = 31 * result + slot
+            result = 31 * result + blur.downsample
+            result = 31 * result + blur.radius.hashCode()
+            return result
         }
 
         private fun targetKey(bounds: ScreenRectangle, cacheKey: Any?, drawSlotKey: Int): Int {

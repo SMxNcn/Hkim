@@ -179,11 +179,11 @@ object Skiko {
 
     fun dropShadow(
         x: Number, y: Number, width: Number, height: Number,
-        blur: Number, spread: Number, radius: Number,
+        feather: Number, spread: Number, radius: Number,
         color: Color = Color(0, 0, 0, 125)
     ) {
         withPaint(color) { p ->
-            p.maskFilter = MaskFilter.makeBlur(FilterBlurMode.NORMAL, blur.toFloat(), true)
+            p.maskFilter = MaskFilter.makeBlur(FilterBlurMode.NORMAL, feather.toFloat(), true)
             val spreadF = spread.toFloat()
             currentCanvas().drawRRect(
                 RRect.makeLTRB(

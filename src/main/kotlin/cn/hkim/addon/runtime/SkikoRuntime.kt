@@ -13,7 +13,21 @@ interface SkikoRuntime : AutoCloseable {
         clipRadius: Float = 0f
     )
 
+    fun beginBatch(
+        graphics: GuiGraphicsExtractor,
+        x: Float, y: Float, width: Float, height: Float,
+        clipRadius: Float = 0f,
+        backdrop: BackdropBlur
+    )
+
     fun endBatch()
+
+    fun drawBackdropBlur(
+        graphics: GuiGraphicsExtractor,
+        x: Float, y: Float, w: Float, h: Float,
+        backdrop: BackdropBlur,
+        cacheKey: Any? = null
+    )
 
     fun drawRoundedRect(
         graphics: GuiGraphicsExtractor,
@@ -23,10 +37,25 @@ interface SkikoRuntime : AutoCloseable {
         borderWidth: Float = 0f,
         radius: Float = 0f,
         shadowColor: Int = 0,
-        blur: Float = 0f,
+        feather: Float = 0f,
         spread: Float = 0f,
         cacheKey: Any? = null,
         cacheToken: Int? = null
+    )
+
+    fun drawRoundedRect(
+        graphics: GuiGraphicsExtractor,
+        x: Float, y: Float, w: Float, h: Float,
+        fillColor: Int,
+        borderColor: Int = 0,
+        borderWidth: Float = 0f,
+        radius: Float = 0f,
+        shadowColor: Int = 0,
+        feather: Float = 0f,
+        spread: Float = 0f,
+        cacheKey: Any? = null,
+        cacheToken: Int? = null,
+        backdrop: BackdropBlur
     )
 
     fun drawEdgeRoundedRect(
@@ -105,6 +134,18 @@ interface SkikoRuntime : AutoCloseable {
         radius: Float = 0f,
         cacheKey: Any? = null,
         cacheToken: Int? = null
+    )
+
+    fun drawGradientRectMulti(
+        graphics: GuiGraphicsExtractor,
+        x: Float, y: Float, w: Float, h: Float,
+        colors: List<Int>,
+        positions: FloatArray? = null,
+        direction: SkikoGradient = SkikoGradient.LEFT_RIGHT,
+        radius: Float = 0f,
+        cacheKey: Any? = null,
+        cacheToken: Int? = null,
+        backdrop: BackdropBlur
     )
 
     fun drawSquareClipped(

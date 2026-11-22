@@ -1,6 +1,11 @@
 package cn.hkim.addon.bridge
 
+import cn.hkim.addon.Hkim
+import cn.hkim.addon.runtime.BackdropBlur
 import cn.hkim.addon.runtime.SkikoRuntime
+import cn.hkim.addon.utils.render.pip.BackdropDraw
+import cn.hkim.addon.utils.render.pip.BackdropBlurPIP
+import cn.hkim.addon.utils.render.pip.BlurPipelines
 import cn.hkim.addon.utils.render.pip.SkikoPIP
 import cn.hkim.addon.utils.render.skiko.Skiko
 import cn.hkim.addon.utils.render.skiko.SkikoFont
@@ -19,6 +24,7 @@ class SkikoRuntimeImpl : SkikoRuntime {
         val x: Float, val y: Float,
         val width: Float, val height: Float,
         val clipRadius: Float,
+        val backdrop: BackdropBlur?,
     ) {
         val ops = ArrayList<() -> Unit>()
     }
@@ -29,12 +35,33 @@ class SkikoRuntimeImpl : SkikoRuntime {
     override fun initPipRenderer() {
         if (pipRegistered) return
         pipRegistered = true
+        runCatching { BlurPipelines.ensureInitialized() }
+            .onFailure { Hkim.logger.error("Failed to register backdrop blur pipelines", it) }
         PictureInPictureRendererRegistry.register { SkikoPIP() }
+        PictureInPictureRendererRegistry.register { BackdropBlurPIP() }
     }
 
     override fun beginBatch(graphics: GuiGraphicsExtractor, x: Float, y: Float, width: Float, height: Float, clipRadius: Float) {
+        beginBatchInternal(graphics, x, y, width, height, clipRadius, null)
+    }
+
+    override fun beginBatch(
+        graphics: GuiGraphicsExtractor,
+        x: Float, y: Float, width: Float, height: Float,
+        clipRadius: Float,
+        backdrop: BackdropBlur
+    ) {
+        beginBatchInternal(graphics, x, y, width, height, clipRadius, backdrop)
+    }
+
+    private fun beginBatchInternal(
+        graphics: GuiGraphicsExtractor,
+        x: Float, y: Float, width: Float, height: Float,
+        clipRadius: Float,
+        backdrop: BackdropBlur?
+    ) {
         if (batchDepth++ > 0) return
-        batch = Batch(graphics, x, y, width, height, clipRadius)
+        batch = Batch(graphics, x, y, width, height, clipRadius, backdrop)
     }
 
     override fun endBatch() {
@@ -45,7 +72,10 @@ class SkikoRuntimeImpl : SkikoRuntime {
         if (collected.ops.isEmpty()) return
         val ops = collected.ops
         val clip = collected.clipRadius.coerceAtMost(minOf(collected.width, collected.height) / 2f)
-        SkikoPIP.drawSkikoTo(collected.graphics, collected.x, collected.y, collected.width, collected.height) {
+        val backdrop = collected.backdrop
+            ?.let { it.copy(cornerRadius = it.cornerRadius ?: clip) }
+            ?.let { BackdropDraw(it, collected.x, collected.y, collected.width, collected.height) }
+        SkikoPIP.drawSkikoTo(collected.graphics, collected.x, collected.y, collected.width, collected.height, null, null, backdrop) {
             if (clip > 0f) {
                 Skiko.push()
                 Skiko.clipRoundRect(collected.x, collected.y, collected.width, collected.height, clip)
@@ -59,14 +89,16 @@ class SkikoRuntimeImpl : SkikoRuntime {
         graphics: GuiGraphicsExtractor,
         x: Number, y: Number, width: Number, height: Number,
         cacheKey: Any? = null, cacheToken: Int? = null,
+        backdrop: BackdropDraw? = null,
         body: () -> Unit
     ) {
         val active = batch
         if (active != null) {
+            // Blur inside a batch is batch-level only; per-op requests are ignored.
             active.ops += body
             return
         }
-        SkikoPIP.drawSkikoTo(graphics, x, y, width, height, cacheKey, cacheToken) { body() }
+        SkikoPIP.drawSkikoTo(graphics, x, y, width, height, cacheKey, cacheToken, backdrop) { body() }
     }
 
     override fun drawRoundedRect(
@@ -77,24 +109,62 @@ class SkikoRuntimeImpl : SkikoRuntime {
         borderWidth: Float,
         radius: Float,
         shadowColor: Int,
-        blur: Float,
+        feather: Float,
         spread: Float,
         cacheKey: Any?,
         cacheToken: Int?
     ) {
+        drawRoundedRectImpl(graphics, x, y, w, h, fillColor, borderColor, borderWidth, radius, shadowColor, feather, spread, cacheKey, cacheToken, null)
+    }
+
+    override fun drawRoundedRect(
+        graphics: GuiGraphicsExtractor,
+        x: Float, y: Float, w: Float, h: Float,
+        fillColor: Int,
+        borderColor: Int,
+        borderWidth: Float,
+        radius: Float,
+        shadowColor: Int,
+        feather: Float,
+        spread: Float,
+        cacheKey: Any?,
+        cacheToken: Int?,
+        backdrop: BackdropBlur
+    ) {
+        drawRoundedRectImpl(graphics, x, y, w, h, fillColor, borderColor, borderWidth, radius, shadowColor, feather, spread, cacheKey, cacheToken, backdrop)
+    }
+
+    private fun drawRoundedRectImpl(
+        graphics: GuiGraphicsExtractor,
+        x: Float, y: Float, w: Float, h: Float,
+        fillColor: Int,
+        borderColor: Int,
+        borderWidth: Float,
+        radius: Float,
+        shadowColor: Int,
+        feather: Float,
+        spread: Float,
+        cacheKey: Any?,
+        cacheToken: Int?,
+        backdrop: BackdropBlur?
+    ) {
         if (w <= 0f || h <= 0f) return
         val hasShadow = shadowColor != 0
         val hasBorder = borderColor != 0 && borderWidth > 0f && w > borderWidth && h > borderWidth
-        val extend = if (hasShadow) spread + blur * 3f else 0f
+        val extend = if (hasShadow) spread + feather * 3f else 0f
         val dx = x - extend
         val dy = y - extend
         val dw = w + extend * 2f
         val dh = h + extend * 2f
-        draw(graphics, dx, dy, dw, dh, cacheKey, cacheToken) {
+        val fillRadius = radius.coerceAtLeast(0f)
+        val backdropDraw = backdrop
+            ?.takeIf { it.enabled }
+            ?.let { it.copy(cornerRadius = it.cornerRadius ?: fillRadius) }
+            ?.let { BackdropDraw(it, x, y, w, h) }
+        draw(graphics, dx, dy, dw, dh, cacheKey, cacheToken, backdropDraw) {
             if (hasShadow) {
-                Skiko.dropShadow(x, y, w, h, blur, spread, radius, Color(shadowColor, true))
+                Skiko.dropShadow(x, y, w, h, feather, spread, radius, Color(shadowColor, true))
             }
-            val fillRadius = radius.coerceAtLeast(0f)
             if (hasBorder) {
                 if (w > borderWidth * 2f && h > borderWidth * 2f) {
                     Skiko.rect(
@@ -116,6 +186,17 @@ class SkikoRuntimeImpl : SkikoRuntime {
                 Skiko.rect(x, y, w, h, Color(fillColor, true), fillRadius)
             }
         }
+    }
+
+    override fun drawBackdropBlur(
+        graphics: GuiGraphicsExtractor,
+        x: Float, y: Float, w: Float, h: Float,
+        backdrop: BackdropBlur,
+        cacheKey: Any?
+    ) {
+        if (w <= 0f || h <= 0f || !backdrop.enabled) return
+        if (batch != null) return
+        SkikoPIP.drawBackdropBlurTo(graphics, x, y, w, h, backdrop, cacheKey)
     }
 
     override fun drawEdgeRoundedRect(
@@ -143,8 +224,40 @@ class SkikoRuntimeImpl : SkikoRuntime {
         cacheKey: Any?,
         cacheToken: Int?
     ) {
+        drawGradientRectMultiImpl(graphics, x, y, w, h, colors, positions, direction, radius, cacheKey, cacheToken, null)
+    }
+
+    override fun drawGradientRectMulti(
+        graphics: GuiGraphicsExtractor,
+        x: Float, y: Float, w: Float, h: Float,
+        colors: List<Int>,
+        positions: FloatArray?,
+        direction: SkikoGradient,
+        radius: Float,
+        cacheKey: Any?,
+        cacheToken: Int?,
+        backdrop: BackdropBlur
+    ) {
+        drawGradientRectMultiImpl(graphics, x, y, w, h, colors, positions, direction, radius, cacheKey, cacheToken, backdrop)
+    }
+
+    private fun drawGradientRectMultiImpl(
+        graphics: GuiGraphicsExtractor,
+        x: Float, y: Float, w: Float, h: Float,
+        colors: List<Int>,
+        positions: FloatArray?,
+        direction: SkikoGradient,
+        radius: Float,
+        cacheKey: Any?,
+        cacheToken: Int?,
+        backdrop: BackdropBlur?
+    ) {
         if (w <= 0f || h <= 0f || colors.size < 2) return
-        draw(graphics, x, y, w, h, cacheKey, cacheToken) {
+        val backdropDraw = backdrop
+            ?.takeIf { it.enabled }
+            ?.let { it.copy(cornerRadius = it.cornerRadius ?: radius.coerceAtLeast(0f)) }
+            ?.let { BackdropDraw(it, x, y, w, h) }
+        draw(graphics, x, y, w, h, cacheKey, cacheToken, backdropDraw) {
             Skiko.gradientRectMulti(x, y, w, h, colors.map { Color(it, true) }, positions, direction, radius)
         }
     }
