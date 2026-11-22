@@ -3,10 +3,9 @@ package cn.hkim.addon.utils.render.island
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.hud.Bounds
 import cn.hkim.addon.runtime.BackdropBlur
-import cn.hkim.addon.utils.LegacyTextRun
 import cn.hkim.addon.utils.notification.NOTIFICATION_DETAIL_COLOR
 import cn.hkim.addon.utils.notification.NOTIFICATION_TITLE_COLOR
-import cn.hkim.addon.utils.parseLegacyRuns
+import cn.hkim.addon.utils.parseColoredText
 import cn.hkim.addon.utils.render.Easing
 import cn.hkim.addon.utils.render.GuiAnimation
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawBackdropBlur
@@ -260,7 +259,7 @@ object IslandRenderer {
         val titleWidth = skikoTextWidth(title, titleSize, bold = true) + inlineMetricsWidth(inline, titleSize)
         val textWidth = maxOf(
             titleWidth,
-            runsWidth(parseLegacyRuns(detail, NOTIFICATION_DETAIL_COLOR), detailSize),
+            skikoTextWidth(parseColoredText(detail).component, detailSize),
         )
         val iconWidth = if (hasIcon) ICON_SIZE + 5f else 0f
         val height = if (detail.isEmpty()) {
@@ -282,7 +281,7 @@ object IslandRenderer {
 
     private fun inlineLabelWidth(metric: IslandMetric, size: Float): Float =
         if (metric.label.isEmpty()) 0f
-        else INLINE_LABEL_GAP + runsWidth(parseLegacyRuns(metric.label, metric.labelColor), size)
+        else INLINE_LABEL_GAP + skikoTextWidth(parseColoredText(metric.label).component, size)
 
     private fun drawMessage(
         graphics: GuiGraphicsExtractor,
@@ -310,8 +309,8 @@ object IslandRenderer {
         val centerX = clip.x + clip.w / 2f
         val left = if (hasIcon) x + PADDING_X + iconSize + 5f else x + PADDING_X
         val titleX = if (centered) centerX - skikoTextWidth(title, titleSize, bold = true) / 2f else left
-        val detailRuns = parseLegacyRuns(detail, detailColor)
-        val detailX = if (centered) centerX - runsWidth(detailRuns, detailSize) / 2f else left
+        val detailComponent = parseColoredText(detail).component
+        val detailX = if (centered) centerX - skikoTextWidth(detailComponent, detailSize) / 2f else left
 
         val titleY = if (detail.isEmpty()) y + (clip.h - titleHeight) / 2f else y + PADDING_Y
         graphics.drawSkikoText(title, titleX, titleY, titleSize, withAlpha(titleColor, titleAlpha), bold = true)
@@ -320,18 +319,13 @@ object IslandRenderer {
             drawInlineMetrics(graphics, inline, titleX + skikoTextWidth(title, titleSize, bold = true) + INLINE_GAP, titleY, titleSize, titleAlpha)
         }
 
-        var cursorX = detailX
         val detailY = y + PADDING_Y + titleHeight + 1f
-        for (run in detailRuns) {
-            if (run.text.isEmpty()) continue
-            graphics.drawSkikoText(
-                run.text,
-                cursorX, detailY,
-                detailSize, withAlpha(run.color, detailAlpha),
-                bold = run.bold,
-            )
-            cursorX += skikoTextWidth(run.text, detailSize, run.bold)
-        }
+        graphics.drawSkikoText(
+            detailComponent,
+            detailX, detailY,
+            detailSize,
+            withAlpha(detailColor, detailAlpha),
+        )
     }
 
     private fun drawInlineMetrics(
@@ -350,15 +344,11 @@ object IslandRenderer {
                 withAlpha(metric.valueColor, alpha), bold = metric.valueBold,
             )
             if (metric.label.isNotEmpty()) {
-                var labelX = cursorX + slotWidth + INLINE_LABEL_GAP
-                for (run in parseLegacyRuns(metric.label, metric.labelColor)) {
-                    if (run.text.isEmpty()) continue
-                    graphics.drawSkikoText(
-                        run.text, labelX, y, size,
-                        withAlpha(run.color, alpha), bold = run.bold,
-                    )
-                    labelX += skikoTextWidth(run.text, size, run.bold)
-                }
+                graphics.drawSkikoText(
+                    parseColoredText(metric.label).component,
+                    cursorX + slotWidth + INLINE_LABEL_GAP, y, size,
+                    withAlpha(metric.labelColor, alpha),
+                )
             }
             cursorX += slotWidth + inlineLabelWidth(metric, size) + INLINE_PART_GAP
         }
@@ -369,11 +359,6 @@ object IslandRenderer {
 
     private fun centeredX(width: Float) = (mc.window.guiScaledWidth - width) / 2f
 
-    private fun runsWidth(runs: List<LegacyTextRun>, size: Float): Float {
-        var width = 0f
-        for (run in runs) width += skikoTextWidth(run.text, size, run.bold)
-        return width
-    }
 }
 
 private class IslandLine(private val tween: Tween) {

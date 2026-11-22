@@ -3,6 +3,7 @@ package cn.hkim.addon.bridge
 import cn.hkim.addon.Hkim
 import cn.hkim.addon.runtime.BackdropBlur
 import cn.hkim.addon.runtime.SkikoRuntime
+import cn.hkim.addon.runtime.SkikoTextRun
 import cn.hkim.addon.utils.render.pip.BackdropDraw
 import cn.hkim.addon.utils.render.pip.BackdropBlurPIP
 import cn.hkim.addon.utils.render.pip.BlurPipelines
@@ -474,6 +475,46 @@ class SkikoRuntimeImpl : SkikoRuntime {
         else {
             draw(graphics, x - 2f, y - 2f, width + 4f, height + 4f, cacheKey, cacheToken) {
                 Skiko.text(text, x, y, size, Color(color, true), font)
+            }
+        }
+    }
+
+    override fun drawTextRuns(
+        graphics: GuiGraphicsExtractor,
+        runs: List<SkikoTextRun>,
+        x: Float,
+        y: Float,
+        size: Float,
+        width: Float,
+        shadow: Boolean,
+        cacheKey: Any?,
+        cacheToken: Int?
+    ) {
+        if (runs.isEmpty() || size <= 0f || width <= 0f) return
+
+        val baseFont = SkikoFont.system()
+        val boldFont = SkikoFont.system(bold = true)
+        val height = Skiko.textHeight(size, baseFont) + 2f
+
+        if (shadow) {
+            draw(graphics, x - 1f, y - 1f, width + 2f, height + 2f, cacheKey, cacheToken) {
+                var cursorX = x
+                for (run in runs) {
+                    if (run.text.isEmpty()) continue
+                    val font = if (run.bold) boldFont else baseFont
+                    Skiko.textShadow(run.text, cursorX, y, size, Color(run.color, true), font)
+                    cursorX += Skiko.textWidth(run.text, size, font)
+                }
+            }
+        } else {
+            draw(graphics, x - 2f, y - 2f, width + 4f, height + 4f, cacheKey, cacheToken) {
+                var cursorX = x
+                for (run in runs) {
+                    if (run.text.isEmpty()) continue
+                    val font = if (run.bold) boldFont else baseFont
+                    Skiko.text(run.text, cursorX, y, size, Color(run.color, true), font)
+                    cursorX += Skiko.textWidth(run.text, size, font)
+                }
             }
         }
     }

@@ -4,6 +4,8 @@ import cn.hkim.addon.utils.render.skiko.SkikoGradient
 import cn.hkim.addon.utils.render.skiko.SkikoRoundEdge
 import net.minecraft.client.gui.GuiGraphicsExtractor
 
+data class SkikoTextRun(val text: String, val color: Int, val bold: Boolean)
+
 interface SkikoRuntime : AutoCloseable {
     fun initPipRenderer()
 
@@ -171,6 +173,18 @@ interface SkikoRuntime : AutoCloseable {
         size: Float,
         color: Int,
         bold: Boolean = false,
+        shadow: Boolean = false,
+        cacheKey: Any? = null,
+        cacheToken: Int? = null
+    )
+
+    fun drawTextRuns(
+        graphics: GuiGraphicsExtractor,
+        runs: List<SkikoTextRun>,
+        x: Float,
+        y: Float,
+        size: Float,
+        width: Float,
         shadow: Boolean = false,
         cacheKey: Any? = null,
         cacheToken: Int? = null

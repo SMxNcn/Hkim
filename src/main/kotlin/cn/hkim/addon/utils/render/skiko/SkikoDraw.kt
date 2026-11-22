@@ -2,7 +2,11 @@ package cn.hkim.addon.utils.render.skiko
 
 import cn.hkim.addon.Hkim
 import cn.hkim.addon.runtime.BackdropBlur
+import cn.hkim.addon.runtime.SkikoTextRun
 import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.Style
+import java.util.Optional
 import kotlin.math.atan2
 import kotlin.math.sqrt
 
@@ -272,6 +276,13 @@ object SkikoDraw {
         return width
     }
 
+    fun skikoTextWidth(component: Component, size: Float, bold: Boolean = false): Float {
+        val runs = buildComponentRuns(component, 0xFFFFFFFF.toInt(), bold)
+        var width = 0f
+        for (run in runs) width += skikoTextWidth(run.text, size, run.bold)
+        return width
+    }
+
     fun skikoTextHeight(size: Float, bold: Boolean = false): Float {
         val key = HeightKey(size, bold)
         heightCache[key]?.let { return it }
@@ -352,6 +363,46 @@ object SkikoDraw {
         val runtime = Hkim.runtime ?: return
         val width = runtime.textWidth(text, size, bold)
         runtime.drawCenteredText(this, text, x + width / 2f, y, size, color, bold, shadow, cacheKey, cacheToken)
+    }
+
+    fun GuiGraphicsExtractor.drawSkikoText(
+        component: Component,
+        x: Float,
+        y: Float,
+        size: Float,
+        color: Int,
+        bold: Boolean = false,
+        shadow: Boolean = false,
+        cacheKey: Any? = null,
+        cacheToken: Int? = null
+    ) {
+        val runtime = Hkim.runtime ?: return
+        val runs = buildComponentRuns(component, color, bold)
+        if (runs.isEmpty()) return
+
+        var width = 0f
+        for (run in runs) width += skikoTextWidth(run.text, size, run.bold)
+        if (width <= 0f) return
+
+        runtime.drawTextRuns(this, runs, x, y, size, width, shadow, cacheKey, cacheToken)
+    }
+
+    private fun buildComponentRuns(component: Component, baseColor: Int, baseBold: Boolean): List<SkikoTextRun> {
+        val runs = ArrayList<SkikoTextRun>()
+        val baseAlpha = (baseColor ushr 24) and 0xFF
+        component.visit({ style: Style, text: String ->
+            if (text.isNotEmpty()) {
+                val rgb = style.color?.value
+                val color = if (rgb != null) (baseAlpha shl 24) or (rgb and 0xFFFFFF) else baseColor
+                runs += SkikoTextRun(text, color, style.isBold || baseBold)
+            }
+            Optional.empty<Unit>()
+        }, Style.EMPTY)
+
+        if (runs.isEmpty() && component.string.isNotEmpty()) {
+            runs += SkikoTextRun(component.string, baseColor, baseBold)
+        }
+        return runs
     }
 
     fun GuiGraphicsExtractor.drawSkikoCenteredTextShadow(
