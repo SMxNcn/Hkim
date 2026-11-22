@@ -20,6 +20,9 @@ import cn.hkim.addon.utils.render.RenderBatchManager
 import cn.hkim.addon.utils.skyblock.DungeonUtils
 import cn.hkim.addon.utils.skyblock.FailSafeUtils
 import cn.hkim.addon.utils.skyblock.LocationUtils
+import cn.hkim.addon.utils.skyblock.mining.MiningEventTracker
+import cn.hkim.addon.utils.skyblock.mining.MiningStatsTracker
+import cn.hkim.addon.utils.skyblock.mining.Pingless
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import meteordevelopment.orbit.EventBus
@@ -53,7 +56,7 @@ object Hkim : ClientModInitializer {
 
         EventDispatcher.postEvents()
         RenderBatchManager.init()
-        EventDispatcher.registerListeners(CustomEventDispatcher, DungeonUtils, FailSafeUtils, IrisCompatibility, LocationUtils, ServerUtils, TickTasks, ArmorDefence)
+        EventDispatcher.registerListeners(ArmorDefence, CustomEventDispatcher, DungeonUtils, FailSafeUtils, MiningEventTracker, MiningStatsTracker, IrisCompatibility, LocationUtils, Pingless, ServerUtils, TickTasks)
         ModuleManager.initModules()
         ModuleConfig.loadConfig()
         Background.getDefaultBackground()

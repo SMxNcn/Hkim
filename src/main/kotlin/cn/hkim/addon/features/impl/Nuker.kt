@@ -1,6 +1,7 @@
 package cn.hkim.addon.features.impl
 
 import cn.hkim.addon.Hkim.mc
+import cn.hkim.addon.compat.input.InputCompat
 import cn.hkim.addon.config.settings.*
 import cn.hkim.addon.events.impl.*
 import cn.hkim.addon.features.Category
@@ -21,13 +22,14 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import java.awt.Color
-import cn.hkim.addon.compat.input.InputCompat
 
 @ModuleInfo("nuker", Category.SKYBLOCK, false)
 object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
     private val aimSpeed by NumberSetting("Aim Speed", "Aim transition speed.", 0.25f, 0.05f, 1.0f, 0.05f)
     private val aimMode by SelectorSetting("Aim Mode", "Aim mode.", listOf("Normal", "Silent"), "Normal")
-    private val preAiming by BooleanSetting("Pre Aiming", "Pingless aiming.", false)
+    private val preAiming by BooleanSetting("Pre Aiming", "Pingless aiming: estimate the server break from Mining Speed + ping.", false)
+    private val preAimThreshold by NumberSetting("Pre Aim Threshold", "Mining progress required to pre-aim the next target.", 0.9f, 0.1f, 0.99f, 0.05f).depends { preAiming }
+    private val pingGlide by NumberSetting("Ping Glide", "Fraction of estimated server break time.", 0f, 0f, 1f, 0.1f).depends { preAiming }
     private val targetType by SelectorSetting("Nuker Target", "Choose which mineral type to mine.", listOf("Gold", "Mithril", "Gemstones", "Glacite", "Timite"), "Mithril")
 
     // Gold
@@ -56,11 +58,15 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
     private val toggleKeybind by KeybindSetting("Toggle Keybind", "Toggle Nuker.", InputCompat.KEY_K)
 
     private const val SCAN_RADIUS = 5.0
+    private const val CLUSTER_RADIUS = 2.0
+    private const val CLUSTER_RADIUS_SQ = CLUSTER_RADIUS * CLUSTER_RADIUS
 
     private var currentTarget: BlockPos? = null
     private var currentHitPos: Vec3? = null
     private var currentMineral: MineralType? = null
     private var hasMineralsInRange = false
+
+    private var lastTargetPos: BlockPos? = null
 
     private var wasScreenOpen = false
     private var screenJustClosed = false
@@ -90,6 +96,7 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
         if (screenOpen) {
             holdKey(mc.options.keyAttack, false)
             holdKey(mc.options.keyUse, false)
+            Pingless.reset()
             wasScreenOpen = true
             return
         }
@@ -97,6 +104,7 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
         if (wasScreenOpen) {
             holdKey(mc.options.keyUse, false)
             clearTarget()
+            Pingless.reset()
             hasMineralsInRange = false
             screenJustClosed = true
             wasScreenOpen = false
@@ -115,24 +123,60 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
             val dz = target.z + 0.5 - eyePos.z
             val outOfRange = dx * dx + dy * dy + dz * dz > SCAN_RADIUS * SCAN_RADIUS
 
+            val hitPos = currentHitPos
+            val reachSq = player.blockInteractionRange().let { it * it }
+            val outOfReach = hitPos == null || hitPos.distanceToSqr(eyePos) > reachSq
+
             when {
-                outOfRange || mineralType == null ->
+                outOfRange || outOfReach -> {
+                    Pingless.reset()
                     clearTarget()
-                !MineralFilter.isMineralAllowed(mineralType, targetType, ignoreOthers, royalDivan, inDwarvenOnly, allowedTypes = resolveAllowedMineralTypes()) ->
+                }
+                mineralType == null -> {
+                    Pingless.reset()
+                    lastTargetPos = target
                     clearTarget()
-                targetType == 4 && System.currentTimeMillis() - targetAcquiredTime >= 15_000L ->
+                }
+                !MineralFilter.isMineralAllowed(mineralType, targetType, ignoreOthers, royalDivan, inDwarvenOnly, allowedTypes = resolveAllowedMineralTypes()) -> {
+                    Pingless.reset()
                     clearTarget()
+                }
+                targetType == 4 && System.currentTimeMillis() - targetAcquiredTime >= 15_000L -> {
+                    Pingless.reset()
+                    clearTarget()
+                }
                 else -> currentMineral = mineralType
             }
         }
 
-        if (preAiming && target != null) {
-            val destroyProgress = (mc.gameMode as MultiPlayerGameModeAccessor?)?.destroyProgress ?: 0f
-            if (destroyProgress >= 0.8f) clearTarget()
+        val etaReady = preAiming && targetType != 4 && currentTarget != null && Pingless.update(pingGlide)
+
+        if (preAiming) {
+            val aimTarget = currentTarget
+            if (aimTarget != null) {
+                if (etaReady) {
+                    if (Pingless.isReady(player)) {
+                        lastTargetPos = aimTarget
+                        Pingless.reset()
+                        clearTarget()
+                    }
+                } else if (Pingless.hasStarted) {
+                    val destroyProgress = (mc.gameMode as MultiPlayerGameModeAccessor?)?.destroyProgress ?: 0f
+                    if (destroyProgress >= preAimThreshold) {
+                        val step = level.getBlockState(aimTarget).getDestroyProgress(player, level, aimTarget)
+                        if (destroyProgress + step >= 1f) {
+                            lastTargetPos = aimTarget
+                            Pingless.reset()
+                            clearTarget()
+                        }
+                    }
+                }
+            }
         }
 
         if (currentTarget == null) {
             scanBestTarget(player, level)?.let { t ->
+                Pingless.setTarget(t.pos)
                 currentTarget = t.pos
                 currentHitPos = t.hitPos
                 currentMineral = t.mineralType
@@ -142,17 +186,42 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
 
         hasMineralsInRange = currentTarget != null
 
+        if (currentTarget != null) resetStaleDestroyPos()
+
         if (targetType == 4) {
             executeTimiteAction(player)
         } else {
-            holdKey(mc.options.keyAttack, currentTarget != null)
+            val stillMining = mc.gameMode?.isDestroying == true
+            holdKey(mc.options.keyAttack, currentTarget != null || stillMining)
         }
+    }
+
+    private fun resetStaleDestroyPos() {
+        val gameMode = mc.gameMode ?: return
+        if (gameMode.isDestroying) return
+        (gameMode as? MultiPlayerGameModeAccessor)?.setDestroyBlockPos(null)
+    }
+
+    private fun abortCurrentMining() {
+        val gameMode = mc.gameMode ?: return
+        if (gameMode.isDestroying) gameMode.stopDestroyBlock()
+        (gameMode as? MultiPlayerGameModeAccessor)?.setDestroyBlockPos(null)
     }
 
     @EventHandler
     private fun onBlockUpdate(event: WorldEvent.BlockUpdate) {
-        if (event.pos == currentTarget && !HitPosHelper.matchesAnyMineral(event.newState)) {
-            clearTarget()
+        val target = currentTarget
+        if (target != null && event.pos == target) {
+            if (!HitPosHelper.matchesAnyMineral(event.newState)) {
+                Pingless.reset()
+                lastTargetPos = target
+                clearTarget()
+            } else {
+                abortCurrentMining()
+                Pingless.reset()
+                lastTargetPos = target
+                clearTarget()
+            }
         }
         if (targetType == 4 && HitPosHelper.matchesAnyMineral(event.oldState)
             && !HitPosHelper.matchesAnyMineral(event.newState)) {
@@ -164,7 +233,7 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
     private fun onRender(event: RenderEvent.Extract) {
         if (!enabled) {
             if (RotationUtils.isSilentAiming || RotationUtils.isStoppingAiming) {
-                RotationUtils.tickStopAiming(aimSpeed / 5f, this)
+                RotationUtils.tickStopAiming(aimSpeed / 2f, this)
             }
             return
         }
@@ -175,7 +244,7 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
         if (hitPos != null) {
             aimAt(hitPos)
         } else if (!hasMineralsInRange && (RotationUtils.isSilentAiming || RotationUtils.isStoppingAiming)) {
-            RotationUtils.tickStopAiming(aimSpeed / 5f, this)
+            RotationUtils.tickStopAiming(aimSpeed / 2f, this)
             return
         }
 
@@ -241,6 +310,8 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
     )
 
     override fun onEnable() {
+        lastTargetPos = null
+        Pingless.reset()
         val player = mc.player ?: return
         val held = player.mainHandItem
 
@@ -266,6 +337,8 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
         holdKey(mc.options.keyAttack, false)
         holdKey(mc.options.keyUse, false)
         clearTarget()
+        lastTargetPos = null
+        Pingless.reset()
         hasMineralsInRange = false
         cachedAllowedTypes = null
         targetAcquiredTime = 0L
@@ -281,6 +354,18 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
     }
 
     private data class Target(val pos: BlockPos, val hitPos: Vec3, val mineralType: MineralType)
+
+    private class NearestTarget {
+        var target: Target? = null
+            private set
+        private var distSq = Double.MAX_VALUE
+
+        fun offer(distSq: Double, pos: BlockPos, hitPos: Vec3, mineralType: MineralType) {
+            if (distSq >= this.distSq) return
+            this.distSq = distSq
+            target = Target(pos.immutable(), hitPos, mineralType)
+        }
+    }
 
     private inline fun forEachSphereBlock(eyePos: Vec3, action: (BlockPos) -> Unit) {
         val r = SCAN_RADIUS
@@ -302,33 +387,32 @@ object Nuker : Module("Nuker", "Automatically breaks mineral blocks.") {
     private fun scanBestTarget(player: Player, level: Level): Target? {
         val eyePos = player.eyePosition
         val allowedTypes = resolveAllowedMineralTypes()
+        val anchor = lastTargetPos
+        val reachSq = player.blockInteractionRange().let { it * it }
 
-        var bestHighPri: Target? = null
-        var bestHighPriDistSq = Double.MAX_VALUE
-        var bestNormal: Target? = null
-        var bestNormalDistSq = Double.MAX_VALUE
+        val clusterHighPri = NearestTarget()
+        val clusterNormal = NearestTarget()
+        val bestHighPri = NearestTarget()
+        val bestNormal = NearestTarget()
 
         forEachSphereBlock(eyePos) { pos ->
             val state = level.getBlockState(pos)
             val mineralType = MineralType.fromBlock(state.block) ?: return@forEachSphereBlock
             if (!MineralFilter.isMineralAllowed(mineralType, targetType, ignoreOthers, royalDivan, inDwarvenOnly, allowedTypes = allowedTypes)) return@forEachSphereBlock
 
-            val isHighPri = mineralType.isHighPriorityBlock(state.block)
-            if (!isHighPri && bestHighPri != null) return@forEachSphereBlock
-
             val hitPos = HitPosHelper.pickHitPos(level, pos, state, eyePos) ?: return@forEachSphereBlock
             val distSq = hitPos.distanceToSqr(eyePos)
+            if (distSq > reachSq) return@forEachSphereBlock
+            val isHighPri = mineralType.isHighPriorityBlock(state.block)
+            val inCluster = anchor != null && pos.distSqr(anchor) <= CLUSTER_RADIUS_SQ
 
-            if (isHighPri && distSq < bestHighPriDistSq) {
-                bestHighPriDistSq = distSq
-                bestHighPri = Target(pos.immutable(), hitPos, mineralType)
-            } else if (!isHighPri && distSq < bestNormalDistSq) {
-                bestNormalDistSq = distSq
-                bestNormal = Target(pos.immutable(), hitPos, mineralType)
-            }
+            val clusterTarget = if (isHighPri) clusterHighPri else clusterNormal
+            val overallTarget = if (isHighPri) bestHighPri else bestNormal
+            if (inCluster) clusterTarget.offer(distSq, pos, hitPos, mineralType)
+            overallTarget.offer(distSq, pos, hitPos, mineralType)
         }
 
-        return bestHighPri ?: bestNormal
+        return clusterHighPri.target ?: clusterNormal.target ?: bestHighPri.target ?: bestNormal.target
     }
 
     private fun resolveAllowedMineralTypes(): Set<MineralType> {

@@ -1,6 +1,7 @@
 package cn.hkim.addon.mixins.accessors;
 
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
+import net.minecraft.core.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
@@ -9,4 +10,10 @@ public interface MultiPlayerGameModeAccessor {
 
     @Accessor("destroyProgress")
     float getDestroyProgress();
+
+    @Accessor("destroyBlockPos")
+    BlockPos getDestroyBlockPos();
+
+    @Accessor("destroyBlockPos")
+    void setDestroyBlockPos(BlockPos pos);
 }

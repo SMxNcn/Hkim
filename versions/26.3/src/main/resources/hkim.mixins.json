@@ -43,6 +43,7 @@
     "MinecraftMixin",
     "MobEffectFogEnvironmentMixin",
     "MouseHandlerMixin",
+    "MultiPlayerGameModeMixin",
     "OptionsMixin",
     "ParticleEngineMixin",
     "PauseScreenMixin",

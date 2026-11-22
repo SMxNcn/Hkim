@@ -7,4 +7,5 @@ class WorldEvent {
     class Load
     class Unload
     class BlockUpdate(val pos: BlockPos, val oldState: BlockState, val newState: BlockState)
+    class BlockBreakStart(val pos: BlockPos, val startTick: Int)
 }

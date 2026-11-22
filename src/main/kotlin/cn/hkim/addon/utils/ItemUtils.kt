@@ -75,6 +75,11 @@ inline val ItemStack.isRecombobulated: Boolean
 inline val ItemStack.hasGlint: Boolean
     get() = get(DataComponents.ENCHANTMENT_GLINT_OVERRIDE) ?: false
 
+fun ItemStack.enchantment(name: String): Int {
+    val enchantments = customData.getCompound("enchantments").orElse(null) ?: return 0
+    return enchantments.getInt(name).orElse(0)!!
+}
+
 fun isSkyBlockItem(stack: ItemStack): Boolean {
     if (stack.isEmpty) return false
     val customData = stack.customData
