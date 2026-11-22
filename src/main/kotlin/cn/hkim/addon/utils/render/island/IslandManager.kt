@@ -41,6 +41,7 @@ data class IslandMetric(
     val slot: String,
     val valueColor: Int,
     val labelColor: Int,
+    val valueBold: Boolean = false,
 )
 
 enum class IslandUser { TAB, CLICK_GUI }

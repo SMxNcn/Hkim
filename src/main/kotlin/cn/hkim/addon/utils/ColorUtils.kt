@@ -198,6 +198,55 @@ fun colorCodeBefore(text: String, index: Int): String? {
     return null
 }
 
+data class LegacyTextRun(val text: String, val color: Int, val bold: Boolean)
+
+/** Splits a legacy (section-sign) string into visible text runs, tracking color and bold. */
+fun parseLegacyRuns(text: String, baseColor: Int, baseBold: Boolean = false): List<LegacyTextRun> {
+    if (text.indexOf('§') < 0) return listOf(LegacyTextRun(text, baseColor, baseBold))
+
+    val runs = ArrayList<LegacyTextRun>()
+    val current = StringBuilder()
+    var color = baseColor
+    var bold = baseBold
+
+    fun flush() {
+        if (current.isEmpty()) return
+        runs += LegacyTextRun(current.toString(), color, bold)
+        current.setLength(0)
+    }
+
+    var i = 0
+    while (i < text.length) {
+        val ch = text[i]
+        if (ch == '§' && i + 1 < text.length) {
+            val format = ChatFormatting.getByCode(text[i + 1])
+            if (format != null) {
+                if (format == ChatFormatting.RESET) {
+                    flush()
+                    color = baseColor
+                    bold = baseBold
+                } else {
+                    val textColor = TextColor.fromLegacyFormat(format)
+                    if (textColor != null) {
+                        flush()
+                        color = 0xFF000000.toInt() or (textColor.value and 0xFFFFFF)
+                        bold = baseBold
+                    } else if (format == ChatFormatting.BOLD) {
+                        flush()
+                        bold = true
+                    }
+                }
+                i += 2
+                continue
+            }
+        }
+        current.append(ch)
+        i++
+    }
+    flush()
+    return runs
+}
+
 fun Component.hasNonLegacyColor(): Boolean {
     var extended = false
     this.visit({ style: Style, _: String ->

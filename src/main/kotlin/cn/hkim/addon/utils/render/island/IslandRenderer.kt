@@ -3,8 +3,10 @@ package cn.hkim.addon.utils.render.island
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.hud.Bounds
 import cn.hkim.addon.runtime.BackdropBlur
+import cn.hkim.addon.utils.LegacyTextRun
 import cn.hkim.addon.utils.notification.NOTIFICATION_DETAIL_COLOR
 import cn.hkim.addon.utils.notification.NOTIFICATION_TITLE_COLOR
+import cn.hkim.addon.utils.parseLegacyRuns
 import cn.hkim.addon.utils.render.Easing
 import cn.hkim.addon.utils.render.GuiAnimation
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawBackdropBlur
@@ -14,9 +16,7 @@ import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoText
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.skikoBatch
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.skikoTextHeight
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.skikoTextWidth
-import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.network.chat.TextColor
 
 object IslandRenderer {
     private const val FALLBACK_TOP_OFFSET = 4f
@@ -260,7 +260,7 @@ object IslandRenderer {
         val titleWidth = skikoTextWidth(title, titleSize, bold = true) + inlineMetricsWidth(inline, titleSize)
         val textWidth = maxOf(
             titleWidth,
-            runsWidth(parseRuns(detail, NOTIFICATION_DETAIL_COLOR), detailSize),
+            runsWidth(parseLegacyRuns(detail, NOTIFICATION_DETAIL_COLOR), detailSize),
         )
         val iconWidth = if (hasIcon) ICON_SIZE + 5f else 0f
         val height = if (detail.isEmpty()) {
@@ -275,13 +275,14 @@ object IslandRenderer {
         if (metrics.isEmpty()) return 0f
         var width = INLINE_GAP
         for (metric in metrics) {
-            width += skikoTextWidth(metric.slot, size) + inlineLabelWidth(metric, size) + INLINE_PART_GAP
+            width += skikoTextWidth(metric.slot, size, metric.valueBold) + inlineLabelWidth(metric, size) + INLINE_PART_GAP
         }
         return width - INLINE_PART_GAP
     }
 
     private fun inlineLabelWidth(metric: IslandMetric, size: Float): Float =
-        if (metric.label.isEmpty()) 0f else INLINE_LABEL_GAP + skikoTextWidth(metric.label, size)
+        if (metric.label.isEmpty()) 0f
+        else INLINE_LABEL_GAP + runsWidth(parseLegacyRuns(metric.label, metric.labelColor), size)
 
     private fun drawMessage(
         graphics: GuiGraphicsExtractor,
@@ -309,7 +310,7 @@ object IslandRenderer {
         val centerX = clip.x + clip.w / 2f
         val left = if (hasIcon) x + PADDING_X + iconSize + 5f else x + PADDING_X
         val titleX = if (centered) centerX - skikoTextWidth(title, titleSize, bold = true) / 2f else left
-        val detailRuns = parseRuns(detail, detailColor)
+        val detailRuns = parseLegacyRuns(detail, detailColor)
         val detailX = if (centered) centerX - runsWidth(detailRuns, detailSize) / 2f else left
 
         val titleY = if (detail.isEmpty()) y + (clip.h - titleHeight) / 2f else y + PADDING_Y
@@ -342,11 +343,22 @@ object IslandRenderer {
         if (alpha <= 0.01f) return
         var cursorX = x
         for (metric in metrics) {
-            val slotWidth = skikoTextWidth(metric.slot, size)
-            val valueWidth = skikoTextWidth(metric.value, size)
-            graphics.drawSkikoText(metric.value, cursorX + slotWidth - valueWidth, y, size, withAlpha(metric.valueColor, alpha))
+            val slotWidth = skikoTextWidth(metric.slot, size, metric.valueBold)
+            val valueWidth = skikoTextWidth(metric.value, size, metric.valueBold)
+            graphics.drawSkikoText(
+                metric.value, cursorX + slotWidth - valueWidth, y, size,
+                withAlpha(metric.valueColor, alpha), bold = metric.valueBold,
+            )
             if (metric.label.isNotEmpty()) {
-                graphics.drawSkikoText(metric.label, cursorX + slotWidth + INLINE_LABEL_GAP, y, size, withAlpha(metric.labelColor, alpha))
+                var labelX = cursorX + slotWidth + INLINE_LABEL_GAP
+                for (run in parseLegacyRuns(metric.label, metric.labelColor)) {
+                    if (run.text.isEmpty()) continue
+                    graphics.drawSkikoText(
+                        run.text, labelX, y, size,
+                        withAlpha(run.color, alpha), bold = run.bold,
+                    )
+                    labelX += skikoTextWidth(run.text, size, run.bold)
+                }
             }
             cursorX += slotWidth + inlineLabelWidth(metric, size) + INLINE_PART_GAP
         }
@@ -357,55 +369,7 @@ object IslandRenderer {
 
     private fun centeredX(width: Float) = (mc.window.guiScaledWidth - width) / 2f
 
-    private data class TextRun(val text: String, val color: Int, val bold: Boolean)
-
-    private fun parseRuns(text: String, baseColor: Int, baseBold: Boolean = false): List<TextRun> {
-        if (text.indexOf('§') < 0) return listOf(TextRun(text, baseColor, baseBold))
-
-        val runs = ArrayList<TextRun>()
-        val current = StringBuilder()
-        var color = baseColor
-        var bold = baseBold
-
-        fun flush() {
-            if (current.isEmpty()) return
-            runs += TextRun(current.toString(), color, bold)
-            current.setLength(0)
-        }
-
-        var i = 0
-        while (i < text.length) {
-            val ch = text[i]
-            if (ch == '§' && i + 1 < text.length) {
-                val format = ChatFormatting.getByCode(text[i + 1])
-                if (format != null) {
-                    if (format == ChatFormatting.RESET) {
-                        flush()
-                        color = baseColor
-                        bold = baseBold
-                    } else {
-                        val textColor = TextColor.fromLegacyFormat(format)
-                        if (textColor != null) {
-                            flush()
-                            color = 0xFF000000.toInt() or (textColor.value and 0xFFFFFF)
-                            bold = baseBold
-                        } else if (format == ChatFormatting.BOLD) {
-                            flush()
-                            bold = true
-                        }
-                    }
-                    i += 2
-                    continue
-                }
-            }
-            current.append(ch)
-            i++
-        }
-        flush()
-        return runs
-    }
-
-    private fun runsWidth(runs: List<TextRun>, size: Float): Float {
+    private fun runsWidth(runs: List<LegacyTextRun>, size: Float): Float {
         var width = 0f
         for (run in runs) width += skikoTextWidth(run.text, size, run.bold)
         return width

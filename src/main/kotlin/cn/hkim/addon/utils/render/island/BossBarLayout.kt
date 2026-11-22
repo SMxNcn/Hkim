@@ -2,6 +2,7 @@ package cn.hkim.addon.utils.render.island
 
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.mixins.accessors.BossHealthOverlayAccessor
+import cn.hkim.addon.utils.skyblock.mining.MiningEventTracker
 import kotlin.math.ceil
 
 /**
@@ -21,7 +22,12 @@ object BossBarLayout {
      */
     fun bottomY(): Float {
         val overlay = mc.gui.hud.bossOverlay as? BossHealthOverlayAccessor ?: return 0f
-        val bars = overlay.events?.size ?: return 0f
+        val events = overlay.events ?: return 0f
+        val bars = if (MiningEventTracker.hideBossBar) {
+            events.values.count { !MiningEventTracker.isEventBar(it) }
+        } else {
+            events.size
+        }
         if (bars <= 0) return 0f
 
         val fitsOnScreen = ceil((mc.window.guiScaledHeight / 3f - FIRST_BAR_Y) / BAR_STEP).toInt()
