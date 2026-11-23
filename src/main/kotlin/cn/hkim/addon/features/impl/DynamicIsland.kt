@@ -5,6 +5,7 @@ import cn.hkim.addon.config.settings.BooleanSetting
 import cn.hkim.addon.config.settings.ColorSetting
 import cn.hkim.addon.config.settings.DropdownSetting
 import cn.hkim.addon.config.settings.NumberSetting
+import cn.hkim.addon.events.impl.BossBarRenderEvent
 import cn.hkim.addon.events.impl.ChatReceiveEvent
 import cn.hkim.addon.events.impl.TickEvent
 import cn.hkim.addon.features.Category
@@ -12,14 +13,11 @@ import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.utils.Colors
 import cn.hkim.addon.utils.ServerUtils
-import cn.hkim.addon.utils.render.island.ChatIslandMessage
-import cn.hkim.addon.utils.render.island.IslandContent
-import cn.hkim.addon.utils.render.island.IslandHost
-import cn.hkim.addon.utils.render.island.IslandMetric
-import cn.hkim.addon.utils.render.island.IslandQueue
-import cn.hkim.addon.utils.render.island.IslandRenderer
+import cn.hkim.addon.utils.render.island.*
 import cn.hkim.addon.utils.render.island.messages.AutopetIslandMessage
 import cn.hkim.addon.utils.render.island.messages.PickaxeAbilityIslandMessage
+import cn.hkim.addon.utils.render.island.messages.SackMessage
+import cn.hkim.addon.utils.skyblock.DungeonUtils
 import cn.hkim.addon.utils.skyblock.mining.MiningEventTracker
 import meteordevelopment.orbit.EventHandler
 import net.minecraft.client.DeltaTracker
@@ -36,6 +34,7 @@ object DynamicIsland : Module("Dynamic Island", "Apple-style dynamic island HUD 
     private val messages by DropdownSetting("Messages", "Messages shown on the island.")
     private val autopetMessage by BooleanSetting("Autopet Message", "Show Autopet info.", false).depends { messages }
     private val pickaxeAbilityMessage by BooleanSetting("Pickaxe Ability", "Show pickaxe ability availability.", false).depends { messages }
+    private val sackMessage by BooleanSetting("Sack Message", "Show items moved from your sacks to your inventory.", false).depends { messages }
 
     private val performance by DropdownSetting("Performance", "Performance info on island.")
     private val showTPS by BooleanSetting("Show TPS", "Shows the TPS.", true).depends { performance }
@@ -44,12 +43,14 @@ object DynamicIsland : Module("Dynamic Island", "Apple-style dynamic island HUD 
     private val lagThreshold by NumberSetting("Lag Threshold", "Shows lag warning when TPS drops below this value.", 10f, 5f, 15f, 1f,).depends { performance }
 
     private val bossbar by DropdownSetting("Bossbar", "Info parsed from bossbar text.")
+    private val hideOnClear by BooleanSetting("Hide on Dungeon Clear", "Hide bossbars during the dungeon clear.", false).depends { bossbar }
     private val showMiningEvent by BooleanSetting("Show Mining Event", "Rotate the mining event with performance info.", false).depends { bossbar }
     private val eventRotation by NumberSetting("Event Rotation", "Seconds per performance/event phase.", 5f, 1f, 10f, 1f, "s").depends { bossbar && showMiningEvent }
 
     private val autopetRule = AutopetIslandMessage { autopetMessage }
     private val pickaxeAbilityRule = PickaxeAbilityIslandMessage { pickaxeAbilityMessage }
-    private val chatMessages: List<ChatIslandMessage> = listOf(autopetRule, pickaxeAbilityRule)
+    private val sackRule = SackMessage { sackMessage }
+    private val chatMessages: List<ChatIslandMessage> = listOf(autopetRule, pickaxeAbilityRule, sackRule)
 
     private const val RADIUS = 8f
     private const val LAG_WARNING = "⚠ Lag Detected"
@@ -124,10 +125,19 @@ object DynamicIsland : Module("Dynamic Island", "Apple-style dynamic island HUD 
         }
     }
 
+    private val hideBossBarInClear: Boolean get() = enabled && hideOnClear && DungeonUtils.inClear
+
+    @EventHandler
+    private fun onBossBarRender(event: BossBarRenderEvent) {
+        if (!hideBossBarInClear) return
+        event.cancel()
+    }
+
     @EventHandler
     private fun onTick(event: TickEvent.Start) {
         MiningEventTracker.hideBossBar = enabled && showMiningEvent
         if (enabled && showMiningEvent) MiningEventTracker.update()
+        BossBarLayout.hideAll = hideBossBarInClear
     }
 
     override fun render(graphics: GuiGraphicsExtractor, tickTracker: DeltaTracker) {
