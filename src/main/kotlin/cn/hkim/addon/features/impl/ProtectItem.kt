@@ -2,6 +2,7 @@ package cn.hkim.addon.features.impl
 
 import cn.hkim.addon.Hkim
 import cn.hkim.addon.Hkim.mc
+import cn.hkim.addon.compat.input.InputCompat
 import cn.hkim.addon.config.settings.BooleanSetting
 import cn.hkim.addon.config.settings.KeybindSetting
 import cn.hkim.addon.events.impl.GuiEvent
@@ -21,7 +22,6 @@ import net.minecraft.world.item.ItemStack
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-import cn.hkim.addon.compat.input.InputCompat
 
 @ModuleInfo("protect_item", Category.SKYBLOCK, true)
 object ProtectItem : Module("Protect Item", "Protect your item.") {
@@ -129,7 +129,8 @@ object ProtectItem : Module("Protect Item", "Protect your item.") {
         }
     }
 
-    private fun sendMsg(message: String) {
+    @JvmStatic
+    fun sendMsg(message: String) {
         if (sendMessage) modMessage(message)
     }
 

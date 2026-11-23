@@ -13,18 +13,21 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import static cn.hkim.addon.utils.ChatUtilsKt.getLegacy;
 import static cn.hkim.addon.utils.ItemUtilsKt.getItemRarity;
 import static cn.hkim.addon.utils.ItemUtilsKt.isSkyBlockItem;
 
@@ -75,9 +78,28 @@ public class AbstractContainerScreenMixin {
     //@Inject(method = "slotClicked(Lnet/minecraft/world/inventory/Slot;IILnet/minecraft/world/inventory/ContainerInput;)V", at = @At("HEAD"), cancellable = true)
     //? }
     protected void onSlotClicked(Slot slot, int slotId, int buttonNum, ContainerInput containerInput, CallbackInfo ci) {
+        if (isDroppingProtectedItem(slotId, containerInput)) {
+            ci.cancel();
+            return;
+        }
+
         GuiEvent.SlotClick event = new GuiEvent.SlotClick((Screen)(Object) this, slotId, buttonNum);
         Hkim.EVENT_BUS.post(event);
         if (event.isCancelled()) ci.cancel();
+    }
+
+    @Unique
+    private boolean isDroppingProtectedItem(int slotId, ContainerInput containerInput) {
+        if (slotId != AbstractContainerMenu.SLOT_CLICKED_OUTSIDE) return false;
+        if (containerInput != ContainerInput.PICKUP && containerInput != ContainerInput.QUICK_MOVE) return false;
+        if (!ProtectItem.INSTANCE.getEnabled()) return false;
+
+        AbstractContainerMenu menu = ((AbstractContainerScreen<?>)(Object) this).getMenu();
+        ItemStack carried = menu.getCarried();
+        if (!ProtectItem.isProtected(carried)) return false;
+
+        ProtectItem.sendMsg(getLegacy(carried.getHoverName()) + " §r§cis protected!");
+        return true;
     }
 
     @Inject(method = "extractTooltip", at = @At("HEAD"), cancellable = true)
