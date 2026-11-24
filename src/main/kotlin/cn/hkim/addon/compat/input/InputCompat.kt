@@ -42,7 +42,8 @@ object InputCompat {
     val KEY_NONE get() = NONE
 
     private const val MOUSE_FLAG = 0x10000
-    private const val NONE = Int.MIN_VALUE
+    private const val NONE = -1
+
     val KEY_ESCAPE get() = InputBackend.KEY_ESCAPE
     val KEY_TAB get() = InputBackend.KEY_TAB
     val KEY_HOME get() = InputBackend.KEY_HOME
@@ -99,7 +100,9 @@ object InputCompat {
     }
 
     fun decodeType(code: Int): KeyType =
-        if (code and MOUSE_FLAG != 0) KeyType.MOUSE else KeyType.KEYBOARD
+        if (code == KEY_NONE) KeyType.KEYBOARD
+        else if (code and MOUSE_FLAG != 0) KeyType.MOUSE
+        else KeyType.KEYBOARD
 
     // ---------------------------------------------------------------------
     // Queries
@@ -152,7 +155,10 @@ object InputCompat {
     }
 
     /** Stable, cross-version name (e.g. `key.keyboard.x`, `key.mouse.4`). */
-    fun keyName(code: Int, type: KeyType): String = InputBackend.keyName(code, type)
+    fun keyName(code: Int, type: KeyType): String {
+        if (code == KEY_NONE) return "key.keyboard.unknown"
+        return InputBackend.keyName(decodeCode(code), type)
+    }
 
     /** Parse both the stable names and legacy GLFW/SDL names. */
     fun keyCode(name: String): InputBinding? = InputBackend.keyCode(name)
