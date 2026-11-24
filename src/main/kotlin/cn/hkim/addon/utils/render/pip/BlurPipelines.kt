@@ -9,8 +9,8 @@ import com.mojang.blaze3d.pipeline.ColorTargetState
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.shaders.UniformType
 //? } else {
-/*import com.mojang.renderpearl.api.pipeline.*
-*///? }
+//import com.mojang.renderpearl.api.pipeline.*
+//? }
 
 object BlurPipelines {
     private val BIND_GROUP_LAYOUT: BindGroupLayout = createBindGroupLayout()
