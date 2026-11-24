@@ -13,6 +13,7 @@
   },
   "client": [
     "AbstractContainerScreenMixin",
+    "AbstractRecipeBookScreenMixin",
     "BlockItemMixin",
     "BossHealthOverlayMixin",
     "CameraMixin",

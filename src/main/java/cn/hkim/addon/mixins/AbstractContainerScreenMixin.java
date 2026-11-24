@@ -2,6 +2,7 @@ package cn.hkim.addon.mixins;
 
 import cn.hkim.addon.Hkim;
 import cn.hkim.addon.events.impl.GuiEvent;
+import cn.hkim.addon.features.impl.CleanView;
 import cn.hkim.addon.features.impl.ItemFeatures;
 import cn.hkim.addon.features.impl.ProtectItem;
 import cn.hkim.addon.utils.HudUtils;
@@ -125,9 +126,16 @@ public class AbstractContainerScreenMixin {
 
     @Inject(method = "extractSlot", at = @At("HEAD"))
     private void onExtractSlotRarityBackground(GuiGraphicsExtractor graphics, Slot slot, int mouseX, int mouseY, CallbackInfo ci) {
-        if (slot != null && slot.hasItem()) {
+        if (slot != null && slot.hasItem() && !CleanView.isHiddenOffhandSlot(slot)) {
             ItemFeatures.drawRarityBackground(graphics, slot.x, slot.y, slot.getItem());
         }
+    }
+
+    @Inject(method = "getHoveredSlot", at = @At("RETURN"), cancellable = true)
+    private void onGetHoveredSlot(double x, double y, CallbackInfoReturnable<Slot> cir) {
+        Slot slot = cir.getReturnValue();
+        if (slot == null || !CleanView.isHiddenOffhandSlot(slot)) return;
+        cir.setReturnValue(null);
     }
 
     //? if 26.2 {

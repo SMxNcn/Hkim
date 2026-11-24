@@ -13,7 +13,10 @@ import cn.hkim.addon.utils.skyblock.LocationUtils
 import cn.hkim.addon.utils.skyblock.M7Phases
 import cn.hkim.addon.utils.skyblock.getF7Phase
 import meteordevelopment.orbit.EventHandler
+import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.world.inventory.ChestMenu
+import net.minecraft.world.inventory.InventoryMenu
+import net.minecraft.world.inventory.Slot
 import net.minecraft.world.item.Items
 
 // The name CleanView may not accurately represent the GUI features and could be changed later.
@@ -38,6 +41,8 @@ object CleanView : Module("Clean View", "Hides unwanted renderings.") {
     private val gui by DropdownSetting("GUI")
     private val cleanGui by BooleanSetting("Clean Gui View", "Stop clicking on blank name items in SkyBlock menus.", true).depends { gui }
     private val blockHoveringClose by BooleanSetting("Block Hovering Close", "Prevent clicking 'Back' or 'Close' button with item on cursor.", false).depends { gui }
+    private val hideOffhandSlot by BooleanSetting("Hide Offhand Slot", "Hide the offhand slot in your inventory and prevent clicking it.", false).depends { gui }
+    private val hideRecipeBook by BooleanSetting("Hide Recipe Book", "Remove the recipe book button from your inventory.", false).depends { gui }
 
     @EventHandler
     private fun onGuiClick(event: GuiEvent.SlotClick) {
@@ -56,6 +61,27 @@ object CleanView : Module("Clean View", "Hides unwanted renderings.") {
             event.cancel()
         }
     }
+
+    @EventHandler
+    private fun onDrawSlot(event: GuiEvent.DrawSlot) {
+        if (event.screen !is InventoryScreen) return
+        if (isHiddenOffhandSlot(event.slot)) event.cancel()
+    }
+
+    @EventHandler
+    private fun onKeyPress(event: GuiEvent.KeyPress) {
+        if (event.screen !is InventoryScreen) return
+        if (mc.options.keySwapOffhand.matches(event.input) && shouldHideOffhandSlot()) event.cancel()
+    }
+
+    @JvmStatic
+    fun shouldHideOffhandSlot(): Boolean = enabled && hideOffhandSlot && LocationUtils.inSkyBlock
+
+    @JvmStatic
+    fun isHiddenOffhandSlot(slot: Slot): Boolean = shouldHideOffhandSlot() && slot.noItemIcon == InventoryMenu.EMPTY_ARMOR_SLOT_SHIELD
+
+    @JvmStatic
+    fun shouldHideRecipeBook(): Boolean = enabled && hideRecipeBook && LocationUtils.inSkyBlock
 
     @JvmStatic
     fun shouldHideFallingBlocks(): Boolean = enabled && hideFallingBlock
