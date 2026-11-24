@@ -1,9 +1,6 @@
 package cn.hkim.addon
 
-import cn.hkim.addon.commands.autoSellCommand
-import cn.hkim.addon.commands.highlightCommand
-import cn.hkim.addon.commands.hkimCommand
-import cn.hkim.addon.commands.hwpCommand
+import cn.hkim.addon.commands.*
 import cn.hkim.addon.compat.iris.IrisCompatibility
 import cn.hkim.addon.config.ModuleConfig
 import cn.hkim.addon.events.CustomEventDispatcher
@@ -51,7 +48,7 @@ object Hkim : ClientModInitializer {
 
     override fun onInitializeClient() {
         ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
-            arrayOf(autoSellCommand, highlightCommand, hkimCommand, hwpCommand).forEach { commodore -> commodore.register(dispatcher) }
+            arrayOf(autoSellCommand, highlightCommand, hkimCommand, hwpCommand, ldCommand, wdCommand).forEach { commodore -> commodore.register(dispatcher) }
         }
 
         EventDispatcher.postEvents()
