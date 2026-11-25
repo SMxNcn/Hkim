@@ -39,6 +39,7 @@ import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.font.TextRenderable
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.client.renderer.state.level.CameraRenderState
+import net.minecraft.network.chat.Component
 import net.minecraft.util.LightCoordsUtil
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
@@ -53,7 +54,7 @@ import java.util.*
 
 internal data class LineData(val from: Vec3, val to: Vec3, val color1: Int, val color2: Int, val thickness: Float, val depth: Boolean)
 internal data class BoxData(val aabb: AABB, val r: Float, val g: Float, val b: Float, val a: Float, val thickness: Float, val depth: Boolean)
-internal data class TextData(val text: String, val pos: Vec3, val scale: Float, val depth: Boolean, val cameraRotation: Quaternionf, val font: Font, val textWidth: Float)
+internal data class TextData(val text: Component, val pos: Vec3, val scale: Float, val depth: Boolean, val cameraRotation: Quaternionf, val font: Font, val textWidth: Float, val color: Int = 0xFFFFFFFF.toInt())
 
 class RenderConsumer {
     internal val lines = ObjectArrayList<LineData>()
@@ -270,10 +271,11 @@ private fun drawTextsWithPipeline(
             .scale(scaleFactor, -scaleFactor, scaleFactor)
 
         val preparedText = text.font.prepareText(
-            text.text,
+            text.text.visualOrderText,
             -text.textWidth / 2f, 0f,
-            0xFFFFFFFF.toInt(),
+            text.color,
             true,
+            false,
             0
         )
 
@@ -462,7 +464,12 @@ fun RenderEvent.Extract.drawWireFrameBox(aabb: AABB, color: Color, thickness: Fl
 fun RenderEvent.Extract.drawFilledBox(aabb: AABB, color: Color, depth: Boolean = false) {
     consumer.filledBoxes.add(BoxData(aabb, color.rGL, color.gGL, color.bGL, color.aGL, 3f, depth))
 }
-fun RenderEvent.Extract.drawStyledBox(aabb: AABB, color: Color, style: Int = 0, depth: Boolean = true) {
+fun RenderEvent.Extract.drawLine(from: Vec3, to: Vec3, color: Color, thickness: Float = 2f, depth: Boolean = false) {
+    val argb = (color.alpha shl 24) or (color.red shl 16) or (color.green shl 8) or color.blue
+    consumer.lines.add(LineData(from, to, argb, argb, thickness, depth))
+}
+
+fun RenderEvent.Extract.drawStyledBox(aabb: AABB, color: Color, style: Int = 0, depth: Boolean = false) {
     when (style) {
         0 -> drawFilledBox(aabb, color, depth = depth)
         1 -> drawWireFrameBox(aabb, color, depth = depth)
@@ -472,8 +479,13 @@ fun RenderEvent.Extract.drawStyledBox(aabb: AABB, color: Color, style: Int = 0, 
         }
     }
 }
-fun RenderEvent.Extract.drawText(text: String, pos: Vec3, scale: Float, depth: Boolean) {
+
+fun RenderEvent.Extract.drawText(text: Component, pos: Vec3, scale: Float, depth: Boolean, color: Int = 0xFFFFFFFF.toInt()) {
     val cameraRotation = mc.gameRenderer.mainCamera().rotation()
     val font = mc.font
-    consumer.texts.add(TextData(text, pos, scale, depth, cameraRotation, font, font.width(text).toFloat()))
+    consumer.texts.add(TextData(text, pos, scale, depth, cameraRotation, font, font.width(text).toFloat(), color))
+}
+
+fun RenderEvent.Extract.drawText(text: String, pos: Vec3, scale: Float, depth: Boolean, color: Int = 0xFFFFFFFF.toInt()) {
+    drawText(Component.literal(text), pos, scale, depth, color)
 }
