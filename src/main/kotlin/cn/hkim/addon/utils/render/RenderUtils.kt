@@ -333,6 +333,11 @@ private fun flushTextMesh(
     val dynamicTransforms = RenderSystem.getDynamicUniforms()
         .writeTransform(viewMatrix, COLOR_MODULATOR, MODEL_OFFSET, TEXTURE_MATRIX)
 
+    //? if 26.2 {
+    //? } else {
+    //val fogBuffer = ensureNoFogBuffer()
+    //? }
+
     val renderPass = encoder.createRenderPass(
         { "hkim_text" },
         mc.gameRenderer.mainRenderTarget().colorTextureView!!,
@@ -349,9 +354,21 @@ private fun flushTextMesh(
         RenderSystem.bindDefaultUniforms(rp)
         rp.setUniform("DynamicTransforms", dynamicTransforms)
         //? if 26.2 {
+        ensureNoFogBuffer()
+        rp.setUniform("Fog", noFogBuffer!!)
+        //? } else {
+        //rp.setUniform("Fog", fogBuffer)
+        //? }
+        //? if 26.2 {
         rp.bindTexture("Sampler0", fontTexture, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST))
         //? } else {
         //rp.setUniform("Sampler0", fontTexture, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST))
+        //? }
+        // TEXT_POLYGON_OFFSET samples the lightmap through Sampler2, must be bound before drawing
+        //? if 26.2 {
+        rp.bindTexture("Sampler2", mc.gameRenderer.levelLightmap(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST))
+        //? } else {
+        //rp.setUniform("Sampler2", mc.gameRenderer.levelLightmap(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR))
         //? }
         rp.setVertexBuffer(0, vertexBuffer.slice())
         rp.setIndexBuffer(indices, indexType)
