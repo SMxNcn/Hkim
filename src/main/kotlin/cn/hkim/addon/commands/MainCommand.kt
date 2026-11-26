@@ -10,7 +10,6 @@ import cn.hkim.addon.utils.customData
 import cn.hkim.addon.utils.modMessage
 import cn.hkim.addon.utils.playSoundAtPlayer
 import cn.hkim.addon.utils.skyblock.inventory.EquipmentUtils.swapEquipment
-import cn.hkim.addon.utils.skyblock.inventory.SwapHandler
 import com.github.stivais.commodore.Commodore
 import com.github.stivais.commodore.utils.GreedyString
 import kotlinx.coroutines.launch
@@ -39,11 +38,6 @@ val hkimCommand = Commodore("hkim") {
         Hkim.scope.launch {
             swapEquipment(itemIds)
         }
-    }
-
-    literal("resetSwap").runs {
-        SwapHandler.resetSwap()
-        modMessage("§aSwap state has been reset.")
     }
 
     literal("getItem").runs {

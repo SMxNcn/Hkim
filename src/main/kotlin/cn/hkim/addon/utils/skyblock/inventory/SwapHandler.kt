@@ -26,14 +26,20 @@ abstract class SwapHandler {
         private var savedInput: ClientInput? = null
         private val handlers = mutableListOf<SwapHandler>()
 
+        const val TIMEOUT_MS = 2000L
+
         /** Resets every swap handler and clears the global swap state. */
         fun resetSwap() {
             handlers.toList().forEach { it.reset() }
         }
 
         fun startSwap(info: SwapInfo? = null) {
-            isInSwap = true
             swapInfo = info
+        }
+
+        private fun activateSwap() {
+            if (isInSwap) return
+            isInSwap = true
             if (SwapOptions.noGui) ViewLock.lock(SwapOptions)
             saveAndStopInput()
         }
@@ -78,7 +84,7 @@ abstract class SwapHandler {
 
     @EventHandler
     private fun onTick(event: TickEvent.End) {
-        if (!isActive) return
+        if (!isActive || !isInSwap) return
         val info = swapInfo ?: return
         if (!SwapOptions.noGui || !SwapOptions.showSwapInfo || mc.gui.hud.isHidden) return
         IslandRenderer.showMessage(
@@ -92,18 +98,25 @@ abstract class SwapHandler {
 
     @EventHandler
     protected open fun onPacket(event: PacketReceiveEvent) {
-        if (!isInSwap || !isActive) return
+        if (!isActive) return
         val packet = event.packet as? ClientboundOpenScreenPacket ?: return
+        if (!matchesTitle(packet.title.cleanString)) return
         val player = mc.player ?: return
         containerId = packet.containerId
         if (SwapOptions.noGui) {
             mc.execute {
+                if (!isActive) return@execute
+                activateSwap()
                 player.containerMenu = packet.type.create(packet.containerId, player.inventory)
                 consumeGuiOpen(packet.title)
             }
             event.cancel()
         } else {
-            schedule(1) { consumeGuiOpen(packet.title) }
+            schedule(1) {
+                if (!isActive) return@schedule
+                activateSwap()
+                consumeGuiOpen(packet.title)
+            }
         }
     }
 
@@ -114,6 +127,8 @@ abstract class SwapHandler {
         return true
     }
 
+    protected abstract fun matchesTitle(title: String): Boolean
+
     protected abstract fun handleGuiOpen(title: String)
 
     protected open fun reset() {
@@ -122,5 +137,14 @@ abstract class SwapHandler {
         isProcessing = false
         containerId = -1
         endSwap()
+    }
+}
+
+abstract class PagedSwapHandler(private val titleRegex: Regex) : SwapHandler() {
+    final override fun matchesTitle(title: String) = titleRegex.containsMatchIn(title)
+
+    protected fun parsePageInfo(title: String): Pair<Int, Int>? {
+        val (current, total) = titleRegex.find(title)?.destructured ?: return null
+        return (current.toIntOrNull() ?: return null) to (total.toIntOrNull() ?: return null)
     }
 }

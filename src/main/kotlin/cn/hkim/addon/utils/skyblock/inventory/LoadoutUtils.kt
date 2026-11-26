@@ -2,17 +2,13 @@ package cn.hkim.addon.utils.skyblock.inventory
 
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.features.impl.SwapOptions
-import cn.hkim.addon.utils.clickInventorySlot
-import cn.hkim.addon.utils.modMessage
-import cn.hkim.addon.utils.randomDelay
-import cn.hkim.addon.utils.schedule
-import cn.hkim.addon.utils.sendCommand
+import cn.hkim.addon.utils.*
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeout
 import kotlin.coroutines.resume
 
-object LoadoutUtils : SwapHandler() {
+object LoadoutUtils : PagedSwapHandler(SwapOptions.ldTitleRegex) {
     private var targetIndex = -1
     private var targetPage = 1
 
@@ -30,7 +26,7 @@ object LoadoutUtils : SwapHandler() {
         }
 
         return try {
-            withTimeout(10000) {
+            withTimeout(TIMEOUT_MS) {
                 suspendCancellableCoroutine { cont ->
                     callback = { result -> cont.resume(result) }
                     targetIndex = index
@@ -70,13 +66,6 @@ object LoadoutUtils : SwapHandler() {
             callback?.invoke(true)
             reset()
         }
-    }
-
-    private fun parsePageInfo(title: String): Pair<Int, Int>? {
-        return SwapOptions.ldTitleRegex.find(title)?.destructured?.let { (current, total) ->
-            current.toIntOrNull() to total.toIntOrNull()
-        }?.takeIf { it.first != null && it.second != null }
-            ?.let { it.first!! to it.second!! }
     }
 
     private fun turnPage() {

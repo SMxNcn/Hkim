@@ -2,13 +2,10 @@ package cn.hkim.addon.utils.skyblock.inventory
 
 import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.features.impl.SwapOptions
-import cn.hkim.addon.utils.clickPlayerInventorySlot
-import cn.hkim.addon.utils.findItemByID
-import cn.hkim.addon.utils.modMessage
-import cn.hkim.addon.utils.randomDelay
-import cn.hkim.addon.utils.schedule
-import cn.hkim.addon.utils.sendCommand
+import cn.hkim.addon.utils.*
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeout
 import kotlin.coroutines.resume
 
 object EquipmentUtils : SwapHandler() {
@@ -29,30 +26,27 @@ object EquipmentUtils : SwapHandler() {
         }
         if (slots.isEmpty()) return false
 
-        return suspendCancellableCoroutine { cont ->
-            callback = { result -> cont.resume(result) }
-            pendingSlots = slots
-            currentIndex = 0
-            isProcessing = false
-            isActive = true
-            startSwap(SwapInfo("Equipment", "Swapping §a${slots.size}§r item(s)"))
-            sendCommand("stats")
-
-            schedule(200) {
-                if (callback != null) {
-                    callback?.invoke(false)
-                    reset()
+        return try {
+            withTimeout(TIMEOUT_MS) {
+                suspendCancellableCoroutine { cont ->
+                    callback = { result -> cont.resume(result) }
+                    pendingSlots = slots
+                    currentIndex = 0
+                    isProcessing = false
+                    isActive = true
+                    startSwap(SwapInfo("Equipment", "Swapping §a${slots.size}§r item(s)"))
+                    sendCommand("stats")
                 }
             }
+        } catch (_: TimeoutCancellationException) {
+            reset()
+            false
         }
     }
 
-    override fun handleGuiOpen(title: String) {
-        if (!title.contains("Stats & Equipment")) {
-            callback?.invoke(false)
-            return
-        }
+    override fun matchesTitle(title: String) = title.contains("Stats & Equipment")
 
+    override fun handleGuiOpen(title: String) {
         schedule(randomDelay(SwapOptions.startClickTicks.toInt(), 2).toInt()) {
             if (!isProcessing) { processNextItem() }
         }
