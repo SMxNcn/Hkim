@@ -7,6 +7,7 @@ import cn.hkim.addon.config.settings.NumberSetting
 import cn.hkim.addon.features.Category
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
+import cn.hkim.addon.utils.isInteractable
 import cn.hkim.addon.utils.isSword
 import cn.hkim.addon.utils.lookingAtUsable
 import cn.hkim.addon.utils.toRadians
@@ -51,7 +52,12 @@ object Animations : Module("Animations", "Customize the first-person view model.
     fun shouldNotSwing() = enabled && disableReSwing
 
     fun shouldApplyOldAnimation(itemStack: ItemStack): Boolean {
-        return enabled && oldAnimation && mc.options.keyUse.isDown && itemStack.isSword && !lookingAtUsable()
+        return enabled && oldAnimation && mc.options.keyUse.isDown && itemStack.isSword && !lookingAtUsable() && !isOtherHandInteractable()
+    }
+
+    private fun isOtherHandInteractable(): Boolean {
+        val player = mc.player ?: return false
+        return player.mainHandItem.isInteractable || player.offhandItem.isInteractable
     }
 
     fun animationVanilla(poseStack: PoseStack, arm: HumanoidArm, equipProgress: Float, swingProgress: Float) {

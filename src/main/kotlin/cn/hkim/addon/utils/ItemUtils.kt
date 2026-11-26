@@ -17,9 +17,7 @@ import net.minecraft.world.entity.decoration.ItemFrame
 import net.minecraft.world.entity.monster.Strider
 import net.minecraft.world.entity.npc.villager.AbstractVillager
 import net.minecraft.world.entity.vehicle.VehicleEntity
-import net.minecraft.world.item.BlockItem
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.Items
+import net.minecraft.world.item.*
 import net.minecraft.world.item.component.CustomData
 import net.minecraft.world.item.component.ItemLore
 import net.minecraft.world.level.block.*
@@ -56,6 +54,14 @@ inline val ItemStack.loreString: List<String>
 
 inline val ItemStack.isSword: Boolean
     get() = `is` { it.`is`(ItemTags.SWORDS) }
+
+inline val ItemStack.isShield: Boolean
+    get() = item is ShieldItem
+
+val ItemStack.isInteractable: Boolean
+    get() = isShield || (!isEmpty && (item.javaClass != Item::class.java ||
+            has(DataComponents.FOOD) || has(DataComponents.CONSUMABLE) || has(DataComponents.EQUIPPABLE) ||
+            mc.player?.let { getUseDuration(it) > 0 } == true))
 
 val strengthRegex = Regex("Strength: \\+(\\d+)")
 
