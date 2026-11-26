@@ -10,10 +10,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.world.item.ItemStack;
 import org.joml.Matrix3x2fStack;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -32,23 +29,6 @@ public class GuiGraphicsExtractorMixin {
             if (upgradeLevel >= 1) text = String.valueOf(upgradeLevel);
         }
         original.call(instance, font, itemStack, x, y, text);
-    }
-
-    @Unique
-    //? if 26.2 {
-    private static final Logger SCISSOR_LOG = LoggerFactory.getLogger("ScissorGuard");
-    //? } else {
-    //private static final Logger SCISSOR_LOG = LoggerFactory.getLogger("HkimScissorGuard");
-    //? }
-
-    @Inject(method = "enableScissor(IIII)V", at = @At("HEAD"), cancellable = true)
-    private void guardZeroAreaScissor(int x0, int y0, int x1, int y1, CallbackInfo ci) {
-        int w = x1 - x0;
-        int h = y1 - y0;
-        if (w <= 0 || h <= 0) {
-            SCISSOR_LOG.warn("Skipping zero-area scissor push ({}x{}) at ({},{}..{},{})", w, h, x0, y0, x1, y1);
-            ci.cancel();
-        }
     }
 
     @Inject(method = "fill(IIIII)V", at = @At("HEAD"), cancellable = true)
