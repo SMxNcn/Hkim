@@ -1,6 +1,7 @@
 package cn.hkim.addon.features.impl
 
 import cn.hkim.addon.Hkim.mc
+import cn.hkim.addon.compat.input.InputCompat
 import cn.hkim.addon.config.settings.BooleanSetting
 import cn.hkim.addon.config.settings.KeybindSetting
 import cn.hkim.addon.config.settings.NumberSetting
@@ -24,7 +25,6 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
-import cn.hkim.addon.compat.input.InputCompat
 
 @ModuleInfo("killaura", Category.MISC, false)
 object KillAura : Module("Kill Aura", "Automatically attack nearby entities.") {
@@ -33,7 +33,7 @@ object KillAura : Module("Kill Aura", "Automatically attack nearby entities.") {
     private val attackRate by NumberSetting("Attack Rate", "Attacks per second.", 10.0f, 0.1f, 20.0f, 0.1f)
     private val targetPlayers by BooleanSetting("Target Players", "Target other players.", true)
     private val targetMobs by BooleanSetting("Target Mobs", "Target hostile mobs.", false)
-    private val toggleKeybind by KeybindSetting("Toggle Keybind", "Toggle KillAura.", InputCompat.KEY_R)
+    private val toggleKeybind by KeybindSetting("Toggle Keybind", "Toggle KillAura.", InputCompat.KEY_NONE)
 
     private const val SEARCH_RANGE = 3.5
 
