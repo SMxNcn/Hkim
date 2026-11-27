@@ -17,6 +17,7 @@ import cn.hkim.addon.utils.render.RenderBatchManager
 import cn.hkim.addon.utils.skyblock.DungeonUtils
 import cn.hkim.addon.utils.skyblock.FailSafeUtils
 import cn.hkim.addon.utils.skyblock.LocationUtils
+import cn.hkim.addon.utils.skyblock.farming.Plot
 import cn.hkim.addon.utils.skyblock.mining.MiningEventTracker
 import cn.hkim.addon.utils.skyblock.mining.MiningStatsTracker
 import cn.hkim.addon.utils.skyblock.mining.Pingless
@@ -57,6 +58,7 @@ object Hkim : ClientModInitializer {
         ModuleManager.initModules()
         ModuleConfig.loadConfig()
         Background.getDefaultBackground()
+        Plot.load()
         ProtectItem.loadUUID()
 
         runtime = BridgeLoader.load()
