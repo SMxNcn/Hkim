@@ -64,20 +64,52 @@ class HudElement(
 
     operator fun getValue(thisRef: Module, property: KProperty<*>): HudElement = this
 
+    fun originX(width: Float = contentWidth * hudScale): Float = when (hudAlignment) {
+        HudAlignment.TOP_RIGHT, HudAlignment.MIDDLE_RIGHT, HudAlignment.BOTTOM_RIGHT -> width
+        HudAlignment.TOP_MIDDLE, HudAlignment.BOTTOM_MIDDLE -> width / 2f
+        else -> 0f
+    }
+
+    fun originY(height: Float = contentHeight * hudScale): Float = when (hudAlignment) {
+        HudAlignment.BOTTOM_LEFT, HudAlignment.BOTTOM_MIDDLE, HudAlignment.BOTTOM_RIGHT -> height
+        HudAlignment.MIDDLE_LEFT, HudAlignment.MIDDLE_RIGHT -> height / 2f
+        else -> 0f
+    }
+
     fun actualX(): Float {
-        return hudAlignment.baseX(mc.window.guiScaledWidth) + anchorX
+        return hudAlignment.baseX(mc.window.guiScaledWidth) + anchorX - originX()
     }
 
     fun actualY(): Float {
-        return hudAlignment.baseY(mc.window.guiScaledHeight) + anchorY
+        return hudAlignment.baseY(mc.window.guiScaledHeight) + anchorY - originY()
+    }
+
+    fun setScreenX(x: Float, width: Float = contentWidth * hudScale) {
+        anchorX = x + originX(width) - hudAlignment.baseX(mc.window.guiScaledWidth)
+    }
+
+    fun setScreenY(y: Float, height: Float = contentHeight * hudScale) {
+        anchorY = y + originY(height) - hudAlignment.baseY(mc.window.guiScaledHeight)
+    }
+
+    fun syncAlignmentToPosition() {
+        if (contentWidth <= 0f || contentHeight <= 0f) return
+        val bounds = getScreenBounds()
+        val newAlign = HudAlignment.forPosition(
+            bounds.x + bounds.w / 2f,
+            bounds.y + bounds.h / 2f,
+            mc.window.guiScaledWidth.toFloat(),
+            mc.window.guiScaledHeight.toFloat(),
+        ) ?: return
+        if (newAlign != hudAlignment) switchAlignment(newAlign)
     }
 
     fun switchAlignment(newAlign: HudAlignment) {
         val ax = actualX()
         val ay = actualY()
         hudAlignment = newAlign
-        anchorX = ax - newAlign.baseX(mc.window.guiScaledWidth)
-        anchorY = ay - newAlign.baseY(mc.window.guiScaledHeight)
+        anchorX = ax + originX() - newAlign.baseX(mc.window.guiScaledWidth)
+        anchorY = ay + originY() - newAlign.baseY(mc.window.guiScaledHeight)
     }
 
     fun scaleCenter(newScale: Float) {
@@ -92,8 +124,8 @@ class HudElement(
 
         val newW = contentWidth * newScale
         val newH = contentHeight * newScale
-        anchorX = (cx - newW / 2f) - hudAlignment.baseX(screenW)
-        anchorY = (cy - newH / 2f) - hudAlignment.baseY(screenH)
+        anchorX = (cx - newW / 2f) + originX(newW) - hudAlignment.baseX(screenW)
+        anchorY = (cy - newH / 2f) + originY(newH) - hudAlignment.baseY(screenH)
     }
 
     fun saveTo(json: JsonObject) {

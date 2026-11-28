@@ -40,7 +40,7 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard features.") {
 
     private val resetPosition by ActionSetting("Reset Position", "Reset scoreboard position to default.") {
         hud.hudAlignment = HudAlignment.MIDDLE_RIGHT
-        hud.anchorX = -100f
+        hud.anchorX = -4f
         hud.anchorY = -25f
         hud.hudScale = 1f
         prevContentWidth = 0f
@@ -143,11 +143,11 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard features.") {
 
             if (currentRight > screenW - 2f) {
                 val newLeft = (screenW - newW * scale - 4f).coerceAtLeast(4f)
-                hud.anchorX = newLeft - hud.hudAlignment.baseX(screenW)
+                hud.setScreenX(newLeft, newW * scale)
             } else if (currentLeft < 2f) {
                 val maxLeft = (screenW - newW * scale - 4f).coerceAtLeast(4f)
                 val newLeft = 4f.coerceAtMost(maxLeft)
-                hud.anchorX = newLeft - hud.hudAlignment.baseX(screenW)
+                hud.setScreenX(newLeft, newW * scale)
             }
             return
         }
@@ -167,7 +167,7 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard features.") {
         val maxLeft = (screenW - newW * scale - 4f).coerceAtLeast(4f)
         val clampedLeft = newLeft.coerceIn(4f, maxLeft)
 
-        hud.anchorX = clampedLeft - hud.hudAlignment.baseX(screenW)
+        hud.setScreenX(clampedLeft, newW * scale)
         prevContentWidth = newW
     }
 

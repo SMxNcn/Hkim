@@ -5,6 +5,7 @@ import cn.hkim.addon.config.settings.BooleanSetting
 import cn.hkim.addon.config.settings.ColorSetting
 import cn.hkim.addon.config.settings.NumberSetting
 import cn.hkim.addon.features.*
+import cn.hkim.addon.hud.HudAlignment
 import cn.hkim.addon.hud.HudElement
 import cn.hkim.addon.utils.ColorUtils.getChromaColor
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoText
