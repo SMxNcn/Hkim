@@ -72,6 +72,9 @@ object FailSafeUtils {
 
     @EventHandler
     private fun onTick(event: TickEvent.End) {
+        val timiteSlotSwitch = Nuker.isTimiteSlotSwitch
+        Nuker.isTimiteSlotSwitch = false
+
         if (!LocationUtils.inSkyBlock) {
             lastSelectedSlot = -1
             wasMacroEnabled = false
@@ -93,7 +96,7 @@ object FailSafeUtils {
 
         val player = mc.player ?: return
         val currentSlot = player.inventory.selectedSlot
-        if (lastSelectedSlot != -1 && currentSlot != lastSelectedSlot) {
+        if (lastSelectedSlot != -1 && currentSlot != lastSelectedSlot && !timiteSlotSwitch) {
             trigger("Held Item Change")
         }
         lastSelectedSlot = currentSlot
