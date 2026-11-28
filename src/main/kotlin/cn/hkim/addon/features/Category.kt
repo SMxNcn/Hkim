@@ -11,3 +11,7 @@ annotation class ModuleInfo(
     val category: Category,
     val default: Boolean = false
 )
+
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class DevModule

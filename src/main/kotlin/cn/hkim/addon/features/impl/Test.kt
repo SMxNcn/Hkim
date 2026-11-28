@@ -1,14 +1,16 @@
 package cn.hkim.addon.features.impl
 
+import cn.hkim.addon.compat.input.InputCompat
 import cn.hkim.addon.config.settings.*
 import cn.hkim.addon.features.Category
+import cn.hkim.addon.features.DevModule
 import cn.hkim.addon.features.Module
 import cn.hkim.addon.features.ModuleInfo
 import cn.hkim.addon.utils.playSoundAtPlayer
 import net.minecraft.resources.Identifier
 import net.minecraft.sounds.SoundEvent
-import cn.hkim.addon.compat.input.InputCompat
 
+@DevModule
 @ModuleInfo("test", Category.MISC, true)
 object Test : Module("Test", "A Test Module.") {
     private val dropdown1 by DropdownSetting("Dropdown 1", "D1", false)

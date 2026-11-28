@@ -4,10 +4,7 @@ import cn.hkim.addon.Hkim.mc
 import cn.hkim.addon.config.settings.BooleanSetting
 import cn.hkim.addon.config.settings.ColorSetting
 import cn.hkim.addon.config.settings.NumberSetting
-import cn.hkim.addon.features.Category
-import cn.hkim.addon.features.Module
-import cn.hkim.addon.features.ModuleInfo
-import cn.hkim.addon.features.ModuleManager
+import cn.hkim.addon.features.*
 import cn.hkim.addon.hud.HudElement
 import cn.hkim.addon.utils.ColorUtils.getChromaColor
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawSkikoText
@@ -15,6 +12,7 @@ import cn.hkim.addon.utils.render.skiko.SkikoDraw.skikoTextWidth
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import java.awt.Color
 
+@DevModule
 @ModuleInfo("module_list", Category.MISC)
 object ModuleList : Module("Module List", "Enabled features list.") {
     private val chromaColor by BooleanSetting("Use Chroma Color", "", false)

@@ -1,5 +1,6 @@
 package cn.hkim.addon.features
 
+import net.fabricmc.loader.api.FabricLoader
 import java.io.File
 import java.net.JarURLConnection
 import java.net.URL
@@ -55,6 +56,7 @@ object ModuleScanner {
 
             if (!Module::class.java.isAssignableFrom(clazz) || clazz == Module::class.java) return
             if (!clazz.isAnnotationPresent(ModuleInfo::class.java)) return
+            if (clazz.isAnnotationPresent(DevModule::class.java) && !FabricLoader.getInstance().isDevelopmentEnvironment) return
             val instance = clazz.kotlin.objectInstance as? Module ?: return
 
             modules.add(instance)
