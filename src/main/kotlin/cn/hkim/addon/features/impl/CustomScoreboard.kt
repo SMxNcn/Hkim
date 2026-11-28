@@ -17,9 +17,7 @@ import cn.hkim.addon.utils.parseColoredText
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawBackdropBlur
 import cn.hkim.addon.utils.render.skiko.SkikoDraw.drawRoundedRect
 import cn.hkim.addon.utils.toLegacyOrComponent
-import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.client.gui.navigation.ScreenRectangle
 import net.minecraft.network.chat.Component
 
 @ModuleInfo("custom_scoreboard", Category.MISC)
@@ -198,19 +196,11 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard features.") {
         dropLastWhile { it.string.isBlank() }
 
     private fun withCustomLine(title: Component, lines: List<Component>, custom: ParsedColoredText?): BoardContent {
-        if (custom == null || lines.isEmpty()) {
+        if (custom == null || custom.plain.isBlank() || lines.isEmpty()) {
             return BoardContent(title, lines.trimTrailingBlankLines(), null)
         }
         val base = lines.dropLast(1)
-        if (custom.plain.isBlank()) {
-            return BoardContent(title, base.trimTrailingBlankLines(), null)
-        }
         return BoardContent(title, (base + custom.asComponent()).trimTrailingBlankLines(), custom)
-    }
-
-    private fun measureText(font: Font, text: Component, shadow: Boolean): ScreenRectangle {
-        val prepared = font.prepareText(text.visualOrderText, 0f, 0f, 0xFFFFFFFF.toInt(), shadow, false, 0)
-        return prepared.bounds() ?: ScreenRectangle(0, 0, font.width(text), font.lineHeight)
     }
 
     private fun renderBoard(graphics: GuiGraphicsExtractor, data: BoardContent): Pair<Float, Float> {
@@ -231,44 +221,33 @@ object CustomScoreboard : Module("Custom Scoreboard", "Scoreboard features.") {
         }
 
         val titleComp = data.title
-        val titleBounds = measureText(font, titleComp, textShadow)
-        val lineBounds = displayLines.map { measureText(font, it, textShadow) }
+        val titleWidth = font.width(titleComp)
+        val lineWidths = displayLines.map { font.width(it) }
+        val contentW = maxOf(lineWidths.maxOrNull() ?: 0, titleWidth)
 
-        val minLineLeft = lineBounds.minOfOrNull { it.left() } ?: 0
-        val maxLineRight = lineBounds.maxOfOrNull { it.right() } ?: 0
-        val lineContentW = (maxLineRight - minLineLeft).coerceAtLeast(0)
-        val contentW = maxOf(lineContentW, titleBounds.width())
-        val lineX = pad - minLineLeft
-        val titleX = pad + (contentW - titleBounds.width()) / 2 - titleBounds.left()
-        val titleY = pad - titleBounds.top()
-
-        val linesTop = pad + titleBounds.height() + titleGap
-        val lineTops = lineBounds.indices.map { linesTop + it * fontHeight }
-        val lastBottom = if (lineBounds.isEmpty()) {
-            pad + titleBounds.height()
-        } else {
-            lineTops.last() + lineBounds.last().height()
-        }
+        val titleX = pad + (contentW - titleWidth) / 2
+        val titleY = pad
+        val linesTop = titleY + fontHeight + titleGap
+        val lineTops = displayLines.indices.map { linesTop + it * fontHeight }
+        val contentBottom = if (displayLines.isEmpty()) titleY + fontHeight else lineTops.last() + fontHeight
         val totalWidth = pad + contentW + pad
-        val totalHeight = lastBottom + pad
+        val totalHeight = contentBottom + pad
 
         graphics.text(font, titleComp, titleX, titleY, 0xFFFFFFFF.toInt(), textShadow)
 
         for ((i, line) in displayLines.withIndex()) {
-            val bounds = lineBounds[i]
-            val y = lineTops[i] - bounds.top()
             val x = if (customHasText && centerIpLine && i == lastIdx) {
-                pad + (contentW - bounds.width()) / 2 - bounds.left()
+                pad + (contentW - lineWidths[i]) / 2
             } else {
-                lineX
+                pad
             }
             if (useGradient && i == lastIdx) {
-                graphics.gradientText(font, custom.formatting, x, y,
+                graphics.gradientText(font, custom.formatting, x, lineTops[i],
                     gradStart and 0xFFFFFF,
                     gradEnd and 0xFFFFFF,
                     gradSpeed.toInt(), shadow = textShadow)
             } else {
-                graphics.text(font, line, x, y, 0xFFFFFFFF.toInt(), textShadow)
+                graphics.text(font, line, x, lineTops[i], 0xFFFFFFFF.toInt(), textShadow)
             }
         }
 
